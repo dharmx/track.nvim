@@ -14,7 +14,7 @@ return telescope.register_extension({
   exports = {
     marks = function(options)
       config.merge(options)
-      mark.load()
+      if not mark._loaded then mark.load() end
       interface.view()
     end,
   },

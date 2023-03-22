@@ -11,12 +11,14 @@ cmd("Track", function(...)
   local option = (...).args
   if option == "save" then
     require("track.mark").save(function() vim.notify("Saved.") end)
+  elseif option == "reload" then
+    require("track.mark").load(function() vim.notify("Reloaded.") end)
   else require("telescope").extensions.track.marks() end
 end, {
   desc = "Main controls.",
   nargs = "?",
   complete = function()
-    return { "save", "marks" }
+    return { "save", "reload", "marks" }
   end
 })
 

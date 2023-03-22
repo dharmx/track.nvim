@@ -31,6 +31,7 @@ M._defaults = {
     on_mark = util.mute,
     on_unmark = util.mute,
     on_save = util.mute,
+    on_load = util.mute,
     on_delete = function(_, picker)
       local entries = vim.F.if_nil(picker:get_multi_selection(), {})
       if #entries == 0 then table.insert(entries, picker:get_selection()) end
