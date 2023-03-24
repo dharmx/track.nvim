@@ -1,3 +1,3 @@
 return {
-  setup = require("track.config").merge
+  setup = require("track.config").merge,
 }
