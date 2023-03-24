@@ -9,25 +9,25 @@ local if_nil = vim.F.if_nil
 -- TODO: Implement a way to show hidden files.
 
 M._defaults = {
-  state_path = vim.fn.stdpath("state") .. "/track.json",
+  savepath = "/tmp/track.json",
   prompt_prefix = " 粒 ",
   previewer = false,
   initial_mode = "insert",
   save = {
-    on_file_mark = false,
-    on_file_unmark = false,
+    on_mark = false,
+    on_unmark = false,
     on_position_mark = false,
     on_position_unmark = false,
+    on_line_mark = false,
+    on_line_unmark = false,
     on_close = true,
+    on_stash = false,
+    on_swap = false,
   },
   layout_config = {
     preview_cutoff = 1,
-    width = function(_, max_columns, _)
-      return math.min(max_columns, 50)
-    end,
-    height = function(_, _, max_lines)
-      return math.min(max_lines, 15)
-    end,
+    width = function(_, max_columns, _) return math.min(max_columns, 50) end,
+    height = function(_, _, max_lines) return math.min(max_lines, 15) end,
   },
   callbacks = {
     on_open = util.mute,
@@ -37,20 +37,19 @@ M._defaults = {
     on_delete = function(_, picker)
       local entries = if_nil(picker:get_multi_selection(), {})
       if #entries == 0 then table.insert(entries, picker:get_selection()) end
-      vim.tbl_map(function(entry)
-        require("track.mark").unmark_file(entry.value)
-      end, entries)
+      vim.tbl_map(function(entry) require("track.mark").unmark_file(entry.value) end, entries)
     end,
     on_choose = function(_, picker)
       local entries = if_nil(picker:get_multi_selection(), {})
       if #entries == 0 then table.insert(entries, picker:get_selection()) end
-      vim.tbl_map(function(entry)
-        vim.cmd("confirm edit " .. entry.value)
-      end, entries)
+      vim.tbl_map(function(entry) vim.cmd("confirm edit " .. entry.value) end, entries)
     end,
   },
+  log = {
+    plugin = "track.nvim",
+    level = "error",
+  },
   roots = {},
-  ---@todo links = table - link $HOME/.config/picom.ini with $HOME/Dotfiles/config/picom.ini (EXPERIMENTAL)
   ---@todo disable_devicons = boolean
   ---@todo view = "metadata"|"contents"
 }
