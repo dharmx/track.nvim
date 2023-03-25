@@ -1,5 +1,4 @@
 local M = {}
-local util = require("track.util")
 
 local Config = require("track.config").get()
 local Path = require("plenary.path")
@@ -7,8 +6,9 @@ local Log = require("plenary.log")
 
 local Root = require("track.containers.root")
 local Mark = require("track.containers.mark")
-local Stash = require("track.containers.stash")
+local Bundle = require("track.containers.bundle")
 
+-- TODO: Set __call metatable to get root list.
 M._roots = {}
 M._loaded = false
 M._savepath = Path:new(Config.savepath)
@@ -20,19 +20,18 @@ local function parse_marks(marks)
     store[path] = Mark:new({
       path = mark.path,
       label = mark.label,
-      positions = mark.positions,
-      lines = mark.lines,
     })
   end
   return store
 end
 
-local function parse_stashes(stashes)
+local function parse_bundles(bundles)
   local store = {}
-  for label, stash in pairs(stashes) do
-    store[label] = Stash:new({
-      label = stash.label,
-      marks = parse_marks(stash.marks),
+  for label, bundle in pairs(bundles) do
+    store[label] = Bundle:new({
+      label = bundle.label,
+      views = bundle.views,
+      marks = parse_marks(bundle.marks),
     })
   end
   return store
@@ -57,15 +56,14 @@ function M.loadsave(action, savepath, on_load)
       label = root.label,
       links = root.links,
       main = root.main,
-      stashes = parse_stashes(root.stashes),
+      bundles = parse_bundles(root.bundles),
     })
+    M._roots[path]._stashed = root._stashed
   end
   if on_load then on_load() end
 end
 
-function M.reload(on_reload)
-  M.loadsave("extend", M._savepath.filename, on_reload)
-end
+function M.reload(on_reload) M.loadsave("extend", M._savepath.filename, on_reload) end
 
 function M.load(on_load)
   if M._loaded then return end
@@ -87,7 +85,7 @@ end
 
 function M.rm(clean)
   if clean then
-    M._savepath:write("[]", "w")
+    M._savepath:write("{}", "w")
     return
   end
   M._savepath:rm()
