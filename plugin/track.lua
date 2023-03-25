@@ -9,3 +9,62 @@ local cmd = vim.api.nvim_create_user_command
 
 -- TODO: Implement bang, range, repeat, motions and bar.
 
+cmd("Track", function(...)
+  local args = (...).fargs
+  local state = require("track.state")
+  local save = require("track.config").get().save
+
+  if args[1] == "save" then
+    state.save(save.before_save, save.on_save)
+  elseif args[1] == "load" then
+    state.load(save.on_load)
+  elseif args[1] == "loadsave" then
+    assert(args[2] and type(args[2]) == "string", "Needs a path value.")
+    state.loadsave("wipe", args[2], save.on_load)
+  elseif args[1] == "reload" then
+    state.reload(save.on_reload)
+  elseif args[1] == "wipe" then
+    state.wipe()
+  elseif args[1] == "remove" then
+    state.rm()
+  else
+    require("telescope").extensions.track.marks()
+  end
+end, {
+  desc = "State operations like: save, load, loadsave, reload, wipe and remove. marks for showing current mark list.",
+  nargs = "*",
+  complete = function() return { "save", "load", "loadsave", "reload", "wipe", "remove", "marks" } end,
+})
+local V = vim.fn
+
+cmd("TrackMark", function()
+  local Config = require("track.config").get()
+  require("track.core").mark(V.getcwd(), V.expand("%"), nil, Config.save.on_mark)
+end, {
+  desc = "Mark current file.",
+  nargs = 0,
+})
+
+cmd("TrackUnmark", function()
+  local Config = require("track.config").get()
+  require("track.core").unmark(V.getcwd(), V.expand("%"), nil, Config.save.on_unmark)
+end, {
+  desc = "Unmark current file.",
+  nargs = 0,
+})
+
+cmd("TrackStashBundle", function()
+  local Config = require("track.config").get()
+  require("track.core").stash(vim.fn.getcwd(), Config.save.on_bundle)
+end, {
+  desc = "Stash current bundle.",
+  nargs = 0,
+})
+
+cmd("TrackRestoreBundle", function()
+  local Config = require("track.config").get()
+  require("track.core").restore(vim.fn.getcwd(), Config.save.on_bundle)
+end, {
+  desc = "Restore stashed bundle.",
+  nargs = 0,
+})
