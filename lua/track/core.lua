@@ -3,13 +3,11 @@ local state = require("track.state")
 local util = require("track.util")
 local Root = require("track.containers.root")
 
--- TODO: Pass cwd instead of calling it.
-
 function M.mark(root_path, file, bundle_label, save)
   assert(root_path, "root_path arg needs to be present.")
   assert(file, "file cannot be nil.")
   file = util.filter_path(file) -- remove // and trailing /
-  state.load()
+  state.load() -- load state from savefile if it exists
 
   -- create a root if it does not exist
   local root = state._roots[root_path]
@@ -20,7 +18,7 @@ function M.mark(root_path, file, bundle_label, save)
   end
 
   -- this part makes sure that root.main does not stay empty
-  -- create a default bundle if not bundle_label is supplied
+  -- create a default bundle if no bundle_label is supplied
   if not bundle_label then
     -- create_default_bundle sets root.main = "main"
     if root:empty() then root:create_default_bundle() end
@@ -63,8 +61,17 @@ function M.restore(root_path, save)
   assert(root_path, "root_path arg needs to be present.")
   state.load()
   local root = state._roots[root_path]
-  if not root or root:empty() then return end
+  if not root then return end
   root:restore_bundle()
+  if save then state.save() end
+end
+
+function M.alternate(root_path, save)
+  assert(root_path, "root_path arg needs to be present.")
+  state.load()
+  local root = state._roots[root_path]
+  if not root then return end
+  root:alternate_bundle()
   if save then state.save() end
 end
 
@@ -113,7 +120,7 @@ function M.move(root_path, file, direction, bundle_label, save)
 end
 
 function M.view(root_path, bundle_label)
-  assert(root_path, "root_path arg needs to be present.")
+  assert(root_path, "root_path needs to be present.")
   state.load()
   local root = state._roots[root_path]
   if not root or root:empty() then return {} end

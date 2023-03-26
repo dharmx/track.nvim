@@ -5,7 +5,9 @@ end
 
 if vim.g.loaded_track == 1 then return end
 vim.g.loaded_track = 1
+
 local cmd = vim.api.nvim_create_user_command
+local V = vim.fn
 
 -- TODO: Implement bang, range, repeat, motions and bar.
 
@@ -28,14 +30,27 @@ cmd("Track", function(...)
   elseif args[1] == "remove" then
     state.rm()
   else
-    require("telescope").extensions.track.marks()
+    require("telescope").extensions.track.track()
   end
 end, {
   desc = "State operations like: save, load, loadsave, reload, wipe and remove. marks for showing current mark list.",
   nargs = "*",
-  complete = function() return { "save", "load", "loadsave", "reload", "wipe", "remove", "marks" } end,
+  complete = function() return { "save", "load", "loadsave", "reload", "wipe", "remove", "menu" } end,
 })
-local V = vim.fn
+
+cmd("TrackPick", function(...)
+  local args = (...).args
+  local tele = require("telescope")
+  local open = tele.extensions.track[args]
+  if args == "" or not open then
+    tele.extensions.track.track()
+    return
+  end
+  open()
+end, {
+  desc = "Open a picker.",
+  nargs = "?",
+})
 
 cmd("TrackMark", function()
   local Config = require("track.config").get()
@@ -55,7 +70,7 @@ end, {
 
 cmd("TrackStashBundle", function()
   local Config = require("track.config").get()
-  require("track.core").stash(vim.fn.getcwd(), Config.save.on_bundle)
+  require("track.core").stash(V.getcwd(), Config.save.on_bundle)
 end, {
   desc = "Stash current bundle.",
   nargs = 0,
@@ -63,7 +78,15 @@ end, {
 
 cmd("TrackRestoreBundle", function()
   local Config = require("track.config").get()
-  require("track.core").restore(vim.fn.getcwd(), Config.save.on_bundle)
+  require("track.core").restore(V.getcwd(), Config.save.on_bundle)
+end, {
+  desc = "Restore stashed bundle.",
+  nargs = 0,
+})
+
+cmd("TrackAlternateBundle", function()
+  local Config = require("track.config").get()
+  require("track.core").alternate(V.getcwd(), Config.save.on_alternate)
 end, {
   desc = "Restore stashed bundle.",
   nargs = 0,
