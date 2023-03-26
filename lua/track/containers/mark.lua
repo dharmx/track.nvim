@@ -18,6 +18,6 @@ function Mark:exists()
   return not not vim.loop.fs_realpath(self.path)
 end
 
-Mark.__newindex = function(_, value) assert(value == nil, "Adding additional fields aren't allowed.") end
+Mark.__newindex = function(_, value) assert(value == nil, "[%s=%s]: adding additional fields aren't allowed.") end
 
 return Mark

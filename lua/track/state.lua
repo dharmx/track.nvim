@@ -8,8 +8,13 @@ local Root = require("track.containers.root")
 local Mark = require("track.containers.mark")
 local Bundle = require("track.containers.bundle")
 
--- TODO: Set __call metatable to get root list.
-M._roots = {}
+M._roots = setmetatable({}, {
+  __call = function(roots, action)
+    if action == "string" then return vim.tbl_keys(roots) end
+    return vim.tbl_values(roots)
+  end
+})
+
 M._loaded = false
 M._savepath = Path:new(Config.savepath)
 M._log = Log.new(Config.log)
@@ -59,6 +64,7 @@ function M.loadsave(action, savepath, on_load)
       bundles = parse_bundles(root.bundles),
     })
     M._roots[path]._stashed = root._stashed
+    M._roots[path]._previous = root._previous
   end
   if on_load then on_load() end
 end

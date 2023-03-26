@@ -6,14 +6,6 @@ function M.mute() end
 
 function M.inspect(items) vim.notify(vim.inspect(items)) end
 
-function M.warn(message)
-  A.nvim_notify(message, vim.log.levels.WARN, {
-    icon = " ",
-    title = "track.nvim",
-    prompt_title = "track.nvim",
-  })
-end
-
 function M.swap(items, index1, index2)
   local temp = items[index1]
   items[index1] = items[index2]

@@ -7,9 +7,23 @@ function Bundle:new(fields)
   local bundle = {}
   bundle.label = fields.label
   bundle.marks = vim.F.if_nil(fields.marks, {})
+  setmetatable(bundle.marks, {
+    __call = function(marks, action)
+      if action == "string" then return vim.tbl_keys(marks) end
+      return vim.tbl_values(marks)
+    end
+  })
 
-  -- TODO: Set __call metatable to convert view paths to mark instances.
   bundle.views = vim.F.if_nil(fields.views, {})
+  setmetatable(bundle.views, {
+    __call = function(views, _)
+      local marks = {}
+      for _, view in ipairs(views) do
+        table.insert(marks, bundle.marks[view])
+      end
+      return marks
+    end
+  })
   bundle._type = "mark"
 
   self.__index = self
@@ -36,6 +50,10 @@ function Bundle:remove_mark(path)
   self.views = vim.tbl_filter(function(item) return item ~= path end, self.views)
 end
 
-Bundle.__newindex = function(_, value) assert(value == nil, "Adding additional fields aren't allowed.") end
+function Bundle:empty()
+  return vim.tbl_isempty(self.marks)
+end
+
+Bundle.__newindex = function(_, value) assert(value == nil, "[%s=%s]: adding additional fields aren't allowed.") end
 
 return Bundle
