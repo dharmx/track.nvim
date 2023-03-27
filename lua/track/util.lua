@@ -1,12 +1,24 @@
 ---@diagnostic disable: param-type-mismatch
 local M = {}
-local U = vim.loop
+local A = vim.api
 
-function M.mute()
+function M.mute() end
+
+function M.inspect(items) vim.notify(vim.inspect(items)) end
+
+function M.swap(items, index1, index2)
+  local temp = items[index1]
+  items[index1] = items[index2]
+  items[index2] = temp
+  return items
 end
 
-function M.inspect(items)
-  vim.notify(vim.inspect(items))
+function M.filter_path(path)
+  local length = path:len()
+  path = path:gsub("//", "/")
+  if path == "/" then return path end
+  if path:sub(length, length) == "/" then return path:sub(1, length - 1) end
+  return path
 end
 
 return M
