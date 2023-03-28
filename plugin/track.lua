@@ -13,22 +13,22 @@ local V = vim.fn
 
 cmd("Track", function(...)
   local args = (...).fargs
-  local state = require("track.state")
+  local State = require("track.state")
   local save = require("track.config").get().save
 
   if args[1] == "save" then
-    state.save(save.before_save, save.on_save)
+    State.save(save.before_save, save.on_save)
   elseif args[1] == "load" then
-    state.load(save.on_load)
+    State.load(save.on_load)
   elseif args[1] == "loadsave" then
     assert(args[2] and type(args[2]) == "string", "Needs a path value.")
-    state.loadsave("wipe", args[2], save.on_load)
+    State.loadsave("wipe", args[2], save.on_load)
   elseif args[1] == "reload" then
-    state.reload(save.on_reload)
+    State.reload(save.on_reload)
   elseif args[1] == "wipe" then
-    state.wipe()
+    State.wipe()
   elseif args[1] == "remove" then
-    state.rm()
+    State.rm()
   else
     require("telescope").extensions.track.track()
   end

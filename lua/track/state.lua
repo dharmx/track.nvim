@@ -12,13 +12,16 @@ M._roots = setmetatable({}, {
   __call = function(roots, action)
     if action == "string" then return vim.tbl_keys(roots) end
     return vim.tbl_values(roots)
-  end
+  end,
 })
 
 M._loaded = false
 M._savepath = Path:new(Config.savepath)
 M._log = Log.new(Config.log)
 
+function M.wipe() M._roots = {} end
+
+-- Root parser utils. {{{
 local function parse_marks(marks)
   local store = {}
   for path, mark in pairs(marks) do
@@ -41,8 +44,7 @@ local function parse_bundles(bundles)
   end
   return store
 end
-
-function M.wipe() M._roots = {} end
+-- }}}
 
 function M.loadsave(action, savepath, on_load)
   if not M._savepath:exists() then
@@ -79,7 +81,7 @@ end
 
 function M.save(before_save, on_save)
   if not M._savepath:exists() then
-    M._log.info("Config.savepath does not exist. Creating...")
+    M._log.info("M.save(): Config.savepath does not exist. Creating...")
     M._savepath:touch({ parents = true })
   end
 
