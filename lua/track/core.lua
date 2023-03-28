@@ -1,19 +1,19 @@
 local M = {}
-local state = require("track.state")
-local util = require("track.util")
+local State = require("track.state")
+local Util = require("track.util")
 local Root = require("track.containers.root")
 
 function M.mark(root_path, file, bundle_label, save)
   assert(root_path, "root_path arg needs to be present.")
   assert(file, "file cannot be nil.")
-  file = util.filter_path(file) -- remove // and trailing /
-  state.load() -- load state from savefile if it exists
+  file = Util.filter_path(file) -- remove // and trailing /
+  State.load() -- load state from savefile if it exists
 
   -- create a root if it does not exist
-  local root = state._roots[root_path]
+  local root = State._roots[root_path]
   if not root then
     local new_root = Root:new({ path = root_path })
-    state._roots[root_path] = new_root
+    State._roots[root_path] = new_root
     root = new_root
   end
 
@@ -28,15 +28,15 @@ function M.mark(root_path, file, bundle_label, save)
     root:new_bundle(bundle_label)
   end
   root.bundles[bundle_label]:add_mark(file)
-  if save then state.save() end
+  if save then State.save() end
 end
 
 function M.unmark(root_path, file, bundle_label, save)
   assert(root_path, "root_path arg needs to be present.")
-  file = util.filter_path(file)
-  state.load()
+  file = Util.filter_path(file)
+  State.load()
 
-  local root = state._roots[root_path]
+  local root = State._roots[root_path]
   if not root then return end
 
   -- root.main being null implies that there are no bundles in root
@@ -45,55 +45,55 @@ function M.unmark(root_path, file, bundle_label, save)
   if not bundle_label then bundle_label = root.main end
   if not root.bundles[bundle_label] or not root.bundles[bundle_label].marks[file] then return end
   root.bundles[bundle_label]:remove_mark(file)
-  if save then state.save() end
+  if save then State.save() end
 end
 
 function M.stash(root_path, save)
   assert(root_path, "root_path arg needs to be present.")
-  state.load()
-  local root = state._roots[root_path]
+  State.load()
+  local root = State._roots[root_path]
   if not root or root:empty() then return end
   root:stash_bundle()
-  if save then state.save() end
+  if save then State.save() end
 end
 
 function M.restore(root_path, save)
   assert(root_path, "root_path arg needs to be present.")
-  state.load()
-  local root = state._roots[root_path]
+  State.load()
+  local root = State._roots[root_path]
   if not root then return end
   root:restore_bundle()
-  if save then state.save() end
+  if save then State.save() end
 end
 
 function M.alternate(root_path, save)
   assert(root_path, "root_path arg needs to be present.")
-  state.load()
-  local root = state._roots[root_path]
+  State.load()
+  local root = State._roots[root_path]
   if not root then return end
   root:alternate_bundle()
-  if save then state.save() end
+  if save then State.save() end
 end
 
 function M.delete(root_path, bundle_label, save)
   assert(root_path, "root_path cannot be nil.")
   assert(bundle_label, "bundle_label cannot be nil.")
-  state.load()
-  local root = state._roots[root_path]
+  State.load()
+  local root = State._roots[root_path]
   if not root or root:empty() then return end
   root:delete_bundle(bundle_label)
-  if save then state.save() end
+  if save then State.save() end
 end
 
 function M.move(root_path, file, direction, bundle_label, save)
   assert(root_path, "root_path arg needs to be present.")
   assert(file, "file cannot be nil.")
   assert(bundle_label, "bundle_label cannot be nil.")
-  file = util.filter_path(file)
+  file = Util.filter_path(file)
   assert(type(direction) == "boolean", "direction_path must be boolean.")
-  state.load()
+  State.load()
 
-  local root = state._roots[root_path]
+  local root = State._roots[root_path]
   if not root or root:empty() or not root.bundles[bundle_label] then return end
 
   local paths = root.bundles[bundle_label].views
@@ -114,15 +114,15 @@ function M.move(root_path, file, direction, bundle_label, save)
     temp = _index - 1
     if temp < 1 then temp = #paths end
   end
-  root.bundles[bundle_label].views = util.swap(paths, _index, temp)
-  if save then state.save() end
+  root.bundles[bundle_label].views = Util.swap(paths, _index, temp)
+  if save then State.save() end
   return root.bundles[bundle_label]
 end
 
 function M.view(root_path, bundle_label)
   assert(root_path, "root_path needs to be present.")
-  state.load()
-  local root = state._roots[root_path]
+  State.load()
+  local root = State._roots[root_path]
   if not root or root:empty() then return {} end
   bundle_label = vim.F.if_nil(bundle_label, root.main)
   if not root.bundles[bundle_label] then return {} end

@@ -11,7 +11,7 @@ function Bundle:new(fields)
     __call = function(marks, action)
       if action == "string" then return vim.tbl_keys(marks) end
       return vim.tbl_values(marks)
-    end
+    end,
   })
 
   bundle.views = vim.F.if_nil(fields.views, {})
@@ -22,7 +22,7 @@ function Bundle:new(fields)
         table.insert(marks, bundle.marks[view])
       end
       return marks
-    end
+    end,
   })
   bundle._type = "mark"
 
@@ -50,10 +50,6 @@ function Bundle:remove_mark(path)
   self.views = vim.tbl_filter(function(item) return item ~= path end, self.views)
 end
 
-function Bundle:empty()
-  return vim.tbl_isempty(self.marks)
-end
-
-Bundle.__newindex = function(_, value) assert(value == nil, "[%s=%s]: adding additional fields aren't allowed.") end
+function Bundle:empty() return vim.tbl_isempty(self.marks) end
 
 return Bundle

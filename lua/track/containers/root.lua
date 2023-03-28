@@ -12,20 +12,20 @@ function Root:new(fields)
 
   local root = {}
   root.path = fields.path
-  root.label = vim.F.if_nil(fields.label, vim.NIL)
-  root.links = vim.F.if_nil(fields.links, {})
+  root.label = fields.label
+  root.links = fields.links
 
   root.bundles = vim.F.if_nil(fields.bundles, {})
   setmetatable(root.bundles, {
     __call = function(bundles, action)
       if action == "string" then return vim.tbl_keys(bundles) end
       return vim.tbl_values(bundles)
-    end
+    end,
   })
 
-  root.main = vim.F.if_nil(fields.main, vim.NIL)
-  root._stashed = vim.NIL
-  root._previous = vim.NIL
+  root.main = fields.main
+  root._stashed = nil
+  root._previous = nil
   root._type = "root"
 
   self.__index = self
@@ -41,8 +41,8 @@ function Root:new_bundle(bundle_label, main, marks)
 end
 
 function Root:change_main_bundle(new_main)
-  assert(new_main and type(new_main) == "string", "new_main needs to be a string|vim.NIL, not nil.")
-  if new_main == vim.NIL then return end
+  assert(new_main and type(new_main) == "string", "new_main needs to be a string|nil.")
+  if not new_main then return end
   if not vim.tbl_contains(vim.tbl_keys(self.bundles), new_main) then return end
   self._previous = self.main
   self.main = new_main
@@ -65,7 +65,7 @@ function Root:get_main_bundle(create)
   return self.bundles[self.main]
 end
 
-function Root:empty() return self.main == vim.NIL end
+function Root:empty() return not self.main end
 
 local function date_label() return "new-bundle-" .. os.date("%s") end
 local function return_true() return true end
@@ -86,13 +86,13 @@ function Root:stash_bundle(on_collision, create_label)
 end
 
 function Root:restore_bundle()
-  if self:empty() or self._stashed == vim.NIL then return end
+  if self:empty() or not self._stashed then return end
   if self.bundles[self._stashed] then self:change_main_bundle(self._stashed) end
-  self._stashed = vim.NIL
+  self._stashed = nil
 end
 
 function Root:alternate_bundle()
-  if self:empty() or self._previous == vim.NIL or not self.bundles[self._previous] then return end
+  if self:empty() or not self._previous or not self.bundles[self._previous] then return end
   self:change_main_bundle(self._previous)
 end
 
@@ -107,16 +107,14 @@ function Root:intersect__bundle(bundle_labels) end
 
 function Root:link(root_path)
   assert(root_path and type(root_path) == "string", "root_path needs to be a string and not nil.")
+  self.links = vim.F.if_nil(self.links, {})
   table.insert(self.links, root_path)
 end
 
 function Root:unlink(root_path)
   assert(root_path and type(root_path) == "string", "root_path needs to be a string and not nil.")
+  if not self.links then return end
   self.links = vim.tbl_filter(function(_item) return _item ~= root_path end, self.links)
-end
-
-Root.__newindex = function(_, key, value)
-  assert(value == nil, string.format("[%s=%s]: adding fields is not allowed.", key, value))
 end
 
 return Root

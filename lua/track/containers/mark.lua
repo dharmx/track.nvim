@@ -5,7 +5,7 @@ function Mark:new(fields)
   assert(fields.path and type(fields.path) == "string", "Mark needs to have a path: string.")
   local mark = {}
   mark.path = fields.path
-  mark.label = vim.F.if_nil(fields.label, vim.NIL)
+  mark.label = fields.label
   mark.absolute = vim.fn.fnamemodify(mark.path, ":p")
   mark._type = "mark"
 
@@ -14,10 +14,6 @@ function Mark:new(fields)
   return mark
 end
 
-function Mark:exists()
-  return not not vim.loop.fs_realpath(self.path)
-end
-
-Mark.__newindex = function(_, value) assert(value == nil, "[%s=%s]: adding additional fields aren't allowed.") end
+function Mark:exists() return not not vim.loop.fs_realpath(self.path) end
 
 return Mark
