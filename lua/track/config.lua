@@ -101,7 +101,6 @@ M._defaults = {
     plugin = "track.nvim",
     level = "error",
   },
-  roots = {},
 }
 M._current = vim.deepcopy(M._defaults)
 
@@ -110,9 +109,7 @@ function M.merge(options)
   M._current = vim.tbl_deep_extend("keep", options, M._current)
 end
 
-function M.extend(options)
-  return vim.tbl_deep_extend("keep", options, M._current)
-end
+function M.extend(options) return vim.tbl_deep_extend("keep", options, M._current) end
 
 function M.get() return M._current end
 
