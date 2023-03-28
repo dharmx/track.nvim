@@ -40,18 +40,18 @@ M._defaults = {
     on_bundles_open = util.mute,
     on_marks_open = util.mute,
 
-    on_views_choose = util.mute,
+    on_views_choose = function(_, picker)
+      local entries = vim.F.if_nil(picker:get_multi_selection(), {})
+      if #entries == 0 then table.insert(entries, picker:get_selection()) end
+      vim.tbl_map(function(entry) vim.cmd("confirm edit " .. entry.value.path) end, entries)
+    end,
     on_roots_choose = util.mute,
     on_bundles_choose = util.mute,
     on_track_choose = function(_, picker)
       local entry = picker:get_selection()
       require("telescope").extensions.track[entry.value:lower()]()
     end,
-    on_marks_choose = function(_, picker)
-      local entries = vim.F.if_nil(picker:get_multi_selection(), {})
-      if #entries == 0 then table.insert(entries, picker:get_selection()) end
-      vim.tbl_map(function(entry) vim.cmd("confirm edit " .. entry.value) end, entries)
-    end,
+    on_marks_choose = util.mute,
   },
   mappings = {
     track = function(_, map)
@@ -97,6 +97,20 @@ M._defaults = {
       map("i", "<C-E>", actions.close)
     end,
   },
+  core = {
+    bundle = "main",
+    root = function() return vim.fn.getcwd() end
+  },
+  icons = {
+    disable_devicons = false,
+    separator = " ",
+    accessible = " ",
+    inaccessible = " ",
+    focused = "ﱤ ",
+  },
+  views_path = function(path)
+    return vim.fn.pathshorten(path)
+  end,
   log = {
     plugin = "track.nvim",
     level = "error",

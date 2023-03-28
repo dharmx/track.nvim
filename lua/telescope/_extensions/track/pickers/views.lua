@@ -1,16 +1,12 @@
 local A = vim.api
-local V = vim.fn
-
 local Config = require("track.config")
-local Core = require("track.core")
 local State = require("track.state")
-local Util = require("track.util")
+local Entry = require("telescope._extensions.track.entry")
 
 local actions = require("telescope.actions")
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
 local config = require("telescope.config")
-local state = require("telescope.state")
 local actions_state = require("telescope.actions.state")
 
 return function(options)
@@ -18,9 +14,24 @@ return function(options)
   State.load()
   options.hooks.on_views_open()
 
+  local results = {}
+  local root = options.core.root()
+  local marks_copy = vim.deepcopy(State._roots[root].bundles[options.core.bundle].marks())
+  if State._roots[root] and State._roots[root].bundles[options.core.bundle] then
+    local count = 1
+    results = vim.tbl_map(function(mark)
+      mark.index = count
+      count = count + 1
+      return mark
+    end, marks_copy)
+  end
+
   local picker = pickers.new(options, {
     prompt_title = "Views",
-    finder = finders.new_table({ results = Core.view(V.getcwd()) }),
+    finder = finders.new_table({
+      results = results,
+      entry_maker = Entry.views(options),
+    }),
     sorter = config.values.file_sorter(options),
     attach_mappings = function(buffer, map)
       local current_picker = actions_state.get_current_picker(buffer)
@@ -40,7 +51,7 @@ return function(options)
         actions.close(buffer)
         options.hooks.on_views_choose(buffer, current_picker)
       end)
-      options.mappings.views(buffer, map)
+      options.mappings.views(buffer, map, options)
       return true
     end,
   })
