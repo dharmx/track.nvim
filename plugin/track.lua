@@ -49,9 +49,7 @@ cmd("TrackPick", function(...)
   end
   open()
 end, {
-  complete = function()
-    return { "bundles", "marks", "roots", "track", "views" }
-  end,
+  complete = function() return { "bundles", "marks", "roots", "track", "views" } end,
   desc = "Open a picker.",
   nargs = "?",
 })
@@ -62,11 +60,26 @@ cmd("TrackMark", function(...)
   local Config = require("track.config").get()
   local Core = require("track.core")
   local cwd = V.getcwd()
-  for _, file in ipairs(files) do Core.mark(cwd, file, nil, Config.save.on_mark) end
+  for _, file in ipairs(files) do
+    Core.mark(cwd, file, nil, Config.save.on_mark)
+  end
 end, {
   complete = "file",
   desc = "Mark current file.",
   nargs = "*",
+})
+
+cmd("TrackMarkAllOpened", function()
+  local Config = require("track.config").get()
+  local Core = require("track.core")
+  local cwd = V.getcwd()
+  for _, info in ipairs(vim.fn.getbufinfo({ listed = 1 })) do
+    local name = vim.fn.bufname(info.bufnr)
+    if name ~= "" and not name:match("^term://") then Core.mark(cwd, name, nil, Config.save.on_mark) end
+  end
+end, {
+  desc = "Mark all opened files.",
+  nargs = 0,
 })
 
 cmd("TrackUnmark", function(...)
@@ -75,7 +88,9 @@ cmd("TrackUnmark", function(...)
   local Config = require("track.config").get()
   local Core = require("track.core")
   local cwd = V.getcwd()
-  for _, file in ipairs(files) do Core.unmark(cwd, file, nil, Config.save.on_unmark) end
+  for _, file in ipairs(files) do
+    Core.unmark(cwd, file, nil, Config.save.on_unmark)
+  end
 end, {
   complete = function()
     local cwd = V.getcwd()
@@ -147,5 +162,5 @@ highlight(0, "TrackViewsIndex", {
 })
 
 highlight(0, "TrackViewsMarkListed", {
-  foreground = "#4B5259"
+  foreground = "#4B5259",
 })
