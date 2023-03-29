@@ -43,8 +43,8 @@ function M.views(options)
     end
 
     local listed, listed_hl = " ", ""
-    for _, info in ipairs(vim.fn.getbufinfo({ listed = 1 })) do
-      if info.name == entry.value.absolute then
+    for _, info in ipairs(vim.fn.getbufinfo({ loaded = 1 })) do
+      if info.name == entry.value.absolute and info.listed == 1 then
         listed, listed_hl = icons.listed, "TrackViewsMarkListed"
         break
       end

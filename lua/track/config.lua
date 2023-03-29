@@ -70,7 +70,7 @@ M._defaults = {
         listed = "",
       },
       display_path = function(path)
-        return vim.fn.fnamemodify(path, ":t")
+        return vim.fn.pathshorten(path)
       end,
     },
     marks = {
