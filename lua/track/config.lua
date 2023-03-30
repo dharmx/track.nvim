@@ -20,12 +20,13 @@ M._defaults = {
   },
   pickers = {
     views = {
+      path_display = { "shorten" },
       prompt_prefix = " 粒 ",
       previewer = false,
       initial_mode = "insert",
       layout_config = {
         preview_cutoff = 1,
-        width = function(_, max_columns, _) return math.min(max_columns, 50) end,
+        width = function(_, max_columns, _) return math.min(max_columns, 70) end,
         height = function(_, _, max_lines) return math.min(max_lines, 15) end,
       },
       hooks = {
@@ -46,20 +47,27 @@ M._defaults = {
           vim.tbl_map(function(entry) Util.open_file(entry.value.path) end, entries)
         end,
       },
-      mappings = function(_, map)
+      attach_mappings = function(_, map)
         local actions = require("telescope.actions")
         map("i", "<C-K>", actions.move_selection_previous)
         map("i", "<C-J>", actions.move_selection_next)
-        map("i", "<C-E>", actions.close)
         map("n", "q", actions.close)
+        map("n", "v", actions.select_all)
 
         local Actions = require("telescope._extensions.track.actions")
         map("n", "dd", Actions.delete_view)
         map("i", "<C-D>", Actions.delete_view)
+        map("n", "D", actions.select_all + Actions.delete_view)
+        return true
       end,
       track_options = {
-        bundle = "main",
-        root = vim.fn.getcwd,
+        bundle_label = function(root)
+          if root and not root:empty() then
+            return root.main
+          end
+          return "main"
+        end,
+        root_path = vim.fn.getcwd,
       },
       disable_devicons = false,
       icons = {
@@ -68,10 +76,9 @@ M._defaults = {
         inaccessible = " ",
         focused = " ",
         listed = "",
+        unlisted = "≖",
+        file = "",
       },
-      display_path = function(path)
-        return vim.fn.pathshorten(path)
-      end,
     },
     marks = {
       prompt_prefix = " 粒 ",
