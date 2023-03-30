@@ -73,8 +73,9 @@ cmd("TrackMarkAllOpened", function()
   local Config = require("track.config").get()
   local Core = require("track.core")
   local cwd = V.getcwd()
-  for _, info in ipairs(vim.fn.getbufinfo({ listed = 1 })) do
-    local name = vim.fn.bufname(info.bufnr)
+  local listed_buffers = V.getbufinfo({ listed = 1 })
+  for _, info in ipairs(listed_buffers) do
+    local name = V.bufname(info.bufnr)
     if name ~= "" and not name:match("^term://") then Core.mark(cwd, name, nil, Config.save.on_mark) end
   end
 end, {
@@ -163,4 +164,12 @@ highlight(0, "TrackViewsIndex", {
 
 highlight(0, "TrackViewsMarkListed", {
   foreground = "#4B5259",
+})
+
+highlight(0, "TrackViewsFileIcon", {
+  foreground = "#FFE59E",
+})
+
+highlight(0, "TrackViewsMarkUnlisted", {
+  foreground = "#C397D8",
 })

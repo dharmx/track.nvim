@@ -1,3 +1,5 @@
+local M = {}
+
 local A = vim.api
 local Config = require("track.config")
 local State = require("track.state")
@@ -9,36 +11,47 @@ local finders = require("telescope.finders")
 local config = require("telescope.config")
 local actions_state = require("telescope.actions.state")
 
-return function(options)
+function M.resulter(views_options)
+  local results = {}
+  local root_path = views_options.track_options.root_path()
+  local root = vim.deepcopy(State._roots[root_path])
+  local bundle_label = views_options.track_options.bundle_label(root)
+  views_options.prompt_title = vim.F.if_nil(views_options.prompt_title, string.format("Views[%s]", bundle_label))
+
+  if root and not root:empty() then
+    local bundle = root.bundles[bundle_label]
+    if bundle and not bundle:empty() then
+      local views = bundle.views()
+      for index, view in ipairs(views) do
+        view.index = index
+        view.root_name = root_path
+        view.bundle_name = bundle_label
+        table.insert(results, index, view)
+      end
+    end
+  end
+  return results
+end
+
+function M.finder(views_options, results)
+  return finders.new_table({
+    results = results,
+    entry_maker = Entry.views(views_options)
+  })
+end
+
+function M.picker(options)
   options = Config.extend(vim.F.if_nil(options, {}))
   local views_options = options.pickers.views
   local views_hooks = views_options.hooks
-
   State.load()
+
+  local results = M.resulter(views_options)
   views_hooks.on_open()
-
-  local results = {}
-  local directory = views_options.track_options.root()
-  local bundle = views_options.track_options.bundle
-  local roots_copy = vim.deepcopy(State._roots)
-
-  if roots_copy[directory] and roots_copy[directory].bundles[bundle] then
-    local marks = roots_copy[directory].bundles[bundle].marks()
-    local count = 1
-    results = vim.tbl_map(function(mark)
-      mark.index = count
-      mark.root_name = directory
-      mark.bundle_name = bundle
-      count = count + 1
-      return mark
-    end, marks)
-  end
-
   local picker = pickers.new(views_options, {
     prompt_title = "Views",
-    finder = finders.new_table({ results = results, entry_maker = Entry.views(views_options) }),
+    finder = M.finder(views_options, results),
     sorter = config.values.file_sorter(views_options),
-
     attach_mappings = function(buffer, map)
       local current_picker = actions_state.get_current_picker(buffer)
       actions.close:replace(function()
@@ -53,18 +66,15 @@ return function(options)
         if options.save.on_views_close then State.save() end
         views_hooks.on_close(buffer, current_picker)
       end)
-
       actions.select_default:replace(function()
         actions.close(buffer)
         views_hooks.on_choose(buffer, current_picker)
       end)
-
-      views_options.mappings(buffer, map, options)
-      for _, mark in ipairs(results) do
-        views_hooks.on_each_view(buffer, map, mark)
-      end
+      for _, mark in ipairs(results) do views_hooks.on_each_view(buffer, map, mark) end
       return true
     end,
   })
   picker:find()
 end
+
+return M
