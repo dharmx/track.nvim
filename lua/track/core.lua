@@ -2,6 +2,7 @@ local M = {}
 local State = require("track.state")
 local Util = require("track.util")
 local Root = require("track.containers.root")
+local Config = require("track.config").get()
 
 function M.mark(root_path, file, bundle_label, save)
   assert(root_path, "root_path arg needs to be present.")
@@ -21,7 +22,11 @@ function M.mark(root_path, file, bundle_label, save)
   -- create a default bundle if no bundle_label is supplied
   if not bundle_label then
     -- create_default_bundle sets root.main = "main"
-    if root:empty() then root:create_default_bundle() end
+    if root:empty() then
+      root:create_default_bundle()
+      root.bundles[root.main].disable_history = Config.disable_history
+      root.bundles[root.main].maximum_history = Config.maximum_history
+    end
     bundle_label = root.main
     if root.bundles[bundle_label].marks[file] then return end
   elseif not root.bundles[bundle_label] then

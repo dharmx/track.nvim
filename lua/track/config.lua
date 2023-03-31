@@ -11,6 +11,8 @@ local Util = require("track.util")
 
 M._defaults = {
   savepath = "/tmp/track.json",
+  disable_history = false,
+  maximum_history = 50,
   save = {
     on_views_close = true,
     on_marks_close = false,
@@ -20,14 +22,17 @@ M._defaults = {
   },
   pickers = {
     views = {
-      path_display = { "shorten" },
+      path_display = {
+        absolute = false,
+        shorten = 1,
+      },
       prompt_prefix = " 粒 ",
       previewer = false,
       initial_mode = "insert",
       layout_config = {
         preview_cutoff = 1,
-        width = function(_, max_columns, _) return math.min(max_columns, 70) end,
-        height = function(_, _, max_lines) return math.min(max_lines, 15) end,
+        width = function(_, maximum_columns, _) return math.min(maximum_columns, 70) end,
+        height = function(_, _, maximum_lines) return math.min(maximum_lines, 15) end,
       },
       hooks = {
         on_close = Util.mute,
@@ -62,9 +67,7 @@ M._defaults = {
       end,
       track_options = {
         bundle_label = function(root)
-          if root and not root:empty() then
-            return root.main
-          end
+          if root and not root:empty() then return root.main end
           return "main"
         end,
         root_path = vim.fn.getcwd,
@@ -86,8 +89,8 @@ M._defaults = {
       initial_mode = "insert",
       layout_config = {
         preview_cutoff = 1,
-        width = function(_, max_columns, _) return math.min(max_columns, 50) end,
-        height = function(_, _, max_lines) return math.min(max_lines, 15) end,
+        width = function(_, maximum_columns, _) return math.min(maximum_columns, 50) end,
+        height = function(_, _, maximum_lines) return math.min(maximum_lines, 15) end,
       },
       hooks = {
         on_close = Util.mute,
@@ -114,8 +117,8 @@ M._defaults = {
       initial_mode = "insert",
       layout_config = {
         preview_cutoff = 1,
-        width = function(_, max_columns, _) return math.min(max_columns, 50) end,
-        height = function(_, _, max_lines) return math.min(max_lines, 15) end,
+        width = function(_, maximum_columns, _) return math.min(maximum_columns, 50) end,
+        height = function(_, _, maximum_lines) return math.min(maximum_lines, 15) end,
       },
       hooks = {
         on_close = Util.mute,
@@ -142,8 +145,8 @@ M._defaults = {
       initial_mode = "insert",
       layout_config = {
         preview_cutoff = 1,
-        width = function(_, max_columns, _) return math.min(max_columns, 50) end,
-        height = function(_, _, max_lines) return math.min(max_lines, 15) end,
+        width = function(_, maximum_columns, _) return math.min(maximum_columns, 50) end,
+        height = function(_, _, maximum_lines) return math.min(maximum_lines, 15) end,
       },
       hooks = {
         on_close = Util.mute,
@@ -164,8 +167,8 @@ M._defaults = {
       initial_mode = "insert",
       layout_config = {
         preview_cutoff = 1,
-        width = function(_, max_columns, _) return math.min(max_columns, 50) end,
-        height = function(_, _, max_lines) return math.min(max_lines, 15) end,
+        width = function(_, maximum_columns, _) return math.min(maximum_columns, 50) end,
+        height = function(_, _, maximum_lines) return math.min(maximum_lines, 15) end,
       },
       hooks = {
         on_close = Util.mute,
@@ -196,8 +199,21 @@ function M.merge(options)
   M._current = vim.tbl_deep_extend("keep", options, M._current)
 end
 
+function M.merge_pickers(options)
+  options = vim.F.if_nil(options, {})
+  M._current.pickers = vim.tbl_deep_extend("keep", options, M._current.pickers)
+end
+
 function M.extend(options) return vim.tbl_deep_extend("keep", options, M._current) end
 
+function M.extend_pickers(options) return vim.tbl_deep_extend("keep", options, M._current.pickers) end
+
 function M.get() return M._current end
+
+function M.get_pickers() return M._current.pickers end
+
+function M.get_save_config()
+  return M._current.save
+end
 
 return M
