@@ -40,6 +40,8 @@ local function parse_bundles(bundles)
       label = bundle.label,
       views = bundle.views,
       marks = parse_marks(bundle.marks),
+      disable_history = bundle.disable_history,
+      maximum_history = bundle.maximum_history,
     })
   end
   return store

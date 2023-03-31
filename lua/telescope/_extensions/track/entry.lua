@@ -54,7 +54,7 @@ function M.views(options)
     entry.focused_path = V.fnamemodify(V.bufname(), ":p")
     return make_entry.set_default_entry_mt({
       value = entry,
-      ordinal = entry.index .. " : " .. entry.absolute,
+      ordinal = entry.index .. ":" .. entry.absolute,
       display = make_display,
     }, options)
   end
