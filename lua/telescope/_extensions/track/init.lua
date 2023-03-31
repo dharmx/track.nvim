@@ -17,12 +17,8 @@ end
 -- TODO: Implement entry_makers.
 
 return telescope.register_extension({
-  setup = require("track.config").merge,
+  setup = require("track.config").merge_pickers,
   exports = {
-    track = require("telescope._extensions.track.pickers.track"),
     views = require("telescope._extensions.track.pickers.views").picker,
-    marks = require("telescope._extensions.track.pickers.marks"),
-    roots = require("telescope._extensions.track.pickers.roots"),
-    bundles = require("telescope._extensions.track.pickers.bundles"),
   },
 })

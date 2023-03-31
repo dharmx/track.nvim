@@ -15,43 +15,25 @@ local highlight = vim.api.nvim_set_hl
 cmd("Track", function(...)
   local args = (...).fargs
   local State = require("track.state")
-  local save = require("track.config").get().save
-
+  local Save = require("track.config").get_save_config()
   if args[1] == "save" then
-    State.save(save.before_save, save.on_save)
+    State.save(Save.before_save, Save.on_save)
   elseif args[1] == "load" then
-    State.load(save.on_load)
+    State.load(Save.on_load)
   elseif args[1] == "loadsave" then
     assert(args[2] and type(args[2]) == "string", "Needs a path value.")
-    State.loadsave("wipe", args[2], save.on_load)
+    State.loadsave("wipe", args[2], Save.on_load)
   elseif args[1] == "reload" then
-    State.reload(save.on_reload)
+    State.reload(Save.on_reload)
   elseif args[1] == "wipe" then
     State.wipe()
   elseif args[1] == "remove" then
     State.rm()
-  else
-    require("telescope").extensions.track.track()
   end
 end, {
   desc = "State operations like: save, load, loadsave, reload, wipe and remove. marks for showing current mark list.",
   nargs = "*",
   complete = function() return { "save", "load", "loadsave", "reload", "wipe", "remove", "menu" } end,
-})
-
-cmd("TrackPick", function(...)
-  local args = (...).args
-  local tele = require("telescope")
-  local open = tele.extensions.track[args]
-  if args == "" or not open then
-    tele.extensions.track.track()
-    return
-  end
-  open()
-end, {
-  complete = function() return { "bundles", "marks", "roots", "track", "views" } end,
-  desc = "Open a picker.",
-  nargs = "?",
 })
 
 cmd("TrackMark", function(...)

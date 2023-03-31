@@ -2,6 +2,7 @@ local M = {}
 
 local A = vim.api
 local Config = require("track.config")
+local Save = Config.get_save_config()
 local State = require("track.state")
 local Entry = require("telescope._extensions.track.entry")
 
@@ -41,8 +42,10 @@ function M.finder(views_options, results)
 end
 
 function M.picker(options)
-  options = Config.extend(vim.F.if_nil(options, {}))
-  local views_options = options.pickers.views
+  options = vim.F.if_nil(options, {})
+  options = Config.extend_pickers(options)
+  local views_options = options.views
+  options.cwd = vim.F.if_nil(options.cwd, views_options.track_options.root_path())
   local views_hooks = views_options.hooks
   State.load()
 
@@ -63,7 +66,7 @@ function M.picker(options)
         if valid and A.nvim_get_mode().mode == "i" and current_picker._original_mode ~= "i" then
           pcall(A.nvim_win_set_cursor, window, { cursor[1], cursor[2] + 1 })
         end
-        if options.save.on_views_close then State.save() end
+        if Save.on_views_close then State.save() end
         views_hooks.on_close(buffer, current_picker)
       end)
       actions.select_default:replace(function()
