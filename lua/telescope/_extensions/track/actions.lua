@@ -14,9 +14,9 @@ function M.delete_view(buffer)
   current_picker:delete_selection(Util.mute)
   if #entries == 0 then table.insert(entries, current_picker:get_selection()) end
   for _, entry in ipairs(entries) do
-    local root = State._roots[entry.value.root_name]
+    local root = State._roots[entry.value.root_path]
     if root and not root:empty() then
-      local bundle = root.bundles[entry.value.bundle_name]
+      local bundle = root.bundles[entry.value.bundle_label]
       bundle:remove_mark(entry.value.path)
     end
   end

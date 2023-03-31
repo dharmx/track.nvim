@@ -10,7 +10,7 @@ function Bundle:new(fields)
   bundle.marks = vim.F.if_nil(fields.marks, {})
   bundle.views = vim.F.if_nil(fields.views, {})
   bundle.disable_history = vim.F.if_nil(fields.disable_history, true)
-  bundle.maximum_history  = vim.F.if_nil(fields.maximum_history , 10)
+  bundle.maximum_history  = vim.F.if_nil(fields.maximum_history, 10)
   bundle.history = vim.F.if_nil(fields.history, {})
   bundle._type = "mark"
 

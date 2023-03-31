@@ -2,10 +2,9 @@ local M = {}
 local State = require("track.state")
 local Util = require("track.util")
 local Root = require("track.containers.root")
-local Config = require("track.config").get()
 
 function M.mark(root_path, file, bundle_label, save)
-  assert(root_path, "root_path arg needs to be present.")
+  assert(root_path, "root_path needs to be present.")
   assert(file, "file cannot be nil.")
   file = Util.filter_path(file) -- remove // and trailing /
   State.load() -- load state from savefile if it exists
@@ -24,8 +23,6 @@ function M.mark(root_path, file, bundle_label, save)
     -- create_default_bundle sets root.main = "main"
     if root:empty() then
       root:create_default_bundle()
-      root.bundles[root.main].disable_history = Config.disable_history
-      root.bundles[root.main].maximum_history = Config.maximum_history
     end
     bundle_label = root.main
     if root.bundles[bundle_label].marks[file] then return end
@@ -37,7 +34,7 @@ function M.mark(root_path, file, bundle_label, save)
 end
 
 function M.unmark(root_path, file, bundle_label, save)
-  assert(root_path, "root_path arg needs to be present.")
+  assert(root_path, "root_path needs to be present.")
   file = Util.filter_path(file)
   State.load()
 
@@ -54,7 +51,7 @@ function M.unmark(root_path, file, bundle_label, save)
 end
 
 function M.stash(root_path, save)
-  assert(root_path, "root_path arg needs to be present.")
+  assert(root_path, "root_path needs to be present.")
   State.load()
   local root = State._roots[root_path]
   if not root or root:empty() then return end
@@ -63,7 +60,7 @@ function M.stash(root_path, save)
 end
 
 function M.restore(root_path, save)
-  assert(root_path, "root_path arg needs to be present.")
+  assert(root_path, "root_path needs to be present.")
   State.load()
   local root = State._roots[root_path]
   if not root then return end
@@ -72,7 +69,7 @@ function M.restore(root_path, save)
 end
 
 function M.alternate(root_path, save)
-  assert(root_path, "root_path arg needs to be present.")
+  assert(root_path, "root_path needs to be present.")
   State.load()
   local root = State._roots[root_path]
   if not root then return end
@@ -91,7 +88,7 @@ function M.delete(root_path, bundle_label, save)
 end
 
 function M.move(root_path, file, direction, bundle_label, save)
-  assert(root_path, "root_path arg needs to be present.")
+  assert(root_path, "root_path needs to be present.")
   assert(file, "file cannot be nil.")
   assert(bundle_label, "bundle_label cannot be nil.")
   file = Util.filter_path(file)
@@ -124,14 +121,16 @@ function M.move(root_path, file, direction, bundle_label, save)
   return root.bundles[bundle_label]
 end
 
-function M.view(root_path, bundle_label)
-  assert(root_path, "root_path needs to be present.")
-  State.load()
+function M.history(root_path, bundle_label, disable_history, maximum_history)
   local root = State._roots[root_path]
-  if not root or root:empty() then return {} end
-  bundle_label = vim.F.if_nil(bundle_label, root.main)
-  if not root.bundles[bundle_label] then return {} end
-  return root.bundles[bundle_label].views
+  if root and not root:empty() then
+    bundle_label = vim.F.if_nil(bundle_label, root.main)
+    local bundle = root.bundles[bundle_label]
+    if bundle and not bundle:empty() then
+      bundle.disable_history = disable_history
+      bundle.maximum_history = maximum_history
+    end
+  end
 end
 
 return M

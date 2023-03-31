@@ -15,7 +15,7 @@ local actions_state = require("telescope.actions.state")
 function M.resulter(views_options)
   local results = {}
   local root_path = views_options.track_options.root_path()
-  local root = vim.deepcopy(State._roots[root_path])
+  local root = State._roots[root_path]
   local bundle_label = views_options.track_options.bundle_label(root)
   views_options.prompt_title = vim.F.if_nil(views_options.prompt_title, string.format("Views[%s]", bundle_label))
 
@@ -24,10 +24,11 @@ function M.resulter(views_options)
     if bundle and not bundle:empty() then
       local views = bundle.views()
       for index, view in ipairs(views) do
-        view.index = index
-        view.root_name = root_path
-        view.bundle_name = bundle_label
-        table.insert(results, index, view)
+        local _view = vim.deepcopy(view)
+        _view.index = index
+        _view.root_path = root_path
+        _view.bundle_label = bundle_label
+        table.insert(results, index, _view)
       end
     end
   end

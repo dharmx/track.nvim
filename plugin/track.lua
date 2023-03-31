@@ -44,6 +44,7 @@ cmd("TrackMark", function(...)
   local cwd = V.getcwd()
   for _, file in ipairs(files) do
     Core.mark(cwd, file, nil, Config.save.on_mark)
+    Core.history(cwd, nil, Config.disable_history, Config.maximum_history)
   end
 end, {
   complete = "file",
@@ -58,7 +59,10 @@ cmd("TrackMarkAllOpened", function()
   local listed_buffers = V.getbufinfo({ listed = 1 })
   for _, info in ipairs(listed_buffers) do
     local name = V.bufname(info.bufnr)
-    if name ~= "" and not name:match("^term://") then Core.mark(cwd, name, nil, Config.save.on_mark) end
+    if name ~= "" and not name:match("^term://") then
+      Core.mark(cwd, name, nil, Config.save.on_mark)
+      Core.history(cwd, nil, Config.disable_history, Config.maximum_history)
+    end
   end
 end, {
   desc = "Mark all opened files.",
