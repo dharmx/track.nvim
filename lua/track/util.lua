@@ -1,6 +1,5 @@
 ---@diagnostic disable: param-type-mismatch
 local M = {}
-local A = vim.api
 
 function M.mute() end
 

@@ -1,11 +1,41 @@
----@diagnostic disable: undefined-field
+---@diagnostic disable: undefined-field, unused-local, param-type-mismatch, assign-type-mismatch
+
+---Root represents a directory in track.nvim. This is synonymous to cwd/project.
+---A root will contain a map of bundles and the bundles will contain marks. A root will
+---also contain a `main` key which (just like GIT) will be the default bundle of the root.
+---@class Root
+---@field path string Path to root.
+---@field label? string Small description/title about the root.
+---@field links? string[] Shortcuts to other roots.
+---@field bundles? Bundle[] Bundle map. Key is the same as `Bundle.label` and value is a `Bundle` instance.
+---@field main? string Master bundle. This is similar to the `main` branch in GIT.
+---@field stashed? string Flag variable that will be set if a bundle has been stashed.
+---@field previous? string Flag variable that will be set if the `main` bundle has an alternate bundle.
+---@field _NAME string Type.
+
+---@class RootFields
+---@field path string Path to root.
+---@field label? string Small description/title about the root.
+---@field links? string[] Shortcuts to other roots.
+---@field bundles? Bundle[] Bundle map. Key is the same as `Bundle.label` and value is a `Bundle` instance.
+---@field main? string Master bundle. This is similar to the `main` branch in GIT.
+---@field stashed? string Flag variable that will be set if a bundle has been stashed.
+---@field previous? string Flag variable that will be set if the `main` bundle has an alternate bundle.
+
+---@type Root
 local Root = {}
+
+---@module "track.containers.bundle"
 local Bundle = require("track.containers.bundle")
 
+-- TODO: Implement history.
 -- TODO: Implement links.
 -- TODO: Implement if cwd/block - cwd != "" then bundles from cwd will be shown instead of cwd/block.
 -- TODO: Implement a way to distinguish projects. Like if cwd has .git then mark it as a git directory.
 
+---Create a new `Root` instance.
+---@param fields RootFields Available root attributes/fields.
+---@return Root
 function Root:new(fields)
   assert(fields and type(fields) == "table", "fields: table cannot be empty")
   assert(fields.path and type(fields.path) == "string", "Root needs to have a path: string field.")
@@ -23,36 +53,56 @@ function Root:new(fields)
     end,
   })
 
-  root.main = fields.main
-  root._stashed = nil
-  root._previous = nil
-  root._type = "root"
+  root.main = fields.main -- main bundle (being empty implies that root is empty)
+  root.stashed = nil -- currently stashed bundle (if any)
+  root.previous = nil -- previous bundle (alternate)
+  root._NAME = "root"
 
   self.__index = self
   setmetatable(root, self)
   return root
 end
 
+---Create a new `Bundle` inside the `Root`. No collision handling implemented. If an existing bundle name
+---is supplied then it will get erased with an empty one.
+---@param bundle_label string The name/label of the `Bundle`.
+---@param main? boolean Make this the default `Bundle`.
+---@param marks? Mark[]|table<string, Mark> Optional List of marks.
 function Root:new_bundle(bundle_label, main, marks)
   assert(bundle_label and type(bundle_label) == "string", "bundle_label needs to be a string and not nil.")
   main = vim.F.if_nil(main, false)
-  self.bundles[bundle_label] = Bundle:new({ label = bundle_label, marks = vim.F.if_nil(marks, {}) })
+  marks = vim.F.if_nil(marks, {})
+  self.bundles[bundle_label] = Bundle:new({ label = bundle_label })
+
+  if vim.tbl_islist(marks) then
+    for _, mark in ipairs(marks) do
+      self.bundles[bundle_label]:add_mark(mark)
+    end
+  else
+    self.bundles[bundle_label].marks = marks
+  end
   if main then self:change_main_bundle(bundle_label) end
 end
 
+---Change the default bundle. Current bundle will be saved into `Root.previous` variable.
+---@param new_main string New default `Bundle`.
 function Root:change_main_bundle(new_main)
   assert(new_main and type(new_main) == "string", "new_main needs to be a string|nil.")
   if not new_main then return end
   if not vim.tbl_contains(vim.tbl_keys(self.bundles), new_main) then return end
-  self._previous = self.main
+  self.previous = self.main
   self.main = new_main
 end
 
+---Check if a bundle exists or, not. `true` if it does `false`, otherwise.
+---@param bundle_label string Label of the `Bundle` that needs to be seached for.
+---@return boolean
 function Root:bundle_exists(bundle_label)
   assert(bundle_label and type(bundle_label) == "string", "bundle_label needs to be a string and not nil.")
   return not not self.bundles[bundle_label]
 end
 
+---Create the default `Bundle`. This will be removed.
 function Root:create_default_bundle()
   if vim.tbl_isempty(self.bundles) or not self.bundle["main"] then
     self:new_bundle("main")
@@ -60,15 +110,28 @@ function Root:create_default_bundle()
   end
 end
 
+---Get the main `Bundle` instance. This is not a copy but a reference.
+---@param create? boolean Create the main `Bundle` if it is empty. This will be removed.
+---@return Bundle
 function Root:get_main_bundle(create)
   if create then self:create_default_bundle() end
   return self.bundles[self.main]
 end
 
+---See if the `Root` is empty. `true` if it does `false`, otherwise. This will be removed.
+---@return boolean
 function Root:empty() return not self.main end
 
+---Generate a random bundle name using current time (in milliseconds).
+---@return string
 local function date_label() return "new-bundle-" .. os.date("%s") end
+
+---Dummy function that always returns `true`.
+---@return true
 local function return_true() return true end
+
+---@param on_collision fun(): boolean
+---@param create_label fun(): string
 function Root:stash_bundle(on_collision, create_label)
   if self:empty() then return end
   create_label = vim.F.if_nil(create_label, date_label)
@@ -81,29 +144,29 @@ function Root:stash_bundle(on_collision, create_label)
   local wipe = on_collision()
   assert(type(wipe) == "boolean", "on_collision should return boolean")
   if self.bundles[new_name] and not wipe then return end
-  self._stashed = self.main
+  self.stashed = self.main
   self:new_bundle(new_name, true)
 end
 
 function Root:restore_bundle()
-  if self:empty() or not self._stashed then return end
-  if self.bundles[self._stashed] then self:change_main_bundle(self._stashed) end
-  self._stashed = nil
+  if self:empty() or not self.stashed then return end
+  if self.bundles[self.stashed] then self:change_main_bundle(self.stashed) end
+  self.stashed = nil
 end
 
 function Root:alternate_bundle()
-  if self:empty() or not self._previous or not self.bundles[self._previous] then return end
-  self:change_main_bundle(self._previous)
+  if self:empty() or not self.previous or not self.bundles[self.previous] then return end
+  self:change_main_bundle(self.previous)
 end
 
 ---@todo
 function Root:delete__bundle(bundle_label) end
 
 ---@todo
-function Root:unionize__bundle(bundle_labels) end
+function Root:bundle__union(bundle_labels) end
 
 ---@todo
-function Root:intersect__bundle(bundle_labels) end
+function Root:bundle__intersection(bundle_labels) end
 
 function Root:link(root_path)
   assert(root_path and type(root_path) == "string", "root_path needs to be a string and not nil.")
