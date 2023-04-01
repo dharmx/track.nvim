@@ -3,8 +3,9 @@ local M = {}
 local A = vim.api
 local Config = require("track.config")
 local Save = Config.get_save_config()
+
 local State = require("track.state")
-local Entry = require("telescope._extensions.track.entry")
+local EntryMakers = require("telescope._extensions.track.entry_makers")
 
 local actions = require("telescope.actions")
 local pickers = require("telescope.pickers")
@@ -17,15 +18,15 @@ function M.resulter(views_options)
   local root_path = views_options.track_options.root_path()
   local root = State._roots[root_path]
   local bundle_label = views_options.track_options.bundle_label(root)
-  views_options.prompt_title = vim.F.if_nil(views_options.prompt_title, string.format("Views[%s]", bundle_label))
 
   if root and not root:empty() then
     local bundle = root.bundles[bundle_label]
     if bundle and not bundle:empty() then
       local views = bundle.views()
+
       for index, view in ipairs(views) do
         local _view = vim.deepcopy(view)
-        _view.index = index
+        _view.index = index -- needed for dynamic keymaps 
         _view.root_path = root_path
         _view.bundle_label = bundle_label
         table.insert(results, index, _view)
@@ -35,21 +36,24 @@ function M.resulter(views_options)
   return results
 end
 
+-- this can be passed into picker:refresh(<finder>)
 function M.finder(views_options, results)
   return finders.new_table({
     results = results,
-    entry_maker = Entry.views(views_options)
+    entry_maker = EntryMakers.gen_from_views(views_options)
   })
 end
 
 function M.picker(options)
   options = vim.F.if_nil(options, {})
   options = Config.extend_pickers(options)
+
   local views_options = options.views
   options.cwd = vim.F.if_nil(options.cwd, views_options.track_options.root_path())
   local views_hooks = views_options.hooks
   State.load()
 
+  -- this will be used in attach_mappings
   local results = M.resulter(views_options)
   views_hooks.on_open()
   local picker = pickers.new(views_options, {
@@ -74,6 +78,8 @@ function M.picker(options)
         actions.close(buffer)
         views_hooks.on_choose(buffer, current_picker)
       end)
+
+      -- dynamic keymaps
       for _, mark in ipairs(results) do views_hooks.on_each_view(buffer, map, mark) end
       return true
     end,

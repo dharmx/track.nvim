@@ -1,5 +1,4 @@
 local present, telescope = pcall(require, "telescope")
-
 if not present then
   vim.notify("This plugin requires telescope.nvim.")
   return
