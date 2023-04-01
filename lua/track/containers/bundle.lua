@@ -1,18 +1,51 @@
+---A virtual mark-map. Allows one to create different versions of marks that
+---is better suitted to a part of a project that you might be working on.
+---
+---For instance:
+---Working at part `A` of a project will require you to frequent
+---`A1`, `A2` and `A3` files and working part `B` would require `B1`, `B2`, `B3`.
+---Normally, without bundles one may put all project files (`A1-3` and `B1-3`) in
+---the mark-list or, remove all `A1-3` files and add `B1-3` files and vice-versa.
+---This adds overhead.
+---Now, with bundles you just need to **stash** the current bundle which contains A1-3
+---(say) and add `B1-3` to the new bundle. (Yes, this is just like GIT.)
+---@class Bundle
+---@field label string Name of the bundle. Similar to setting a GIT branch name.
+---@field disable_history? boolean Deleting marks will not store marks in the `history` table.
+---@field maximum_history? number Maximum number of marks that are allowed to be in `history` table.
+---@field history Mark[] Deleted/Uneeded marks are sent here. This acts as a recycle bin for marks.
+---@field marks table<string, Mark> Mark map. Key is the same as `Mark.path`. Therefore, no duplicates.
+---@field views string[] Paths of newly added marks are inserted into this list. This is to maintain order.
+---@field _NAME string Type.
+
+---@class BundleFields
+---@field label string Name of the bundle. Similar to setting a GIT branch name.
+---@field disable_history? boolean Deleting marks will not store marks in the `history` table.
+---@field maximum_history? number Maximum number of marks that are allowed to be in `history` table.
+---@field history Mark[] Deleted/Uneeded marks are sent here. This acts as a recycle bin for marks.
+
+---@type Bundle
 local Bundle = {}
+
+---@module "track.containers.mark"
 local Mark = require("track.containers.mark")
 
+---Create a new `Bundle` object.
+---@param fields BundleFields Available bundle attributes/fields.
+---@return Bundle
 function Bundle:new(fields)
   assert(fields and type(fields) == "table", "fields: table cannot be empty.")
   assert(fields.label and type(fields.label) == "string", "Bundle needs to have a label: string.")
 
   local bundle = {}
   bundle.label = fields.label
-  bundle.marks = vim.F.if_nil(fields.marks, {})
-  bundle.views = vim.F.if_nil(fields.views, {})
+
+  bundle.marks = {}
+  bundle.views = {}
   bundle.disable_history = vim.F.if_nil(fields.disable_history, true)
-  bundle.maximum_history  = vim.F.if_nil(fields.maximum_history, 10)
+  bundle.maximum_history = vim.F.if_nil(fields.maximum_history, 10)
   bundle.history = vim.F.if_nil(fields.history, {})
-  bundle._type = "mark"
+  bundle._NAME = "mark"
 
   self.__index = self
   setmetatable(bundle, self)
@@ -23,8 +56,10 @@ end
 
 -- Metatable Setters {{{
 ---@private
+---Helper for re-registering the `__call` metatable to `Bundle.views` field.
 function Bundle:_callize_views()
   setmetatable(self.views, {
+    ---@return Mark[]?
     __call = function(views, _)
       local view_marks = {}
       for _, view in ipairs(views) do
@@ -36,6 +71,7 @@ function Bundle:_callize_views()
 end
 
 ---@private
+---Helper for re-registering the `__call` metatable to `Bundle.marks` field.
 function Bundle:_callize_marks()
   setmetatable(self.marks, {
     __call = function(marks, action)
@@ -46,44 +82,73 @@ function Bundle:_callize_marks()
 end
 -- }}}
 
+---Add a mark into the `Bundle`.
+---@param mark Mark|string `Mark` or, the path that will be turned into a `Mark`.
+---@param label? string Title of the mark.
+---@return Mark
 function Bundle:add_mark(mark, label)
-  if type(mark) == "table" and mark._type == "mark" then
+  if type(mark) == "table" and mark._NAME == "mark" then
     self.marks[mark.path] = mark
     return self.marks[mark.path]
   end
+  -- if it does not exist then create it
+  ---@diagnostic disable-next-line: assign-type-mismatch
   self.marks[mark] = Mark:new({ path = mark, label = label })
+  -- adding a mark will add its path to the views table
   table.insert(self.views, mark)
   return self.marks[mark]
 end
 
-function Bundle:remove_mark(path)
-  assert(path and type(path), "path: string cannot be empty.")
-  local removed_mark = self.marks[path]
-  self.marks[path] = nil
-  self.views = vim.tbl_filter(function(item) return item ~= path end, self.views)
+---Remove a mark from the Bundle. Returns the removed mark (if available).
+---@param mark Mark|string `Mark` or, the path that will be removed from the `Bundle.marks` table.
+---@return Mark
+function Bundle:remove_mark(mark)
+  local removed_mark
+  if type(mark) == "table" and mark._NAME == "mark" then
+    removed_mark = self.marks[mark.path]
+  else
+    removed_mark = self.marks[mark]
+  end
+
+  self.marks[removed_mark.path] = nil
+  -- removing a mark will also remove its path from the views table
+  -- how do I make this faster O(N) is not good.
+  -- thinking more about this... can the marklist go beyond 100 :thonk:
+  self.views = vim.tbl_filter(function(item) return item ~= removed_mark.path end, self.views)
+  -- self.views is being overwritten which means any metatable will also be overwritten
+  -- we need to re-register the __call metatable so that external parties can call
+  -- Bundle.view() again.
   self:_callize_views()
+  -- record history: removed marks will be inserted into the self.history table (by your will)
   self:insert_history(removed_mark)
   return removed_mark
 end
 
+---Reset the `Bundle`. All marks will be purged.
 function Bundle:clear()
   for _, mark in pairs(self.marks) do
-    table.insert(self.history, mark)
+    self:insert_history(mark)
   end
   self.marks = {}
   self.views = {}
+  -- re-attach __call.
   self:_callize_views()
   self:_callize_marks()
 end
 
+---Insert mark into the history list.
+---@param mark Mark The `Mark` object that needs to be inserted into the history list.
+---@param force? boolean overrides `Bundle.disable_history`.
 function Bundle:insert_history(mark, force)
   local mark_type = type(mark)
-  assert(mark_type == "table" and mark._type == "mark", "mark: Mark cannot be nil.")
+  assert(mark_type == "table" and mark._NAME == "mark", "mark: Mark cannot be nil.")
   if self.disable_history and not force then return end
   table.insert(self.history, 1, mark)
   if #self.history > self.maximum_history then table.remove(self.history, #self.history) end
 end
 
+---Check if the `Bundle` has any marks.
+---@return boolean
 function Bundle:empty() return vim.tbl_isempty(self.marks) end
 
 return Bundle
