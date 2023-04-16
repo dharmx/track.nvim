@@ -45,23 +45,30 @@ function Root:new(fields)
   root.label = fields.label
   root.links = fields.links
 
-  root.bundles = vim.F.if_nil(fields.bundles, {})
-  setmetatable(root.bundles, {
+  root.bundles = {}
+  root.stashed = nil -- currently stashed bundle (if any)
+  root.previous = nil -- previous bundle (alternate)
+  root._NAME = "root"
+  root.main = vim.F.if_nil(fields.main, "main")
+
+  self.__index = self
+  setmetatable(root, self)
+  self.new_bundle(root, root.main, true)
+  self._callize_bundles(root)
+  return root
+end
+
+---@private
+---Helper for re-registering the `__call` metatable to `Root.bundles` field.
+function Root:_callize_bundles()
+  setmetatable(self.bundles, {
     __call = function(bundles, action)
       if action == "string" then return vim.tbl_keys(bundles) end
       return vim.tbl_values(bundles)
     end,
   })
-
-  root.main = fields.main -- main bundle (being empty implies that root is empty)
-  root.stashed = nil -- currently stashed bundle (if any)
-  root.previous = nil -- previous bundle (alternate)
-  root._NAME = "root"
-
-  self.__index = self
-  setmetatable(root, self)
-  return root
 end
+
 
 ---Create a new `Bundle` inside the `Root`. No collision handling implemented. If an existing bundle name
 ---is supplied then it will get erased with an empty one.
@@ -102,25 +109,11 @@ function Root:bundle_exists(bundle_label)
   return not not self.bundles[bundle_label]
 end
 
----Create the default `Bundle`. This will be removed.
-function Root:create_default_bundle()
-  if vim.tbl_isempty(self.bundles) or not self.bundle["main"] then
-    self:new_bundle("main")
-    self:change_main_bundle("main")
-  end
-end
-
 ---Get the main `Bundle` instance. This is not a copy but a reference.
----@param create? boolean Create the main `Bundle` if it is empty. This will be removed.
 ---@return Bundle
-function Root:get_main_bundle(create)
-  if create then self:create_default_bundle() end
+function Root:get_main_bundle()
   return self.bundles[self.main]
 end
-
----See if the `Root` is empty. `true` if it does `false`, otherwise. This will be removed.
----@return boolean
-function Root:empty() return not self.main end
 
 ---Generate a random bundle name using current time (in milliseconds).
 ---@return string
@@ -133,7 +126,6 @@ local function return_true() return true end
 ---@param on_collision fun(): boolean
 ---@param create_label fun(): string
 function Root:stash_bundle(on_collision, create_label)
-  if self:empty() then return end
   create_label = vim.F.if_nil(create_label, date_label)
   on_collision = vim.F.if_nil(on_collision, return_true)
   assert(type(create_label) == "function", "create_label must be a fun(): string")
@@ -149,13 +141,13 @@ function Root:stash_bundle(on_collision, create_label)
 end
 
 function Root:restore_bundle()
-  if self:empty() or not self.stashed then return end
+  if not self.stashed then return end
   if self.bundles[self.stashed] then self:change_main_bundle(self.stashed) end
   self.stashed = nil
 end
 
 function Root:alternate_bundle()
-  if self:empty() or not self.previous or not self.bundles[self.previous] then return end
+  if not self.previous or not self.bundles[self.previous] then return end
   self:change_main_bundle(self.previous)
 end
 

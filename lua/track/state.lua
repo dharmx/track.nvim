@@ -116,8 +116,9 @@ function M.loadsave(action, loadpath, on_load)
       label = root.label,
       links = root.links,
       main = root.main,
-      bundles = parse_bundles(root.bundles), -- delegate to helper
     })
+    M._roots[path].bundles = parse_bundles(root.bundles) -- delegate to helper
+    M._roots[path]:_callize_bundles()
 
     -- private
     M._roots[path].stashed = root.stashed

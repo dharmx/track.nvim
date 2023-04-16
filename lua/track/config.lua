@@ -112,7 +112,7 @@ M._defaults = {
       end,
       track_options = {
         bundle_label = function(root)
-          if root and not root:empty() then return root.main end
+          if root then return root.main end
           return "main"
         end,
         root_path = vim.fn.getcwd,
