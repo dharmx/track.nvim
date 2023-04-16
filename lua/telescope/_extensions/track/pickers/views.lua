@@ -19,7 +19,7 @@ function M.resulter(views_options)
   local root = State._roots[root_path]
   local bundle_label = views_options.track_options.bundle_label(root)
 
-  if root and not root:empty() then
+  if root then
     local bundle = root.bundles[bundle_label]
     if bundle and not bundle:empty() then
       local views = bundle.views()

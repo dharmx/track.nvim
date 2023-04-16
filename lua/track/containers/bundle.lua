@@ -45,7 +45,7 @@ function Bundle:new(fields)
   bundle.disable_history = vim.F.if_nil(fields.disable_history, true)
   bundle.maximum_history = vim.F.if_nil(fields.maximum_history, 10)
   bundle.history = vim.F.if_nil(fields.history, {})
-  bundle._NAME = "mark"
+  bundle._NAME = "bundle"
 
   self.__index = self
   setmetatable(bundle, self)
