@@ -16,7 +16,7 @@ function M.delete_view(buffer)
 
   for _, entry in ipairs(entries) do
     local root = State._roots[entry.value.root_path]
-    if root and not root:empty() then
+    if root then
       local bundle = root.bundles[entry.value.bundle_label]
       bundle:remove_mark(entry.value.path)
     end

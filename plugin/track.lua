@@ -80,7 +80,7 @@ end, {
   complete = function()
     local cwd = V.getcwd()
     local root = require("track.state")._roots[cwd]
-    if root and not root:empty() then
+    if root then
       local bundle = root:get_main_bundle()
       if bundle then return bundle.marks("string") end
       return {}
@@ -99,7 +99,7 @@ end, {
   complete = function()
     local cwd = V.getcwd()
     local root = require("track.state")._roots[cwd]
-    if root and not root:empty() then return root.bundles("string") end
+    if root then return root.bundles("string") end
     return {}
   end,
   desc = "Stash current bundle.",
