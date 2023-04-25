@@ -3,6 +3,7 @@ local M = {}
 local A = vim.api
 local Config = require("track.config")
 local Save = Config.get_save_config()
+local Log = require("track.log")._log
 
 local State = require("track.state")
 local EntryMakers = require("telescope._extensions.track.entry_makers")
@@ -71,7 +72,10 @@ function M.picker(options)
         if valid and A.nvim_get_mode().mode == "i" and current_picker._original_mode ~= "i" then
           pcall(A.nvim_win_set_cursor, window, { cursor[1], cursor[2] + 1 })
         end
-        if Save.on_views_close then State.save() end
+        if Save.on_views_close then
+          State.save()
+          Log.info("Views.picker(): closed telescope.track.views and saved state")
+        end
         views_hooks.on_close(buffer, current_picker)
       end)
       actions.select_default:replace(function()

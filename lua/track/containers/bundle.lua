@@ -17,18 +17,16 @@
 ---@field marks table<string, Mark> Mark map. Key is the same as `Mark.path`. Therefore, no duplicates.
 ---@field views string[] Paths of newly added marks are inserted into this list. This is to maintain order.
 ---@field _NAME string Type.
+local Bundle = {}
+
+local Mark = require("track.containers.mark")
+local Log = require("track.log")._log
 
 ---@class BundleFields
 ---@field label string Name of the bundle. Similar to setting a GIT branch name.
 ---@field disable_history? boolean Deleting marks will not store marks in the `history` table.
 ---@field maximum_history? number Maximum number of marks that are allowed to be in `history` table.
 ---@field history Mark[] Deleted/Uneeded marks are sent here. This acts as a recycle bin for marks.
-
----@type Bundle
-local Bundle = {}
-
----@module "track.containers.mark"
-local Mark = require("track.containers.mark")
 
 ---Create a new `Bundle` object.
 ---@param fields BundleFields Available bundle attributes/fields.
@@ -89,6 +87,7 @@ end
 function Bundle:add_mark(mark, label)
   if type(mark) == "table" and mark._NAME == "mark" then
     self.marks[mark.path] = mark
+    Log.trace("Bundle.add_mark(): new mark " .. mark.path .. " has been added")
     return self.marks[mark.path]
   end
   -- if it does not exist then create it
@@ -96,6 +95,7 @@ function Bundle:add_mark(mark, label)
   self.marks[mark] = Mark:new({ path = mark, label = label })
   -- adding a mark will add its path to the views table
   table.insert(self.views, mark)
+  Log.trace("Bundle.add_mark(): new mark " .. mark .. " has been added")
   return self.marks[mark]
 end
 
@@ -121,6 +121,7 @@ function Bundle:remove_mark(mark)
   self:_callize_views()
   -- record history: removed marks will be inserted into the self.history table (by your will)
   self:insert_history(removed_mark)
+  Log.trace("Bundle.remove_mark(): mark " .. removed_mark.path .. " has been removed")
   return removed_mark
 end
 
@@ -134,6 +135,7 @@ function Bundle:clear()
   -- re-attach __call.
   self:_callize_views()
   self:_callize_marks()
+  Log.trace("Bundle.clear(): Bundle.marks and Bundle.views has been emptied")
 end
 
 ---Insert mark into the history list.
@@ -145,6 +147,7 @@ function Bundle:insert_history(mark, force)
   if self.disable_history and not force then return end
   table.insert(self.history, 1, mark)
   if #self.history > self.maximum_history then table.remove(self.history, #self.history) end
+  Log.trace("Bundle.insert_history(): mark " .. mark.path .. " has been recorded into history")
 end
 
 ---Check if the `Bundle` has any marks.

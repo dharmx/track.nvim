@@ -1,5 +1,3 @@
----@diagnostic disable: undefined-field, unused-local, param-type-mismatch, assign-type-mismatch
-
 ---Root represents a directory in track.nvim. This is synonymous to cwd/project.
 ---A root will contain a map of bundles and the bundles will contain marks. A root will
 ---also contain a `main` key which (just like GIT) will be the default bundle of the root.
@@ -7,11 +5,20 @@
 ---@field path string Path to root.
 ---@field label? string Small description/title about the root.
 ---@field links? string[] Shortcuts to other roots.
----@field bundles? Bundle[] Bundle map. Key is the same as `Bundle.label` and value is a `Bundle` instance.
----@field main? string Master bundle. This is similar to the `main` branch in GIT.
+---@field bundles Bundle[] Bundle map. Key is the same as `Bundle.label` and value is a `Bundle` instance.
+---@field main string Master bundle. This is similar to the `main` branch in GIT.
 ---@field stashed? string Flag variable that will be set if a bundle has been stashed.
 ---@field previous? string Flag variable that will be set if the `main` bundle has an alternate bundle.
 ---@field _NAME string Type.
+local Root = {}
+
+local Log = require("track.log")._log
+
+---@module "track.containers.bundle"
+local Bundle = require("track.containers.bundle")
+
+-- TODO: Implement if cwd/block - cwd != "" then bundles from cwd will be shown instead of cwd/block.
+-- TODO: Implement a way to distinguish projects. Like if cwd has .git then mark it as a git directory.
 
 ---@class RootFields
 ---@field path string Path to root.
@@ -21,17 +28,6 @@
 ---@field main? string Master bundle. This is similar to the `main` branch in GIT.
 ---@field stashed? string Flag variable that will be set if a bundle has been stashed.
 ---@field previous? string Flag variable that will be set if the `main` bundle has an alternate bundle.
-
----@type Root
-local Root = {}
-
----@module "track.containers.bundle"
-local Bundle = require("track.containers.bundle")
-
--- TODO: Implement history.
--- TODO: Implement links.
--- TODO: Implement if cwd/block - cwd != "" then bundles from cwd will be shown instead of cwd/block.
--- TODO: Implement a way to distinguish projects. Like if cwd has .git then mark it as a git directory.
 
 ---Create a new `Root` instance.
 ---@param fields RootFields Available root attributes/fields.
@@ -69,7 +65,6 @@ function Root:_callize_bundles()
   })
 end
 
-
 ---Create a new `Bundle` inside the `Root`. No collision handling implemented. If an existing bundle name
 ---is supplied then it will get erased with an empty one.
 ---@param bundle_label string The name/label of the `Bundle`.
@@ -80,12 +75,16 @@ function Root:new_bundle(bundle_label, main, marks)
   main = vim.F.if_nil(main, false)
   marks = vim.F.if_nil(marks, {})
   self.bundles[bundle_label] = Bundle:new({ label = bundle_label })
+  Log.trace("Root.new_bundle(): bundle " .. bundle_label .. " has been created")
 
+  ---@diagnostic disable-next-line: param-type-mismatch
   if vim.tbl_islist(marks) then
+    ---@diagnostic disable-next-line: param-type-mismatch
     for _, mark in ipairs(marks) do
       self.bundles[bundle_label]:add_mark(mark)
     end
   else
+    ---@diagnostic disable-next-line: assign-type-mismatch
     self.bundles[bundle_label].marks = marks
   end
   if main then self:change_main_bundle(bundle_label) end
@@ -99,6 +98,7 @@ function Root:change_main_bundle(new_main)
   if not vim.tbl_contains(vim.tbl_keys(self.bundles), new_main) then return end
   self.previous = self.main
   self.main = new_main
+  Log.trace("Root.change_main_bundle(): main bundle has been changed")
 end
 
 ---Check if a bundle exists or, not. `true` if it does `false`, otherwise.
@@ -135,6 +135,8 @@ function Root:stash_bundle(on_collision, create_label)
   assert(type(new_name) == "string", "create_label should return string")
   local wipe = on_collision()
   assert(type(wipe) == "boolean", "on_collision should return boolean")
+  Log.trace("Root.stash_bundle(): main bundle has been stashed")
+
   if self.bundles[new_name] and not wipe then return end
   self.stashed = self.main
   self:new_bundle(new_name, true)
@@ -144,32 +146,44 @@ function Root:restore_bundle()
   if not self.stashed then return end
   if self.bundles[self.stashed] then self:change_main_bundle(self.stashed) end
   self.stashed = nil
+  Log.trace("Root.restore_bundle(): stashed bundle has been restored")
 end
 
 function Root:alternate_bundle()
   if not self.previous or not self.bundles[self.previous] then return end
   self:change_main_bundle(self.previous)
+  Log.trace("Root.alternate_bundle(): main bundle is now previous bundle")
+end
+
+-- Not implemented. {{{
+---@todo
+function Root:delete__bundle(bundle_label)
+  Log.warn("Root.delete__bundle(): this function has not been implemented")
 end
 
 ---@todo
-function Root:delete__bundle(bundle_label) end
+function Root:bundle__union(bundle_labels)
+  Log.warn("Root.bundle__union(): this function has not been implemented")
+end
 
 ---@todo
-function Root:bundle__union(bundle_labels) end
-
----@todo
-function Root:bundle__intersection(bundle_labels) end
+function Root:bundle__intersection(bundle_labels)
+  Log.warn("Root.bundle__intersection(): this function has not been implemented")
+end
+-- }}}
 
 function Root:link(root_path)
   assert(root_path and type(root_path) == "string", "root_path needs to be a string and not nil.")
   self.links = vim.F.if_nil(self.links, {})
   table.insert(self.links, root_path)
+  Log.trace("Root.link(): linked root " .. root_path .. " to current root")
 end
 
 function Root:unlink(root_path)
   assert(root_path and type(root_path) == "string", "root_path needs to be a string and not nil.")
   if not self.links then return end
   self.links = vim.tbl_filter(function(_item) return _item ~= root_path end, self.links)
+  Log.trace("Root.unlink(): unlinked root " .. root_path .. " from current root")
 end
 
 return Root

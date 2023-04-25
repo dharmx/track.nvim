@@ -132,7 +132,7 @@ M._defaults = {
   },
   log = {
     plugin = "track.nvim",
-    level = "error",
+    level = "info",
   },
 }
 
