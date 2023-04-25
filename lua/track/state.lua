@@ -2,11 +2,11 @@ local M = {}
 
 local Config = require("track.config").get()
 local Path = require("plenary.path")
-local Log = require("plenary.log")
 
 local Root = require("track.containers.root")
 local Mark = require("track.containers.mark")
 local Bundle = require("track.containers.bundle")
+local Log = require("track.log")
 
 ---Main state of track.nvim. It tracks all roots.
 ---@type table<string, Root>
@@ -30,12 +30,10 @@ function M._callize_roots(roots)
 end
 M._callize_roots(M._roots)
 
-
 ---If `TrackConfig.savepath` has been loaded (merged) into `M._roots` then `true` else `false`.
 ---@private
 M.loaded = false
 ---@private
-M._log = Log.new(Config.log) -- TODO: Please, FTLOG. Use this. Logging is seriously underrated.
 
 ---@type Path
 local savepath = Path:new(Config.savepath)
@@ -94,22 +92,26 @@ end
 ---@param on_load? function Run this callback after the save file is loaded.
 function M.loadsave(action, loadpath, on_load)
   if not savepath:exists() then
-    M._log.warn("Config.savepath does not exist.")
+    Log.warn("State.loadsave(): " .. savepath.filename .. " does not exist")
     return
   end
 
   ---@diagnostic disable-next-line: cast-local-type
   loadpath = Path:new(loadpath)
   local data = vim.trim(loadpath:read()) -- strip leading and trailing whitespaces
-  if data == "" then return end
+  if data == "" then
+    Log.warn("State.loadsave(): " .. savepath.filename .. " is empty")
+    return
+  end
 
   -- action == "wipe" will clear the current state (M._roots)
   -- and then parse the supplied savefile
   -- otherwise it will be merged with current state (maybe I should remove this?)
-  local roots = vim.json.decode(data)
+  local roots = vim.F.if_nil(vim.json.decode(data), {})
   if action == "wipe" then M.wipe() end
   assert(action == "extend" or action == "wipe", "action: string[extend|wipe]")
 
+  ---@diagnostic disable-next-line: param-type-mismatch
   for path, root in pairs(roots) do
     M._roots[path] = Root:new({
       path = root.path,
@@ -124,6 +126,7 @@ function M.loadsave(action, loadpath, on_load)
     M._roots[path].stashed = root.stashed
     M._roots[path].previous = root.previous
   end
+  Log.info("State.loadsave(): loaded state from " .. savepath.filename)
   if on_load then on_load() end
 end
 
@@ -131,6 +134,7 @@ end
 ---@param on_reload? function Callback that gets called after reload.
 function M.reload(on_reload)
   M.loadsave("extend", savepath.filename, on_reload)
+  Log.info("State.reload(): reloaded " .. savepath.filename)
 end
 
 -- you will see this called practically everywhere in core.lua
@@ -140,6 +144,7 @@ end
 function M.load(on_load)
   if M._loaded then return end
   M._loaded = true -- allow calling this only once.
+  Log.info("State.load(): loaded state from " .. savepath.filename)
   M.reload(on_load)
 end
 
@@ -148,7 +153,7 @@ end
 ---@param on_save? function Callback that is called after changes are written to `Config.savepath`.
 function M.save(before_save, on_save)
   if not savepath:exists() then
-    M._log.info("M.save(): Config.savepath does not exist. Creating...")
+    Log.warn("M.save(): " .. savepath.filename .. " does not exist. Creating...")
     savepath:touch({ parents = true })
   end
 
@@ -156,6 +161,7 @@ function M.save(before_save, on_save)
   if before_save and before_save() then return end
   local encoded = vim.json.encode(M._roots)
   savepath:write(encoded, "w")
+  Log.info("State.save(): saved current state into " .. savepath.filename)
   if on_save then on_save() end
 end
 
@@ -165,8 +171,10 @@ function M.rm(clean)
   if clean then
     -- empty JSON object
     savepath:write("{}", "w")
+    Log.info("State.rm(): cleared " .. savepath.filename)
     return
   end
+  Log.info("State.rm(): removed " .. savepath.filename)
   savepath:rm()
 end
 

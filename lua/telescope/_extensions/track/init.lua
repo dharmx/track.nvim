@@ -6,17 +6,17 @@ end
 
 -- TODO: Implement the links picker.
 -- TODO: Add ability to delete entries from bundles, views, links and marks pickers.
--- TODO: Implement a way to edit bundle, root and mark labels.
 -- TODO: Implement copying and pasting (both mutiple and single).
 -- TODO: Implement move up and move down (both multiple and single).
--- TODO: Implement highlight_one_row.
 -- TODO: Implement row edits.
 -- TODO: Implement save_modify.
 -- TODO: Implement a previewer for viewing metadata and file contents.
--- TODO: Implement entry_makers.
 
 return telescope.register_extension({
-  setup = require("track.config").merge_pickers,
+  setup = function(options)
+    require("track.config").merge_pickers(options)
+    require("track.log").info("Telescope.Init.setup(): telescope extension has been configured")
+  end,
   exports = {
     views = require("telescope._extensions.track.pickers.views").picker,
   },

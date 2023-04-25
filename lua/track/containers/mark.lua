@@ -10,16 +10,14 @@
 ---@field label? string Optional label for that the mark.
 ---@field absolute string Absolute path to mark.
 ---@field _NAME string Type.
-
----@class MarkFields
----@field path string Path to mark.
----@field label? string Optional label for that the mark.
-
----@type Mark
 local Mark = {}
 
 local V = vim.fn
 local U = vim.loop
+
+---@class MarkFields
+---@field path string Path to mark.
+---@field label? string Optional label for that the mark.
 
 ---Create a new `Mark` object.
 ---@param fields MarkFields Available mark attributes/fields.
