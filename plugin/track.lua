@@ -28,6 +28,8 @@ cmd("Track", function(...)
     State.wipe()
   elseif args[1] == "remove" then
     State.rm()
+  else
+    require("telescope").extensions.track.views()
   end
 end, {
   desc = "State operations like: save, load, loadsave, reload, wipe and remove. marks for showing current mark list.",

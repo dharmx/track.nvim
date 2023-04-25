@@ -43,7 +43,7 @@ local Util = require("track.util")
 ---@field views TrackPickersViewsConfig Configuration options relating to the `views` telescope picker.
 
 ---@class TrackLogConfig
----@field level "error"|"warn"|"info"|"trace"|"debug" Log level. The higher the level is, lesser the STDOUT messages will be shown.
+---@field level "error"|"warn"|"info"|"trace"|"debug"|"off" Log level. The higher the level is, lesser the STDOUT messages will be shown.
 ---@field plugin string Name of the plugin.
 
 ---@class TrackConfig
@@ -131,7 +131,7 @@ M._defaults = {
     },
   },
   log = {
-    plugin = "track.nvim",
+    plugin = "track",
     level = "error",
   },
 }
