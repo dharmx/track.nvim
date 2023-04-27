@@ -95,7 +95,10 @@ end
 function Root:change_main_bundle(new_main)
   assert(new_main and type(new_main) == "string", "new_main needs to be a string|nil.")
   if not new_main then return end
-  if not vim.tbl_contains(vim.tbl_keys(self.bundles), new_main) then return end
+  if not vim.tbl_contains(vim.tbl_keys(self.bundles), new_main) then
+    Log.warn("Root.change_main_bundle(): tried changing main to a bundle " .. new_main .. " which does not exist")
+    return
+  end
   self.previous = self.main
   self.main = new_main
   Log.trace("Root.change_main_bundle(): main bundle has been changed")
@@ -155,12 +158,38 @@ function Root:alternate_bundle()
   Log.trace("Root.alternate_bundle(): main bundle is now previous bundle")
 end
 
--- Not implemented. {{{
----@todo
-function Root:delete__bundle(bundle_label)
-  Log.warn("Root.delete__bundle(): this function has not been implemented")
+function Root:delete_main_bundle()
+  local labels = vim.tbl_keys(self.bundles)
+  if #labels == 1 then
+    Log.warn("Root.delete_bundle(): tried deleting last bundle " .. self.main)
+    return
+  end
+
+  for index, label in ipairs(labels) do
+    if label == self.main then
+      table.remove(labels, index)
+      break
+    end
+  end
+  local new_main = labels[1]
+  self:change_main_bundle(new_main)
+  self.bundles[self.main] = nil
 end
 
+function Root:delete_bundle(bundle_label)
+  if not self:bundle_exists(bundle_label) then
+    Log.warn("Root.delete_bundle(): tried deleting a bundle " .. bundle_label .. " that does not exist")
+    return
+  end
+  if self.main == bundle_label then
+    self:delete_main_bundle()
+    return
+  end
+  -- TODO: Implement history.
+  self.bundles[bundle_label] = nil
+end
+
+-- Not implemented. {{{
 ---@todo
 function Root:bundle__union(bundle_labels)
   Log.warn("Root.bundle__union(): this function has not been implemented")

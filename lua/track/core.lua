@@ -102,11 +102,15 @@ end
 ---@param save? function
 function M.delete(root_path, bundle_label, save)
   Log.errors(root_path, "root_path needs to be present.", "Core.delete")
-  Log.errors(bundle_label, "bundle_label needs to be present.", "Core.delete")
   State.load()
   local root = State._roots[root_path]
   if not root then
     Log.warn("Core.delete(): cannot delete bundle as the root " .. root_path .. " does not exist")
+    return
+  end
+
+  if not bundle_label then
+    root:delete_main_bundle()
     return
   end
   root:delete_bundle(bundle_label)
