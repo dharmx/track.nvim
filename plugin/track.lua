@@ -114,6 +114,23 @@ cmd("TrackRestoreBundle", function() require("track.core").restore(V.getcwd()) e
   nargs = 0,
 })
 
+cmd("TrackDeleteBundle", function(...)
+  local label = (...).args
+  local Core = require("track.core")
+  local cwd = V.getcwd()
+  if label == "" then label = nil end
+  Core.delete(cwd, label)
+end, {
+  desc = "Delete bundle.",
+  nargs = "?",
+  complete = function()
+    local cwd = V.getcwd()
+    local root = require("track.state")._roots[cwd]
+    if root then return root.bundles("string") end
+    return {}
+  end,
+})
+
 ---@todo
 cmd("TrackAlternateBundle", function() require("track.core").alternate(V.getcwd()) end, {
   desc = "Restore stashed bundle.",

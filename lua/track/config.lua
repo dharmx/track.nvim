@@ -132,7 +132,7 @@ M._defaults = {
   },
   log = {
     plugin = "track",
-    level = "error",
+    level = "warn",
   },
 }
 
