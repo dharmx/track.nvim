@@ -11,7 +11,7 @@
 ---(say) and add `B1-3` to the new bundle. (Yes, this is just like GIT.)
 ---@class Bundle
 ---@field label string Name of the bundle. Similar to setting a GIT branch name.
----@field disable_history? boolean Deleting marks will not store marks in the `history` table.
+---@field disable_history? boolean Deleting marks will not store said marks in the `history` table.
 ---@field maximum_history? number Maximum number of marks that are allowed to be in `history` table.
 ---@field history Mark[] Deleted/Uneeded marks are sent here. This acts as a recycle bin for marks.
 ---@field marks table<string, Mark> Mark map. Key is the same as `Mark.path`. Therefore, no duplicates.

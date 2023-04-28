@@ -9,6 +9,9 @@
 ---@field main string Master bundle. This is similar to the `main` branch in GIT.
 ---@field stashed? string Flag variable that will be set if a bundle has been stashed.
 ---@field previous? string Flag variable that will be set if the `main` bundle has an alternate bundle.
+---@field disable_history? boolean Deleting bundles will not store said bundles in the `history` table.
+---@field maximum_history? number Maximum number of bundles that are allowed to be in `history` table.
+---@field history Bundle[] Deleted/Uneeded bundle are sent here. This acts as a recycle bin for bundles.
 ---@field _NAME string Type.
 local Root = {}
 
@@ -28,6 +31,9 @@ local Bundle = require("track.containers.bundle")
 ---@field main? string Master bundle. This is similar to the `main` branch in GIT.
 ---@field stashed? string Flag variable that will be set if a bundle has been stashed.
 ---@field previous? string Flag variable that will be set if the `main` bundle has an alternate bundle.
+---@field disable_history? boolean Deleting bundles will not store said bundles in the `history` table.
+---@field maximum_history? number Maximum number of bundles that are allowed to be in `history` table.
+---@field history Bundle[] Deleted/Uneeded bundle are sent here. This acts as a recycle bin for bundles.
 
 ---Create a new `Root` instance.
 ---@param fields RootFields Available root attributes/fields.
@@ -40,6 +46,9 @@ function Root:new(fields)
   root.path = fields.path
   root.label = fields.label
   root.links = fields.links
+  root.disable_history = vim.F.if_nil(fields.disable_history, true)
+  root.maximum_history = vim.F.if_nil(fields.maximum_history, 10)
+  root.history = {}
 
   root.bundles = {}
   root.stashed = nil -- currently stashed bundle (if any)
@@ -159,21 +168,23 @@ function Root:alternate_bundle()
 end
 
 function Root:delete_main_bundle()
-  local labels = vim.tbl_keys(self.bundles)
-  if #labels == 1 then
+  local bundle_labels = vim.tbl_keys(self.bundles)
+  if #bundle_labels == 1 then
     Log.warn("Root.delete_bundle(): tried deleting last bundle " .. self.main)
     return
   end
 
-  for index, label in ipairs(labels) do
-    if label == self.main then
-      table.remove(labels, index)
-      break
+  for index, bundle_label in ipairs(bundle_labels) do
+    if bundle_label == self.main then
+      table.remove(bundle_labels, index)
+      self:change_main_bundle(bundle_labels[1]) -- changes self.main
+      self:insert_history(self.bundles[bundle_label])
+      if self.previous == bundle_label then self.previous = nil end
+      if self.stashed == bundle_label then self.stashed = nil end
+      self.bundles[bundle_label] = nil
+      return
     end
   end
-  local new_main = labels[1]
-  self:change_main_bundle(new_main)
-  self.bundles[self.main] = nil
 end
 
 function Root:delete_bundle(bundle_label)
@@ -185,21 +196,11 @@ function Root:delete_bundle(bundle_label)
     self:delete_main_bundle()
     return
   end
-  -- TODO: Implement history.
+  if self.previous == bundle_label then self.previous = nil end
+  if self.stashed == bundle_label then self.stashed = nil end
+  self:insert_history(self.bundles[bundle_label])
   self.bundles[bundle_label] = nil
 end
-
--- Not implemented. {{{
----@todo
-function Root:bundle__union(bundle_labels)
-  Log.warn("Root.bundle__union(): this function has not been implemented")
-end
-
----@todo
-function Root:bundle__intersection(bundle_labels)
-  Log.warn("Root.bundle__intersection(): this function has not been implemented")
-end
--- }}}
 
 function Root:link(root_path)
   assert(root_path and type(root_path) == "string", "root_path needs to be a string and not nil.")
@@ -213,6 +214,15 @@ function Root:unlink(root_path)
   if not self.links then return end
   self.links = vim.tbl_filter(function(_item) return _item ~= root_path end, self.links)
   Log.trace("Root.unlink(): unlinked root " .. root_path .. " from current root")
+end
+
+function Root:insert_history(bundle, force)
+  local bundle_type = type(bundle)
+  assert(bundle_type == "table" and bundle._NAME == "bundle", "bundle: Bundle cannot be nil")
+  if self.disable_history and not force then return end
+  table.insert(self.history, 1, bundle)
+  if #self.history > self.maximum_history then table.remove(self.history, #self.history) end
+  Log.trace("Root.insert_history(): bundle " .. bundle.label .. " has been recorded into history")
 end
 
 return Root
