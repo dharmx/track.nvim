@@ -61,7 +61,7 @@ local Util = require("track.util")
 M._defaults = {
   savepath = vim.fn.stdpath("state") .. "/track.json",
   disable_history = true,
-  maximum_history = 20,
+  maximum_history = 10,
   save = {
     on_views_close = true, -- save when the view telescope picker is closed
   },
