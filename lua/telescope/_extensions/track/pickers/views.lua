@@ -26,11 +26,11 @@ function M.resulter(views_options)
       local views = bundle.views()
 
       for index, view in ipairs(views) do
-        local _view = vim.deepcopy(view)
-        _view.index = index -- needed for dynamic keymaps 
-        _view.root_path = root_path
-        _view.bundle_label = bundle_label
-        table.insert(results, index, _view)
+        local view_copy = vim.deepcopy(view)
+        view_copy.index = index -- needed for dynamic keymaps 
+        view_copy.root_path = root_path
+        view_copy.bundle_label = bundle_label
+        table.insert(results, index, view_copy)
       end
     end
   end
