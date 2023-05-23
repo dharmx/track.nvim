@@ -30,7 +30,11 @@ function M.gen_from_views(options)
     end
 
     -- the marked value might be deleted - priority: 2
-    if not entry.value:exists() then
+    if vim.startswith(entry.value.path, "term:/") then
+      marker, marker_hl = icons.terminal, "TrackViewsTerminal"
+    elseif vim.startswith(entry.value.path, "man:/") then
+      marker, marker_hl = icons.manual, "TrackViewsManual"
+    elseif not entry.value:exists() then
       marker, marker_hl = icons.missing, "TrackViewsMissing"
     end
 

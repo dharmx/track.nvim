@@ -6,6 +6,8 @@ local Util = require("track.util")
 -- TODO: Implement validation (vim.validate) and config fallback.
 -- TODO: Defaults (M.defaults) will be used if config values are invalid.
 -- TODO: Implement a way to show hidden files.
+-- TODO: Implement exclude filetypes.
+-- TODO: Implement exclude buffer names.
 -- TODO: Asyncify saving.
 
 -- Configuration documentation. {{{
@@ -86,7 +88,7 @@ M._defaults = {
           local keys = Util.serial_keymap(mark.index)
           local function command()
             require("telescope.actions").close(buffer)
-            Util.open_file(mark.path)
+            Util.open_entry(mark.path)
           end
           map("n", keys.normal, command)
           map("i", keys.insert, command)
@@ -94,7 +96,7 @@ M._defaults = {
         on_choose = function(_, picker)
           local entries = vim.F.if_nil(picker:get_multi_selection(), {})
           if #entries == 0 then table.insert(entries, picker:get_selection()) end
-          vim.tbl_map(function(entry) Util.open_file(entry.value.path) end, entries)
+          vim.tbl_map(function(entry) Util.open_entry(entry.value.path) end, entries)
         end,
       },
       attach_mappings = function(_, map)
@@ -120,6 +122,8 @@ M._defaults = {
       disable_devicons = false,
       icons = {
         separator = " ",
+        terminal = " ",
+        manual = " ",
         missing = " ",
         accessible = " ",
         inaccessible = " ",
