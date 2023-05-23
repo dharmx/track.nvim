@@ -147,4 +147,6 @@ highlight(0, "TrackViewsMarkListed", { foreground = "#4B5259" })
 highlight(0, "TrackViewsFileIcon", { foreground = "#FFE59E" })
 highlight(0, "TrackViewsMarkUnlisted", { foreground = "#C397D8" })
 highlight(0, "TrackViewsMissing", { foreground = "#FFE59E" })
+highlight(0, "TrackViewsTerminal", { foreground = "#36C692" })
+highlight(0, "TrackViewsManual", { foreground = "#5FB0FC" })
 -- }}}

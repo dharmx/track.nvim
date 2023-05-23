@@ -46,6 +46,7 @@ function Root:new(fields)
   root.path = fields.path
   root.label = fields.label
   root.links = fields.links
+
   root.disable_history = vim.F.if_nil(fields.disable_history, true)
   root.maximum_history = vim.F.if_nil(fields.maximum_history, 10)
   root.history = {}

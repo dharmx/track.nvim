@@ -98,7 +98,7 @@ function M.alternate(root_path, save)
 end
 
 ---@param root_path string
----@param bundle_label string
+---@param bundle_label? string
 ---@param save? function
 function M.delete(root_path, bundle_label, save)
   Log.errors(root_path, "root_path needs to be present.", "Core.delete")
