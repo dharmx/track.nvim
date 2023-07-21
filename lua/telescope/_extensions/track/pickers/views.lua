@@ -52,13 +52,16 @@ function M.picker(options)
   local views_options = options.views
   options.cwd = vim.F.if_nil(options.cwd, views_options.track_options.root_path())
   local views_hooks = views_options.hooks
+  local root_path = views_options.track_options.root_path()
+  local root = State._roots[root_path]
+  local bundle_label = views_options.track_options.bundle_label(root)
   State.load()
 
   -- this will be used in attach_mappings
   local results = M.resulter(views_options)
   views_hooks.on_open()
   local picker = pickers.new(views_options, {
-    prompt_title = "Views",
+    prompt_title = "Views: " .. bundle_label,
     finder = M.finder(views_options, results),
     sorter = config.values.file_sorter(views_options),
     attach_mappings = function(buffer, map)
