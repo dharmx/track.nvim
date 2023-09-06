@@ -11,6 +11,15 @@
 ---@field absolute string Absolute path to mark.
 ---@field _NAME string Type.
 local Mark = {}
+Mark.__index = Mark
+setmetatable(Mark, {
+  __call = function(class, ...)
+    local self = setmetatable({}, class)
+    self:_new(...)
+    return self
+  end,
+})
+
 
 local V = vim.fn
 local U = vim.loop
@@ -22,19 +31,16 @@ local U = vim.loop
 ---Create a new `Mark` object.
 ---@param fields MarkFields Available mark attributes/fields.
 ---@return Mark
-function Mark:new(fields)
-  assert(fields and type(fields) == "table", "fields: table cannot be empty")
-  assert(fields.path and type(fields.path) == "string", "Mark needs to have a path: string.")
+function Mark:_new(fields)
+  local fieldstype = type(fields)
+  assert(fieldstype ~= "table" or fieldstype ~= "string", "expected: fields: string|table found: " .. fieldstype)
+  if fieldstype == "string" then fields = { path = fields } end
+  assert(fields.path and type(fields.path) == "string", "fields.path: string cannot be nil")
 
-  local mark = {}
-  mark.path = fields.path
-  mark.label = fields.label
-  mark.absolute = V.fnamemodify(mark.path, ":p")
-  mark._NAME = "mark"
-
-  self.__index = self
-  setmetatable(mark, self)
-  return mark
+  self.path = fields.path
+  self.label = fields.label
+  self.absolute = V.fnamemodify(self.path, ":p")
+  self._NAME = "mark"
 end
 
 ---Check if the mark path exists. True if it does, false otherwise.
