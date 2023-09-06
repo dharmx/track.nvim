@@ -14,6 +14,16 @@
 ---@field history Bundle[] Deleted/Uneeded bundle are sent here. This acts as a recycle bin for bundles.
 ---@field _NAME string Type.
 local Root = {}
+Root.__index = Root
+setmetatable(Root, {
+  __call = function(class, ...)
+    local self = setmetatable({}, class)
+    self:_new(...)
+    self.new_bundle(self, self.main, true)
+    self._callize_bundles(self)
+    return self
+  end,
+})
 
 local Log = require("track.log")
 
@@ -38,30 +48,25 @@ local Bundle = require("track.containers.bundle")
 ---Create a new `Root` instance.
 ---@param fields RootFields Available root attributes/fields.
 ---@return Root
-function Root:new(fields)
-  assert(fields and type(fields) == "table", "fields: table cannot be empty")
-  assert(fields.path and type(fields.path) == "string", "Root needs to have a path: string field.")
+function Root:_new(fields)
+  local fieldstype = type(fields)
+  assert(fieldstype ~= "table" or fieldstype ~= "string", "expected: fields: string|table found: " .. fieldstype)
+  if fieldstype == "string" then fields = { path = fields } end
+  assert(fields.path and type(fields.path) == "string", "fields.path: string cannot be nil")
 
-  local root = {}
-  root.path = fields.path
-  root.label = fields.label
-  root.links = fields.links
+  self.path = fields.path
+  self.label = fields.label
+  self.links = fields.links
 
-  root.disable_history = vim.F.if_nil(fields.disable_history, true)
-  root.maximum_history = vim.F.if_nil(fields.maximum_history, 10)
-  root.history = {}
+  self.disable_history = vim.F.if_nil(fields.disable_history, true)
+  self.maximum_history = vim.F.if_nil(fields.maximum_history, 10)
+  self.history = {}
 
-  root.bundles = {}
-  root.stashed = nil -- currently stashed bundle (if any)
-  root.previous = nil -- previous bundle (alternate)
-  root._NAME = "root"
-  root.main = vim.F.if_nil(fields.main, "main")
-
-  self.__index = self
-  setmetatable(root, self)
-  self.new_bundle(root, root.main, true)
-  self._callize_bundles(root)
-  return root
+  self.bundles = {}
+  self.stashed = nil -- currently stashed bundle (if any)
+  self.previous = nil -- previous bundle (alternate)
+  self._NAME = "root"
+  self.main = vim.F.if_nil(fields.main, "main")
 end
 
 ---@private
@@ -84,7 +89,7 @@ function Root:new_bundle(bundle_label, main, marks)
   assert(bundle_label and type(bundle_label) == "string", "bundle_label needs to be a string and not nil.")
   main = vim.F.if_nil(main, false)
   marks = vim.F.if_nil(marks, {})
-  self.bundles[bundle_label] = Bundle:new({ label = bundle_label })
+  self.bundles[bundle_label] = Bundle(bundle_label)
   Log.trace("Root.new_bundle(): bundle " .. bundle_label .. " has been created")
 
   ---@diagnostic disable-next-line: param-type-mismatch

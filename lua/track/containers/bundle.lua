@@ -18,6 +18,16 @@
 ---@field views string[] Paths of newly added marks are inserted into this list. This is to maintain order.
 ---@field _NAME string Type.
 local Bundle = {}
+Bundle.__index = Bundle
+setmetatable(Bundle, {
+  __call = function(class, ...)
+    local self = setmetatable({}, class)
+    self:_new(...)
+    self._callize_views(self)
+    self._callize_marks(self)
+    return self
+  end,
+})
 
 local Mark = require("track.containers.mark")
 local Log = require("track.log")
@@ -31,25 +41,19 @@ local Log = require("track.log")
 ---Create a new `Bundle` object.
 ---@param fields BundleFields Available bundle attributes/fields.
 ---@return Bundle
-function Bundle:new(fields)
-  assert(fields and type(fields) == "table", "fields: table cannot be empty.")
-  assert(fields.label and type(fields.label) == "string", "Bundle needs to have a label: string.")
+function Bundle:_new(fields)
+  local fieldstype = type(fields)
+  assert(fieldstype ~= "table" or fieldstype ~= "string", "expected: fields: string|table found: " .. fieldstype)
+  if fieldstype == "string" then fields = { label = fields } end
+  assert(fields.label and type(fields.label) == "string", "fields.label: string cannot be nil")
 
-  local bundle = {}
-  bundle.label = fields.label
-
-  bundle.marks = {}
-  bundle.views = {}
-  bundle.disable_history = vim.F.if_nil(fields.disable_history, true)
-  bundle.maximum_history = vim.F.if_nil(fields.maximum_history, 10)
-  bundle.history = vim.F.if_nil(fields.history, {})
-  bundle._NAME = "bundle"
-
-  self.__index = self
-  setmetatable(bundle, self)
-  self._callize_views(bundle)
-  self._callize_marks(bundle)
-  return bundle
+  self.label = fields.label
+  self.marks = {}
+  self.views = {}
+  self.disable_history = vim.F.if_nil(fields.disable_history, true)
+  self.maximum_history = vim.F.if_nil(fields.maximum_history, 10)
+  self.history = vim.F.if_nil(fields.history, {})
+  self._NAME = "bundle"
 end
 
 -- Metatable Setters {{{
@@ -92,7 +96,7 @@ function Bundle:add_mark(mark, label)
   end
   -- if it does not exist then create it
   ---@diagnostic disable-next-line: assign-type-mismatch
-  self.marks[mark] = Mark:new({ path = mark, label = label })
+  self.marks[mark] = Mark({ path = mark, label = label })
   -- adding a mark will add its path to the views table
   table.insert(self.views, mark)
   Log.trace("Bundle.add_mark(): new mark " .. mark .. " has been added")

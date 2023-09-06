@@ -52,7 +52,7 @@ end
 local function parse_marks(marks)
   local store = {}
   for path, mark in pairs(marks) do
-    store[path] = Mark:new({
+    store[path] = Mark({
       path = mark.path,
       label = mark.label,
     })
@@ -66,7 +66,7 @@ end
 local function parse_bundles(bundles)
   local store = {}
   for label, bundle in pairs(bundles) do
-    store[label] = Bundle:new({
+    store[label] = Bundle({
       label = bundle.label,
       disable_history = bundle.disable_history,
       maximum_history = bundle.maximum_history,
@@ -113,7 +113,7 @@ function M.loadsave(action, loadpath, on_load)
 
   ---@diagnostic disable-next-line: param-type-mismatch
   for path, root in pairs(roots) do
-    M._roots[path] = Root:new({
+    M._roots[path] = Root({
       path = root.path,
       label = root.label,
       links = root.links,

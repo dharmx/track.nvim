@@ -18,7 +18,7 @@ function M.mark(root_path, file, bundle_label, save)
   -- create a root if it does not exist
   local root = State._roots[root_path]
   if not root then
-    local new_root = Root:new({ path = root_path })
+    local new_root = Root(root_path)
     State._roots[root_path] = new_root
     root = new_root
   end
