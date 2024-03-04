@@ -18,7 +18,6 @@ local Util = require("track.util")
 ---@class TrackPickersViewsHooksConfig
 ---@field on_open function This will be called before the picker window is opened.
 ---@field on_close function(buffer: number, picker: Picker) This will be called right after the picker window is closed.
----@field on_each_view function(buffer: number, map: function, mark: Mark) This will be called on each view entry before opening the picker window.
 ---@field on_choose function(buffer: number, picker: Picker) Will be called after the choice is made and the picker os closed.
 
 ---@class TrackPickersViewsTrackOptionsConfig
@@ -84,15 +83,6 @@ M._defaults = {
       hooks = {
         on_close = Util.mute,
         on_open = Util.mute,
-        on_each_view = function(buffer, map, mark)
-          local keys = Util.serial_keymap(mark.index)
-          local function command()
-            require("telescope.actions").close(buffer)
-            Util.open_entry(mark.path)
-          end
-          map("n", keys.normal, command)
-          map("i", keys.insert, command)
-        end,
         on_choose = function(_, picker)
           local entries = vim.F.if_nil(picker:get_multi_selection(), {})
           if #entries == 0 then table.insert(entries, picker:get_selection()) end
@@ -101,15 +91,15 @@ M._defaults = {
       },
       attach_mappings = function(_, map)
         local actions = require("telescope.actions")
-        map("i", "<C-K>", actions.move_selection_previous)
-        map("i", "<C-J>", actions.move_selection_next)
         map("n", "q", actions.close)
         map("n", "v", actions.select_all)
 
         local Actions = require("telescope._extensions.track.actions")
+        map("n", "D", actions.select_all + Actions.delete_view)
         map("n", "dd", Actions.delete_view)
         map("i", "<C-D>", Actions.delete_view)
-        map("n", "D", actions.select_all + Actions.delete_view)
+        map("i", "<C-N>", Actions.move_view_next)
+        map("i", "<C-P>", Actions.move_view_previous)
         return true -- compulsory
       end,
       track_options = {

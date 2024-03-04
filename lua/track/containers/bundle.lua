@@ -154,6 +154,16 @@ function Bundle:insert_history(mark, force)
   Log.trace("Bundle.insert_history(): mark " .. mark.path .. " has been recorded into history")
 end
 
+---Swap marks.
+---@param a number
+---@param b number
+function Bundle:swap_marks(a, b)
+  if not self.views[a] or not self.views[b] then return end
+  local temp = self.views[a]
+  self.views[a] = self.views[b]
+  self.views[b] = temp
+end
+
 ---Check if the `Bundle` has any marks.
 ---@return boolean
 function Bundle:empty() return vim.tbl_isempty(self.marks) end

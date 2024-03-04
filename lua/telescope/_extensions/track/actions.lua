@@ -7,6 +7,7 @@ local State = require("track.state")
 
 local mt = require("telescope.actions.mt")
 local actions_state = require("telescope.actions.state")
+local actions = require("telescope.actions")
 
 function M.delete_view(buffer)
   local current_picker = actions_state.get_current_picker(buffer)
@@ -21,6 +22,34 @@ function M.delete_view(buffer)
       bundle:remove_mark(entry.value.path)
     end
   end
+end
+
+function M.move_view_previous(buffer)
+  local current_picker = actions_state.get_current_picker(buffer)
+  local entry = current_picker:get_selection()
+
+  local root = State._roots[entry.value.root_path]
+  ---@type Bundle
+  local bundle = root.bundles[entry.value.bundle_label]
+  bundle:swap_marks(entry.value.index - 1, entry.value.index)
+
+  local views = require("telescope._extensions.track.pickers.views")
+  local options = current_picker._current_options.views
+  current_picker:refresh(views.finder(options, views.resulter(options)))
+end
+
+function M.move_view_next(buffer)
+  local current_picker = actions_state.get_current_picker(buffer)
+  local entry = current_picker:get_selection()
+
+  local root = State._roots[entry.value.root_path]
+  ---@type Bundle
+  local bundle = root.bundles[entry.value.bundle_label]
+  bundle:swap_marks(entry.value.index + 1, entry.value.index)
+
+  local views = require("telescope._extensions.track.pickers.views")
+  local options = current_picker._current_options.views
+  current_picker:refresh(views.finder(options, views.resulter(options)))
 end
 
 M = mt.transform_mod(M)
