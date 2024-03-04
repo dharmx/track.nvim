@@ -53,6 +53,7 @@ function Bundle:_new(fields)
   self.disable_history = vim.F.if_nil(fields.disable_history, true)
   self.maximum_history = vim.F.if_nil(fields.maximum_history, 10)
   self.history = vim.F.if_nil(fields.history, {})
+  ---@diagnostic disable-next-line: missing-return
   self._NAME = "bundle"
 end
 

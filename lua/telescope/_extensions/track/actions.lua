@@ -24,32 +24,37 @@ function M.delete_view(buffer)
   end
 end
 
-function M.move_view_previous(buffer)
+local function picked_bundle(buffer)
   local current_picker = actions_state.get_current_picker(buffer)
   local entry = current_picker:get_selection()
-
   local root = State._roots[entry.value.root_path]
-  ---@type Bundle
-  local bundle = root.bundles[entry.value.bundle_label]
-  bundle:swap_marks(entry.value.index - 1, entry.value.index)
+  return {
+    bundle = root.bundles[entry.value.bundle_label],
+    picker = current_picker,
+    entry = entry,
+  }
+end
 
+function M.move_view_previous(buffer)
+  local pack = picked_bundle(buffer)
+  pack.bundle:swap_marks(pack.entry.value.index, pack.entry.value.index - 1)
   local views = require("telescope._extensions.track.pickers.views")
-  local options = current_picker._current_options.views
-  current_picker:refresh(views.finder(options, views.resulter(options)))
+  local options = pack.picker._current_options.views
+  pack.picker:register_completion_callback(function(self)
+    self:set_selection(pack.entry.value.index - 2)
+  end)
+  pack.picker:refresh(views.finder(options, views.resulter(options)), { reset_prompt = true })
 end
 
 function M.move_view_next(buffer)
-  local current_picker = actions_state.get_current_picker(buffer)
-  local entry = current_picker:get_selection()
-
-  local root = State._roots[entry.value.root_path]
-  ---@type Bundle
-  local bundle = root.bundles[entry.value.bundle_label]
-  bundle:swap_marks(entry.value.index + 1, entry.value.index)
-
+  local pack = picked_bundle(buffer)
+  pack.bundle:swap_marks(pack.entry.value.index + 1, pack.entry.value.index)
   local views = require("telescope._extensions.track.pickers.views")
-  local options = current_picker._current_options.views
-  current_picker:refresh(views.finder(options, views.resulter(options)))
+  local options = pack.picker._current_options.views
+  pack.picker:register_completion_callback(function(self)
+    self:set_selection(pack.entry.value.index)
+  end)
+  pack.picker:refresh(views.finder(options, views.resulter(options)), { reset_prompt = true })
 end
 
 M = mt.transform_mod(M)
