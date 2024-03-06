@@ -1,3 +1,4 @@
+---@diagnostic disable: param-type-mismatch
 if vim.version().minor < 8 then
   vim.notify("track.nvim requires at least nvim-0.8.0.")
   return
@@ -37,7 +38,7 @@ end, {
   complete = function() return { "save", "load", "loadsave", "reload", "wipe", "remove", "menu" } end,
 })
 
-CMD("TrackMark", function(...)
+CMD("Mark", function(...)
   local files = (...).fargs
   if vim.tbl_isempty(files) then table.insert(files, V.expand("%")) end
   local Config = require("track.config").get()
@@ -53,7 +54,7 @@ end, {
   nargs = "*",
 })
 
-CMD("TrackMarkAllOpened", function()
+CMD("MarkOpened", function()
   local Config = require("track.config").get()
   local Core = require("track.core")
   local cwd = V.getcwd()
@@ -70,7 +71,7 @@ end, {
   nargs = 0,
 })
 
-CMD("TrackUnmark", function(...)
+CMD("Unmark", function(...)
   local files = (...).fargs
   if vim.tbl_isempty(files) then table.insert(files, V.expand("%")) end
   local Core = require("track.core")
@@ -94,7 +95,7 @@ end, {
 })
 
 ---@todo
-CMD("TrackStashBundle", function()
+CMD("StashBundle", function()
   local Core = require("track.core")
   Core.stash(V.getcwd())
 end, {
@@ -109,12 +110,12 @@ end, {
 })
 
 ---@todo
-CMD("TrackRestoreBundle", function() require("track.core").restore(V.getcwd()) end, {
+CMD("RestoreBundle", function() require("track.core").restore(V.getcwd()) end, {
   desc = "Restore stashed bundle.",
   nargs = 0,
 })
 
-CMD("TrackDeleteBundle", function(...)
+CMD("DeleteBundle", function(...)
   local label = (...).args
   local Core = require("track.core")
   local cwd = V.getcwd()
@@ -132,8 +133,17 @@ end, {
 })
 
 ---@todo
-CMD("TrackAlternateBundle", function() require("track.core").alternate(V.getcwd()) end, {
+CMD("AlternateBundle", function()
+  require("track.core").alternate(V.getcwd())
+end, {
   desc = "Restore stashed bundle.",
+  nargs = 0,
+})
+
+CMD("Bookmark", function()
+  require("track.core").bookmark(vim.fn.bufnr("%"), V.getcwd(), V.expand("%"))
+end, {
+  desc = "Toggle bookmark.",
   nargs = 0,
 })
 
@@ -149,4 +159,9 @@ HI(0, "TrackViewsMarkUnlisted", { foreground = "#C397D8" })
 HI(0, "TrackViewsMissing", { foreground = "#FFE59E" })
 HI(0, "TrackViewsTerminal", { foreground = "#36C692" })
 HI(0, "TrackViewsManual", { foreground = "#5FB0FC" })
+
+HI(0, "TrackBookmarkSign", { link = "Error" })
+HI(0, "TrackBookmarkNumber", { bold = true })
+HI(0, "TrackBookmarkLine", { bold = true })
+HI(0, "TrackBookmarkCursorline", { bold = true })
 -- }}}

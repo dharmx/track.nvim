@@ -44,6 +44,7 @@ local Log = require("track.log")
 function Bundle:_new(fields)
   local fieldstype = type(fields)
   assert(fieldstype ~= "table" or fieldstype ~= "string", "expected: fields: string|table found: " .. fieldstype)
+  ---@diagnostic disable-next-line: missing-fields
   if fieldstype == "string" then fields = { label = fields } end
   assert(fields.label and type(fields.label) == "string", "fields.label: string cannot be nil")
 

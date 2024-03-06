@@ -134,31 +134,65 @@ function M.move(root_path, file, direction, bundle_label, save)
   local root = State._roots[root_path]
   if not root or not root.bundles[bundle_label] then return end
 
-  local views = root.bundles[bundle_label].views
-  local swap_index
-  for index, view in ipairs(views) do
-    if file == view then
-      swap_index = index
-      break
-    end
-  end
-  Log.errors(swap_index, "index does not exist in bundle.views.", "Core.move")
-
-  local with_index
+  ---@type Bundle
+  local bundle = root.bundles[bundle_label]
   -- true means the item at swap index would be moved upwards
   -- false means downwards
-  if direction then
-    with_index = swap_index + 1
-    if with_index > #views then with_index = 1 end
+  if direction == "next" then
+    for index, view in ipairs(bundle.views) do
+      if view == file then
+        bundle:swap_marks(index + 1, index)
+        break
+      end
+    end
   else
-    with_index = swap_index - 1
-    if with_index < 1 then with_index = #views end
+    for index, view in ipairs(bundle.views) do
+      if view == file then
+        bundle:swap_marks(index, index - 1)
+        break
+      end
+    end
   end
 
-  -- Inplace? I have not tested this
-  Util.swap(root.bundles[bundle_label].views, swap_index, with_index)
   if save then State.save() end
   return root.bundles[bundle_label]
+end
+
+function M.bookmark(buffer, root_path, file)
+  ---@type Root
+  local root = State._roots[root_path]
+  if root then
+    ---@type Bundle
+    local bundle = root:get_main_bundle()
+    if bundle then
+      ---@type Mark
+      local mark = bundle.marks[file]
+      if not mark then
+        M.mark(root_path, file, bundle.label)
+        mark = bundle.marks[file]
+      end
+      local line = vim.api.nvim_win_get_cursor(0)[1]
+      local bookmark = mark.bookmarks[tostring(line)]
+      local ui = require("track.ui")
+      if bookmark then
+        mark:remove_bookmark(line)
+        ui.remove_bookmark(buffer, line)
+      else
+        if require("track.config").get().bookmarks.choice then
+          vim.ui.input({
+            prompt = "label: ",
+            default = "label-" .. os.date("%s"),
+          }, function(input)
+            mark:add_bookmark(vim.trim(input), line)
+            ui.add_bookmark(buffer, line)
+          end)
+        else
+          mark:add_bookmark("label-" .. os.date("%s"), line)
+          ui.add_bookmark(buffer, line)
+        end
+      end
+    end
+  end
 end
 
 ---@param root_path string
