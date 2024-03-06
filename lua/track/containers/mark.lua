@@ -9,6 +9,7 @@
 ---@field path string Path to mark.
 ---@field label? string Optional label for that the mark.
 ---@field absolute string Absolute path to mark.
+---@field bookmarks {label:string,row:number}[] Positional array.
 ---@field _NAME string Type.
 local Mark = {}
 Mark.__index = Mark
@@ -31,15 +32,24 @@ local U = vim.loop
 ---@param fields MarkFields Available mark attributes/fields.
 ---@return Mark
 function Mark:_new(fields)
-  local fieldstype = type(fields)
-  assert(fieldstype ~= "table" or fieldstype ~= "string", "expected: fields: string|table found: " .. fieldstype)
-  if fieldstype == "string" then fields = { path = fields } end
+  local field_types = type(fields)
+  assert(field_types == "table", "expected: fields: table found: " .. field_types)
   assert(fields.path and type(fields.path) == "string", "fields.path: string cannot be nil")
 
+  self.bookmarks = {}
   self.path = fields.path
   self.label = fields.label
   self.absolute = V.fnamemodify(self.path, ":p")
+  ---@diagnostic disable-next-line: missing-return
   self._NAME = "mark"
+end
+
+function Mark:add_bookmark(label, line)
+  self.bookmarks[tostring(line)] = label
+end
+
+function Mark:remove_bookmark(line)
+  self.bookmarks[tostring(line)] = nil
 end
 
 ---Check if the mark path exists. True if it does, false otherwise.

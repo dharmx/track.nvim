@@ -51,6 +51,7 @@ local Bundle = require("track.containers.bundle")
 function Root:_new(fields)
   local fieldstype = type(fields)
   assert(fieldstype ~= "table" or fieldstype ~= "string", "expected: fields: string|table found: " .. fieldstype)
+  ---@diagnostic disable-next-line: missing-fields
   if fieldstype == "string" then fields = { path = fields } end
   assert(fields.path and type(fields.path) == "string", "fields.path: string cannot be nil")
 
@@ -66,6 +67,7 @@ function Root:_new(fields)
   self.stashed = nil -- currently stashed bundle (if any)
   self.previous = nil -- previous bundle (alternate)
   self._NAME = "root"
+  ---@diagnostic disable-next-line: missing-return, assign-type-mismatch
   self.main = vim.F.if_nil(fields.main, "main")
 end
 

@@ -47,15 +47,13 @@ end
 -- Roots parser helpers. {{{
 
 ---Helper that parses marks and wraps raw mark fields into a `Mark` instance. As a side-effect any extra values sneaked in will be ignored.
----@param marks {path: string, label: string}[]
+---@param marks {path: string, label: string, bookmarks: table[]}[]
 ---@return Mark[]
 local function parse_marks(marks)
   local store = {}
   for path, mark in pairs(marks) do
-    store[path] = Mark({
-      path = mark.path,
-      label = mark.label,
-    })
+    store[path] = Mark({ path = mark.path, label = mark.label })
+    store[path].bookmarks = mark.bookmarks
   end
   return store
 end
@@ -129,7 +127,7 @@ function M.loadsave(action, loadpath, on_load)
     M._roots[path].previous = root.previous
   end
   Log.info("State.loadsave(): loaded state from " .. savepath.filename)
-  if on_load then on_load() end
+  if on_load then on_load(M._roots) end
 end
 
 ---Reload and merge `Config.savepath` path into `M._roots` again.

@@ -47,11 +47,16 @@ local Util = require("track.util")
 ---@field level "error"|"warn"|"info"|"trace"|"debug"|"off" Log level. The higher the level is, lesser the STDOUT messages will be shown.
 ---@field plugin string Name of the plugin.
 
+---@class TrackBookmarksConfig
+---@field sign string
+---@field choice boolean
+
 ---@class TrackConfig
 ---@field savepath string JSON file where the current state will be saved.
 ---@field disable_history boolean Change state of all bundle histories.
 ---@field maximum_history number Change the maximum number of marks to be stored in all bundle history tables.
 ---@field save TrackSaveConfig Sub-configuration for when current state will be saved.
+---@field bookmarks TrackBookmarksConfig Sub-configuration for bookmarks.
 ---@field pickers TrackPickersConfig Sub-configuration for telescope pickers.
 ---@field log TrackLogConfig Sub-configuration for logging and debugging.
 
@@ -65,6 +70,10 @@ M._defaults = {
   maximum_history = 10,
   save = {
     on_views_close = true, -- save when the view telescope picker is closed
+  },
+  bookmarks = {
+    sign = "",
+    choice = false,
   },
   pickers = {
     views = {
