@@ -53,6 +53,7 @@ function Bundle:_new(fields)
   self.disable_history = vim.F.if_nil(fields.disable_history, true)
   self.maximum_history = vim.F.if_nil(fields.maximum_history, 10)
   self.history = vim.F.if_nil(fields.history, {})
+  ---@diagnostic disable-next-line: missing-return
   self._NAME = "bundle"
 end
 
@@ -152,6 +153,16 @@ function Bundle:insert_history(mark, force)
   table.insert(self.history, 1, mark)
   if #self.history > self.maximum_history then table.remove(self.history, #self.history) end
   Log.trace("Bundle.insert_history(): mark " .. mark.path .. " has been recorded into history")
+end
+
+---Swap marks.
+---@param a number
+---@param b number
+function Bundle:swap_marks(a, b)
+  if not self.views[a] or not self.views[b] then return end
+  local temp = self.views[a]
+  self.views[a] = self.views[b]
+  self.views[b] = temp
 end
 
 ---Check if the `Bundle` has any marks.

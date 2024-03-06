@@ -50,6 +50,7 @@ function M.picker(options)
   options = Config.extend_pickers(options)
 
   local views_options = options.views
+  ---@diagnostic disable-next-line: inject-field
   options.cwd = vim.F.if_nil(options.cwd, views_options.track_options.root_path())
   local views_hooks = views_options.hooks
   local root_path = views_options.track_options.root_path()
@@ -64,8 +65,10 @@ function M.picker(options)
     prompt_title = "Views: " .. bundle_label,
     finder = M.finder(views_options, results),
     sorter = config.values.file_sorter(views_options),
-    attach_mappings = function(buffer, map)
+    attach_mappings = function(buffer)
       local current_picker = actions_state.get_current_picker(buffer)
+      current_picker._current_options = options
+      ---@diagnostic disable-next-line: undefined-field
       actions.close:replace(function()
         local window = current_picker.original_win_id
         local valid, cursor = pcall(A.nvim_win_get_cursor, window)
@@ -85,9 +88,7 @@ function M.picker(options)
         actions.close(buffer)
         views_hooks.on_choose(buffer, current_picker)
       end)
-
       -- dynamic keymaps
-      for _, mark in ipairs(results) do views_hooks.on_each_view(buffer, map, mark) end
       return true
     end,
   })

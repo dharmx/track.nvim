@@ -7,12 +7,12 @@ if vim.g.loaded_track == 1 then return end
 vim.g.loaded_track = 1
 
 local V = vim.fn
-local cmd = vim.api.nvim_create_user_command
-local highlight = vim.api.nvim_set_hl
+local CMD = vim.api.nvim_create_user_command
+local HI = vim.api.nvim_set_hl
 
 -- TODO: Implement bang, range, repeat, motions and bar.
 
-cmd("Track", function(...)
+CMD("Track", function(...)
   local args = (...).fargs
   local State = require("track.state")
   if args[1] == "save" then
@@ -37,7 +37,7 @@ end, {
   complete = function() return { "save", "load", "loadsave", "reload", "wipe", "remove", "menu" } end,
 })
 
-cmd("TrackMark", function(...)
+CMD("TrackMark", function(...)
   local files = (...).fargs
   if vim.tbl_isempty(files) then table.insert(files, V.expand("%")) end
   local Config = require("track.config").get()
@@ -53,7 +53,7 @@ end, {
   nargs = "*",
 })
 
-cmd("TrackMarkAllOpened", function()
+CMD("TrackMarkAllOpened", function()
   local Config = require("track.config").get()
   local Core = require("track.core")
   local cwd = V.getcwd()
@@ -70,7 +70,7 @@ end, {
   nargs = 0,
 })
 
-cmd("TrackUnmark", function(...)
+CMD("TrackUnmark", function(...)
   local files = (...).fargs
   if vim.tbl_isempty(files) then table.insert(files, V.expand("%")) end
   local Core = require("track.core")
@@ -94,7 +94,7 @@ end, {
 })
 
 ---@todo
-cmd("TrackStashBundle", function()
+CMD("TrackStashBundle", function()
   local Core = require("track.core")
   Core.stash(V.getcwd())
 end, {
@@ -109,12 +109,12 @@ end, {
 })
 
 ---@todo
-cmd("TrackRestoreBundle", function() require("track.core").restore(V.getcwd()) end, {
+CMD("TrackRestoreBundle", function() require("track.core").restore(V.getcwd()) end, {
   desc = "Restore stashed bundle.",
   nargs = 0,
 })
 
-cmd("TrackDeleteBundle", function(...)
+CMD("TrackDeleteBundle", function(...)
   local label = (...).args
   local Core = require("track.core")
   local cwd = V.getcwd()
@@ -132,21 +132,21 @@ end, {
 })
 
 ---@todo
-cmd("TrackAlternateBundle", function() require("track.core").alternate(V.getcwd()) end, {
+CMD("TrackAlternateBundle", function() require("track.core").alternate(V.getcwd()) end, {
   desc = "Restore stashed bundle.",
   nargs = 0,
 })
 
 -- Highlights {{{
-highlight(0, "TrackViewsAccessible", { foreground = "#79DCAA" })
-highlight(0, "TrackViewsInaccessible", { foreground = "#F87070" })
-highlight(0, "TrackViewsFocusedDisplay", { foreground = "#7AB0DF" })
-highlight(0, "TrackViewsFocused", { foreground = "#7AB0DF" })
-highlight(0, "TrackViewsIndex", { foreground = "#54CED6" })
-highlight(0, "TrackViewsMarkListed", { foreground = "#4B5259" })
-highlight(0, "TrackViewsFileIcon", { foreground = "#FFE59E" })
-highlight(0, "TrackViewsMarkUnlisted", { foreground = "#C397D8" })
-highlight(0, "TrackViewsMissing", { foreground = "#FFE59E" })
-highlight(0, "TrackViewsTerminal", { foreground = "#36C692" })
-highlight(0, "TrackViewsManual", { foreground = "#5FB0FC" })
+HI(0, "TrackViewsAccessible", { foreground = "#79DCAA" })
+HI(0, "TrackViewsInaccessible", { foreground = "#F87070" })
+HI(0, "TrackViewsFocusedDisplay", { foreground = "#7AB0DF" })
+HI(0, "TrackViewsFocused", { foreground = "#7AB0DF" })
+HI(0, "TrackViewsIndex", { foreground = "#54CED6" })
+HI(0, "TrackViewsMarkListed", { foreground = "#4B5259" })
+HI(0, "TrackViewsFileIcon", { foreground = "#FFE59E" })
+HI(0, "TrackViewsMarkUnlisted", { foreground = "#C397D8" })
+HI(0, "TrackViewsMissing", { foreground = "#FFE59E" })
+HI(0, "TrackViewsTerminal", { foreground = "#36C692" })
+HI(0, "TrackViewsManual", { foreground = "#5FB0FC" })
 -- }}}
