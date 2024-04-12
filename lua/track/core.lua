@@ -18,6 +18,7 @@ function M.mark(root_path, file, bundle_label, save)
   -- create a root if it does not exist
   local root = State._roots[root_path]
   if not root then
+    ---@type Root
     local new_root = Root(root_path)
     State._roots[root_path] = new_root
     root = new_root
@@ -31,7 +32,10 @@ function M.mark(root_path, file, bundle_label, save)
   elseif not root.bundles[bundle_label] then
     root:new_bundle(bundle_label)
   end
-  root.bundles[bundle_label]:add_mark(file)
+  ---@diagnostic disable-next-line: undefined-field
+  local mark = root.bundles[bundle_label]:add_mark(file)
+  ---@diagnostic disable-next-line: assign-type-mismatch
+  if mark then mark.type = vim.loop.fs_stat(file).type end
   if save then State.save() end
 end
 
@@ -141,6 +145,7 @@ function M.move(root_path, file, direction, bundle_label, save)
   if direction == "next" then
     for index, view in ipairs(bundle.views) do
       if view == file then
+        ---@diagnostic disable-next-line: undefined-field
         bundle:swap_marks(index + 1, index)
         break
       end
@@ -148,6 +153,7 @@ function M.move(root_path, file, direction, bundle_label, save)
   else
     for index, view in ipairs(bundle.views) do
       if view == file then
+        ---@diagnostic disable-next-line: undefined-field
         bundle:swap_marks(index, index - 1)
         break
       end
@@ -156,43 +162,6 @@ function M.move(root_path, file, direction, bundle_label, save)
 
   if save then State.save() end
   return root.bundles[bundle_label]
-end
-
-function M.bookmark(buffer, root_path, file)
-  ---@type Root
-  local root = State._roots[root_path]
-  if root then
-    ---@type Bundle
-    local bundle = root:get_main_bundle()
-    if bundle then
-      ---@type Mark
-      local mark = bundle.marks[file]
-      if not mark then
-        M.mark(root_path, file, bundle.label)
-        mark = bundle.marks[file]
-      end
-      local line = vim.api.nvim_win_get_cursor(0)[1]
-      local bookmark = mark.bookmarks[tostring(line)]
-      local ui = require("track.ui")
-      if bookmark then
-        mark:remove_bookmark(line)
-        ui.remove_bookmark(buffer, line)
-      else
-        if require("track.config").get().bookmarks.choice then
-          vim.ui.input({
-            prompt = "label: ",
-            default = "label-" .. os.date("%s"),
-          }, function(input)
-            mark:add_bookmark(vim.trim(input), line)
-            ui.add_bookmark(buffer, line)
-          end)
-        else
-          mark:add_bookmark("label-" .. os.date("%s"), line)
-          ui.add_bookmark(buffer, line)
-        end
-      end
-    end
-  end
 end
 
 ---@param root_path string

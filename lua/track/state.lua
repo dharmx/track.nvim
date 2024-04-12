@@ -47,13 +47,12 @@ end
 -- Roots parser helpers. {{{
 
 ---Helper that parses marks and wraps raw mark fields into a `Mark` instance. As a side-effect any extra values sneaked in will be ignored.
----@param marks {path: string, label: string, bookmarks: table[]}[]
+---@param marks {path: string, label: string, type: MarkType}[]
 ---@return Mark[]
 local function parse_marks(marks)
   local store = {}
   for path, mark in pairs(marks) do
-    store[path] = Mark({ path = mark.path, label = mark.label })
-    store[path].bookmarks = mark.bookmarks
+    store[path] = Mark({ path = mark.path, label = mark.label, type = mark.type })
   end
   return store
 end

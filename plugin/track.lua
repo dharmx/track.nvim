@@ -8,37 +8,61 @@ if vim.g.loaded_track == 1 then return end
 vim.g.loaded_track = 1
 
 local V = vim.fn
-local CMD = vim.api.nvim_create_user_command
+local cmd = vim.api.nvim_create_user_command
 local HI = vim.api.nvim_set_hl
 
 -- TODO: Implement bang, range, repeat, motions and bar.
 
-CMD("Track", function(...)
-  local args = (...).fargs
-  local State = require("track.state")
-  if args[1] == "save" then
-    State.save()
-  elseif args[1] == "load" then
+cmd("Track", function(...)
+  local function get_root_and_bundle_opted()
+    local State = require("track.state")
     State.load()
+    local cwd = vim.fn.getcwd()
+    return {
+      track = {
+        root_path = cwd,
+        bundle_label = State._roots[cwd].main,
+      }
+    }
+  end
+
+  local args = (...).fargs
+  if args[1] == "save" then
+    require("track.state").save()
+  elseif args[1] == "load" then
+    require("track.state").load()
   elseif args[1] == "loadsave" then
     assert(args[2] and type(args[2]) == "string", "Needs a path value.")
-    State.loadsave("wipe", args[2])
+    require("track.state").loadsave("wipe", args[2])
   elseif args[1] == "reload" then
-    State.reload()
+    require("track.state").reload()
   elseif args[1] == "wipe" then
-    State.wipe()
+    require("track.state").wipe()
   elseif args[1] == "remove" then
-    State.rm()
+    require("track.state").rm()
+  elseif args[1] == "bundles" then
+    require("telescope").extensions.track.bundles(get_root_and_bundle_opted())
   else
-    require("telescope").extensions.track.views()
+    require("telescope").extensions.track.views(get_root_and_bundle_opted())
   end
 end, {
   desc = "State operations like: save, load, loadsave, reload, wipe and remove. marks for showing current mark list.",
   nargs = "*",
-  complete = function() return { "save", "load", "loadsave", "reload", "wipe", "remove", "menu" } end,
+  complete = function()
+    return {
+      "save",
+      "load",
+      "loadsave",
+      "reload",
+      "wipe",
+      "remove",
+      "menu",
+      "bundles",
+    }
+  end,
 })
 
-CMD("Mark", function(...)
+cmd("Mark", function(...)
   local files = (...).fargs
   if vim.tbl_isempty(files) then table.insert(files, V.expand("%")) end
   local Config = require("track.config").get()
@@ -54,7 +78,7 @@ end, {
   nargs = "*",
 })
 
-CMD("MarkOpened", function()
+cmd("MarkOpened", function()
   local Config = require("track.config").get()
   local Core = require("track.core")
   local cwd = V.getcwd()
@@ -71,7 +95,7 @@ end, {
   nargs = 0,
 })
 
-CMD("Unmark", function(...)
+cmd("Unmark", function(...)
   local files = (...).fargs
   if vim.tbl_isempty(files) then table.insert(files, V.expand("%")) end
   local Core = require("track.core")
@@ -95,7 +119,7 @@ end, {
 })
 
 ---@todo
-CMD("StashBundle", function()
+cmd("StashBundle", function()
   local Core = require("track.core")
   Core.stash(V.getcwd())
 end, {
@@ -110,12 +134,12 @@ end, {
 })
 
 ---@todo
-CMD("RestoreBundle", function() require("track.core").restore(V.getcwd()) end, {
+cmd("RestoreBundle", function() require("track.core").restore(V.getcwd()) end, {
   desc = "Restore stashed bundle.",
   nargs = 0,
 })
 
-CMD("DeleteBundle", function(...)
+cmd("DeleteBundle", function(...)
   local label = (...).args
   local Core = require("track.core")
   local cwd = V.getcwd()
@@ -133,17 +157,10 @@ end, {
 })
 
 ---@todo
-CMD("AlternateBundle", function()
+cmd("AlternateBundle", function()
   require("track.core").alternate(V.getcwd())
 end, {
   desc = "Restore stashed bundle.",
-  nargs = 0,
-})
-
-CMD("Bookmark", function()
-  require("track.core").bookmark(vim.fn.bufnr("%"), V.getcwd(), V.expand("%"))
-end, {
-  desc = "Toggle bookmark.",
   nargs = 0,
 })
 
@@ -155,13 +172,17 @@ HI(0, "TrackViewsFocused", { foreground = "#7AB0DF" })
 HI(0, "TrackViewsIndex", { foreground = "#54CED6" })
 HI(0, "TrackViewsMarkListed", { foreground = "#4B5259" })
 HI(0, "TrackViewsFileIcon", { foreground = "#FFE59E" })
+HI(0, "TrackViewsDirectoryIcon", { foreground = "#FFE59E" })
 HI(0, "TrackViewsMarkUnlisted", { foreground = "#C397D8" })
 HI(0, "TrackViewsMissing", { foreground = "#FFE59E" })
 HI(0, "TrackViewsTerminal", { foreground = "#36C692" })
 HI(0, "TrackViewsManual", { foreground = "#5FB0FC" })
 
-HI(0, "TrackBookmarkSign", { link = "Error" })
-HI(0, "TrackBookmarkNumber", { bold = true })
-HI(0, "TrackBookmarkLine", { bold = true })
-HI(0, "TrackBookmarkCursorline", { bold = true })
+HI(0, "TrackBundlesInactive", { foreground = "#4B5259" })
+HI(0, "TrackBundlesMain", { foreground = "#7AB0DF" })
+HI(0, "TrackBundlesDisplayMain", { foreground = "#7AB0DF" })
+HI(0, "TrackBundlesAlternate", { foreground = "#36C692" })
+HI(0, "TrackBundlesDisplayAlternate", { foreground = "#79DCAA" })
+HI(0, "TrackBundlesMark", { foreground = "#FFE59E" })
+HI(0, "TrackBundlesHistory", { foreground = "#F87070" })
 -- }}}

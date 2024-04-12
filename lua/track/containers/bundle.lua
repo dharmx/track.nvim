@@ -9,14 +9,6 @@
 ---This adds overhead.
 ---Now, with bundles you just need to **stash** the current bundle which contains A1-3
 ---(say) and add `B1-3` to the new bundle. (Yes, this is just like GIT.)
----@class Bundle
----@field label string Name of the bundle. Similar to setting a GIT branch name.
----@field disable_history? boolean Deleting marks will not store said marks in the `history` table.
----@field maximum_history? number Maximum number of marks that are allowed to be in `history` table.
----@field history Mark[] Deleted/Uneeded marks are sent here. This acts as a recycle bin for marks.
----@field marks table<string, Mark> Mark map. Key is the same as `Mark.path`. Therefore, no duplicates.
----@field views string[] Paths of newly added marks are inserted into this list. This is to maintain order.
----@field _NAME string Type.
 local Bundle = {}
 Bundle.__index = Bundle
 setmetatable(Bundle, {
@@ -31,12 +23,6 @@ setmetatable(Bundle, {
 
 local Mark = require("track.containers.mark")
 local Log = require("track.log")
-
----@class BundleFields
----@field label string Name of the bundle. Similar to setting a GIT branch name.
----@field disable_history? boolean Deleting marks will not store marks in the `history` table.
----@field maximum_history? number Maximum number of marks that are allowed to be in `history` table.
----@field history Mark[] Deleted/Uneeded marks are sent here. This acts as a recycle bin for marks.
 
 ---Create a new `Bundle` object.
 ---@param fields BundleFields Available bundle attributes/fields.
@@ -164,6 +150,22 @@ function Bundle:swap_marks(a, b)
   local temp = self.views[a]
   self.views[a] = self.views[b]
   self.views[b] = temp
+end
+
+---Change a mark's path.
+---@param mark Mark
+---@param new_path string
+function Bundle:change_mark_path(mark, new_path)
+  assert(type(mark) == "table" and mark._NAME == "mark", "mark: restricted type")
+  local new_mark = Mark({ path = new_path, label = mark.label })
+  for index, view in ipairs(self.views) do
+    if view == mark.path then
+      self.views[index] = new_path
+      self.marks[view] = nil
+      self.marks[new_path] = new_mark
+      return new_mark
+    end
+  end
 end
 
 ---Check if the `Bundle` has any marks.

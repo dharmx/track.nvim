@@ -1,8 +1,7 @@
 local M = {}
 
-local A = vim.api
 local Config = require("track.config")
-local Save = Config.get_save_config()
+local SaveConfig = Config.get_save_config()
 local Log = require("track.log")
 
 local State = require("track.state")
@@ -12,13 +11,13 @@ local actions = require("telescope.actions")
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
 local config = require("telescope.config")
-local actions_state = require("telescope.actions.state")
+local state = require("telescope.state")
 
-function M.resulter(views_options)
+function M.resulter(opts)
   local results = {}
-  local root_path = views_options.track_options.root_path()
+  local root_path = opts.track.root_path
   local root = State._roots[root_path]
-  local bundle_label = views_options.track_options.bundle_label(root)
+  local bundle_label = opts.track.bundle_label
 
   if root then
     local bundle = root.bundles[bundle_label]
@@ -27,7 +26,7 @@ function M.resulter(views_options)
 
       for index, view in ipairs(views) do
         local view_copy = vim.deepcopy(view)
-        view_copy.index = index -- needed for dynamic keymaps 
+        view_copy.index = index -- needed for dynamic keymaps
         view_copy.root_path = root_path
         view_copy.bundle_label = bundle_label
         table.insert(results, index, view_copy)
@@ -38,60 +37,56 @@ function M.resulter(views_options)
 end
 
 -- this can be passed into picker:refresh(<finder>)
-function M.finder(views_options, results)
+function M.finder(opts, results)
   return finders.new_table({
     results = results,
-    entry_maker = EntryMakers.gen_from_views(views_options)
+    entry_maker = EntryMakers.gen_from_views(opts),
   })
 end
 
-function M.picker(options)
-  options = vim.F.if_nil(options, {})
-  options = Config.extend_pickers(options)
-
-  local views_options = options.views
-  ---@diagnostic disable-next-line: inject-field
-  options.cwd = vim.F.if_nil(options.cwd, views_options.track_options.root_path())
-  local views_hooks = views_options.hooks
-  local root_path = views_options.track_options.root_path()
-  local root = State._roots[root_path]
-  local bundle_label = views_options.track_options.bundle_label(root)
+function M.picker(opts)
+  opts = vim.F.if_nil(opts, {})
+  ---@diagnostic disable-next-line: missing-fields
+  opts = Config.extend_pickers({ views = opts }).views
+  local hooks = opts.hooks
   State.load()
 
-  -- this will be used in attach_mappings
-  local results = M.resulter(views_options)
-  views_hooks.on_open()
-  local picker = pickers.new(views_options, {
-    prompt_title = "Views: " .. bundle_label,
-    finder = M.finder(views_options, results),
-    sorter = config.values.file_sorter(views_options),
-    attach_mappings = function(buffer)
-      local current_picker = actions_state.get_current_picker(buffer)
-      current_picker._current_options = options
+  local picker = pickers.new(opts, {
+    prompt_title = "Views",
+    finder = M.finder(opts, M.resulter(opts)),
+    sorter = config.values.file_sorter(opts),
+    attach_mappings = function(buffer, _)
+      local status = state.get_status(buffer)
       ---@diagnostic disable-next-line: undefined-field
-      actions.close:replace(function()
-        local window = current_picker.original_win_id
-        local valid, cursor = pcall(A.nvim_win_get_cursor, window)
-        actions.close_pum(buffer)
-        pickers.on_close_prompt(buffer)
-        pcall(A.nvim_set_current_win, window)
-        if valid and A.nvim_get_mode().mode == "i" and current_picker._original_mode ~= "i" then
-          pcall(A.nvim_win_set_cursor, window, { cursor[1], cursor[2] + 1 })
+      actions.close:enhance({
+        post = function(_)
+          if SaveConfig.on_views_close then
+            State.save()
+            Log.info("Telescope.Views.picker(): closed telescope.track.views and saved state")
+          end
+          hooks.on_close(status, opts)
+        end,
+      })
+      actions.select_default:replace(function(...)
+        -- add navigation controls for traversing back and forth through other roots
+        -- if the exist otherwise open the directory
+        local entry = status.picker:get_selection()
+        local new_root_path = entry.value.absolute
+        if new_root_path:len() > 1 then new_root_path = new_root_path:gsub("/$", "") end
+        if entry.value.type == "directory" and State._roots[new_root_path] then
+          vim.cmd.chdir(new_root_path)
+          status.picker:refresh(M.finder(opts, M.resulter(opts)), { reset_prompt = true })
+          return
         end
-        if Save.on_views_close then
-          State.save()
-          Log.info("Telescope.Views.picker(): closed telescope.track.views and saved state")
-        end
-        views_hooks.on_close(buffer, current_picker)
-      end)
-      actions.select_default:replace(function()
-        actions.close(buffer)
-        views_hooks.on_choose(buffer, current_picker)
+        actions.close(...)
+        hooks.on_choose(status, opts)
       end)
       -- dynamic keymaps
       return true
     end,
   })
+
+  hooks.on_open(opts)
   picker:find()
 end
 

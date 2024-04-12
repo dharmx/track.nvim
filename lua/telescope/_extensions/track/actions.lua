@@ -7,7 +7,6 @@ local State = require("track.state")
 
 local mt = require("telescope.actions.mt")
 local actions_state = require("telescope.actions.state")
-local actions = require("telescope.actions")
 
 function M.delete_view(buffer)
   local current_picker = actions_state.get_current_picker(buffer)
@@ -39,22 +38,31 @@ function M.move_view_previous(buffer)
   local pack = picked_bundle(buffer)
   pack.bundle:swap_marks(pack.entry.value.index, pack.entry.value.index - 1)
   local views = require("telescope._extensions.track.pickers.views")
-  local options = pack.picker._current_options.views
-  pack.picker:register_completion_callback(function(self)
-    self:set_selection(pack.entry.value.index - 2)
-  end)
-  pack.picker:refresh(views.finder(options, views.resulter(options)), { reset_prompt = true })
+  local opts = pack.picker._current_opts.views
+  pack.picker:register_completion_callback(function(self) self:set_selection(pack.entry.value.index - 2) end)
+  pack.picker:refresh(views.finder(opts, views.resulter(opts)), { reset_prompt = true })
 end
 
 function M.move_view_next(buffer)
   local pack = picked_bundle(buffer)
   pack.bundle:swap_marks(pack.entry.value.index + 1, pack.entry.value.index)
   local views = require("telescope._extensions.track.pickers.views")
-  local options = pack.picker._current_options.views
-  pack.picker:register_completion_callback(function(self)
-    self:set_selection(pack.entry.value.index)
+  local opts = pack.picker._current_opts.views
+  pack.picker:register_completion_callback(function(self) self:set_selection(pack.entry.value.index) end)
+  pack.picker:refresh(views.finder(opts, views.resulter(opts)), { reset_prompt = true })
+end
+
+function M.change_mark_view(buffer)
+  local pack = picked_bundle(buffer)
+  if not (pack and pack.entry and pack.entry.value) then return end
+  vim.ui.input({ prompt = "New path: ", completion = "file" }, function(input)
+    input = vim.trim(vim.F.if_nil(input, ""))
+    if input == "" then return end
+    local root = State._roots[pack.entry.value.root_path]
+    local bundle = root.bundles[pack.entry.value.bundle_label]
+    local mark = bundle:change_mark_path(pack.entry.value, input)
+    if mark then mark.type = vim.loop.fs_stat(mark.absolute).type end
   end)
-  pack.picker:refresh(views.finder(options, views.resulter(options)), { reset_prompt = true })
 end
 
 M = mt.transform_mod(M)
