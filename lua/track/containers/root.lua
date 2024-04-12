@@ -1,18 +1,6 @@
 ---Root represents a directory in track.nvim. This is synonymous to cwd/project.
 ---A root will contain a map of bundles and the bundles will contain marks. A root will
 ---also contain a `main` key which (just like GIT) will be the default bundle of the root.
----@class Root
----@field path string Path to root.
----@field label? string Small description/title about the root.
----@field links? string[] Shortcuts to other roots.
----@field bundles Bundle[] Bundle map. Key is the same as `Bundle.label` and value is a `Bundle` instance.
----@field main string Master bundle. This is similar to the `main` branch in GIT.
----@field stashed? string Flag variable that will be set if a bundle has been stashed.
----@field previous? string Flag variable that will be set if the `main` bundle has an alternate bundle.
----@field disable_history? boolean Deleting bundles will not store said bundles in the `history` table.
----@field maximum_history? number Maximum number of bundles that are allowed to be in `history` table.
----@field history Bundle[] Deleted/Uneeded bundle are sent here. This acts as a recycle bin for bundles.
----@field _NAME string Type.
 local Root = {}
 Root.__index = Root
 setmetatable(Root, {
@@ -32,18 +20,6 @@ local Bundle = require("track.containers.bundle")
 
 -- TODO: Implement if cwd/block - cwd != "" then bundles from cwd will be shown instead of cwd/block.
 -- TODO: Implement a way to distinguish projects. Like if cwd has .git then mark it as a git directory.
-
----@class RootFields
----@field path string Path to root.
----@field label? string Small description/title about the root.
----@field links? string[] Shortcuts to other roots.
----@field bundles? Bundle[] Bundle map. Key is the same as `Bundle.label` and value is a `Bundle` instance.
----@field main? string Master bundle. This is similar to the `main` branch in GIT.
----@field stashed? string Flag variable that will be set if a bundle has been stashed.
----@field previous? string Flag variable that will be set if the `main` bundle has an alternate bundle.
----@field disable_history? boolean Deleting bundles will not store said bundles in the `history` table.
----@field maximum_history? number Maximum number of bundles that are allowed to be in `history` table.
----@field history Bundle[] Deleted/Uneeded bundle are sent here. This acts as a recycle bin for bundles.
 
 ---Create a new `Root` instance.
 ---@param fields RootFields Available root attributes/fields.

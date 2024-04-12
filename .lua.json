@@ -10,8 +10,11 @@
   },
   "neoconf": {
     "plugins": {
-      "sumneko_lua": {
+      "lua_ls": {
         "enabled": true,
+        "diagnostics.globals": [
+          "vim"
+        ],
         "Lua.workspace.library": [
           "/usr/share/nvim/runtime",
           "/usr/lib/nvim"
