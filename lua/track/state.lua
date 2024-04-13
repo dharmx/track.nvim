@@ -45,7 +45,6 @@ function M.wipe()
 end
 
 -- Roots parser helpers. {{{
-
 ---Helper that parses marks and wraps raw mark fields into a `Mark` instance. As a side-effect any extra values sneaked in will be ignored.
 ---@param marks {path: string, label: string, type: MarkType}[]
 ---@return Mark[]
@@ -77,11 +76,7 @@ local function parse_bundles(bundles)
   end
   return store
 end
-
 -- }}}
-
--- loadsave? Really? Impeccable naming sense.
--- Interpret this as load_savefile. _ triggers my OCD.
 
 ---Load a save file. The decoded JSON will be merged/overwritten to `M._roots` table.
 ---@param action "wipe"|"extend" Wipe will clear `M._roots` and then assign the decoded values. Merge will extend existing `M._roots` value.
