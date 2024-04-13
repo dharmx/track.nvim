@@ -35,7 +35,10 @@ function M.mark(root_path, file, bundle_label, save)
   ---@diagnostic disable-next-line: undefined-field
   local mark = root.bundles[bundle_label]:add_mark(file)
   ---@diagnostic disable-next-line: assign-type-mismatch
-  if mark then mark.type = vim.loop.fs_stat(file).type end
+  if mark then
+    local stat = vim.loop.fs_stat(file)
+    mark.type = stat and stat.type or "terminal"
+  end
   if save then State.save() end
 end
 
