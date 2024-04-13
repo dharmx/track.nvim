@@ -11,11 +11,12 @@ function M.gen_from_views(opts)
   local disable_devicons = opts.disable_devicons
   local displayer = entry_display.create({
     separator = icons.separator,
+    separator_hl = "TrackViewsDivide",
     items = {
       -- hardcoded
-      { width = 2 },
-      { width = 3 },
-      { width = 2 },
+      { width = 1 },
+      {},
+      {},
       { width = 1 },
       { remaining = true },
     },
@@ -86,18 +87,17 @@ function M.gen_from_views(opts)
   end
 end
 
-
 function M.gen_from_bundles(opts)
   ---@type Root
   local root = require("track.state")._roots[opts.track.root_path]
   local icons = opts.icons
   local displayer = entry_display.create({
     separator = icons.separator,
+    separator_hl = "TrackBundlesDivide",
     items = {
-      -- hardcoded
-      { width = 2 }, -- main / alternate / inactive
-      { width = 1 }, -- views-marks
-      { width = 1 }, -- history-deleted
+      {}, -- views-marks
+      {}, -- history-deleted
+      {}, -- main / alternate / inactive
       { remaining = true },
     },
   })
@@ -105,8 +105,8 @@ function M.gen_from_bundles(opts)
   local function make_display(entry)
     ---@type Bundle
     local bundle = entry.value
-    local display, display_hl = bundle.label, ""
-    local state, state_hl = icons.inactive, "TrackBundlesState"
+    local display, display_hl = bundle.label, "TrackBundlesInactive"
+    local state, state_hl = icons.inactive, "TrackBundlesDisplayInactive"
     if root.main == bundle.label then
       state, state_hl = icons.main, "TrackBundlesMain"
       display, display_hl = bundle.label, "TrackBundlesDisplayMain"
@@ -115,12 +115,12 @@ function M.gen_from_bundles(opts)
       display, display_hl = bundle.label, "TrackBundlesDisplayAlternate"
     end
 
-    local mark, mark_hl = string.format("%s%s", icons.marks, #bundle.views), "TrackBundlesMark"
-    local history, history_hl = string.format("%s%s", icons.history, #bundle.history), "TrackBundlesHistory"
+    local mark, mark_hl = string.format("%s %s", icons.mark, #bundle.views), "TrackBundlesMark"
+    local history, history_hl = string.format("%s %s", icons.history, #bundle.history), "TrackBundlesHistory"
     return displayer({
-      { state, state_hl },
       { mark, mark_hl },
       { history, history_hl },
+      { state, state_hl },
       { display, display_hl },
     })
   end

@@ -21,7 +21,7 @@ cmd("Track", function(...)
     return {
       track = {
         root_path = cwd,
-        bundle_label = State._roots[cwd].main,
+        bundle_label = State._roots[cwd] and State._roots[cwd].main or "main",
       }
     }
   end
@@ -177,12 +177,15 @@ HI(0, "TrackViewsMarkUnlisted", { foreground = "#C397D8" })
 HI(0, "TrackViewsMissing", { foreground = "#FFE59E" })
 HI(0, "TrackViewsTerminal", { foreground = "#36C692" })
 HI(0, "TrackViewsManual", { foreground = "#5FB0FC" })
+HI(0, "TrackViewsDivide", { foreground = "#4B5259" })
 
 HI(0, "TrackBundlesInactive", { foreground = "#4B5259" })
+HI(0, "TrackBundlesDisplayInactive", { foreground = "#4B5259" })
 HI(0, "TrackBundlesMain", { foreground = "#7AB0DF" })
 HI(0, "TrackBundlesDisplayMain", { foreground = "#7AB0DF" })
 HI(0, "TrackBundlesAlternate", { foreground = "#36C692" })
 HI(0, "TrackBundlesDisplayAlternate", { foreground = "#79DCAA" })
 HI(0, "TrackBundlesMark", { foreground = "#FFE59E" })
 HI(0, "TrackBundlesHistory", { foreground = "#F87070" })
+HI(0, "TrackBundlesDivide", { foreground = "#4B5259" })
 -- }}}

@@ -45,12 +45,12 @@ M._defaults = {
         root_path = nil,
       },
       icons = {
-        separator = " ",
-        alternate = " ",
+        separator = " ┃ ",
         main = " ",
+        alternate = " ",
         inactive = " ",
-        marks = "",
-        history = "",
+        mark = "",
+        history = "",
       }
     },
     views = {
