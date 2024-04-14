@@ -6,7 +6,7 @@ local entry_display = require("telescope.pickers.entry_display")
 local utils = require("telescope.utils")
 local make_entry = require("telescope.make_entry")
 
-function M.gen_from_views(opts)
+function M.gen_from_view(opts)
   local icons = opts.icons
   local disable_devicons = opts.disable_devicons
   local displayer = entry_display.create({
@@ -18,7 +18,7 @@ function M.gen_from_views(opts)
       {},
       {},
       { width = 1 },
-      { remaining = true },
+      {},
     },
   })
 
@@ -33,9 +33,9 @@ function M.gen_from_views(opts)
     end
 
     -- the marked value might be deleted - priority: 2
-    if vim.startswith(mark.path, "term:/") then
+    if mark.type == "term" then
       marker, marker_hl = icons.terminal, "TrackViewsTerminal"
-    elseif vim.startswith(mark.path, "man:/") then
+    elseif mark.type == "man" then
       marker, marker_hl = icons.manual, "TrackViewsManual"
     ---@diagnostic disable-next-line: undefined-field
     elseif not mark:exists() then
@@ -87,7 +87,7 @@ function M.gen_from_views(opts)
   end
 end
 
-function M.gen_from_bundles(opts)
+function M.gen_from_bundle(opts)
   ---@type Root
   local root = require("track.state")._roots[opts.track.root_path]
   local icons = opts.icons
@@ -98,7 +98,7 @@ function M.gen_from_bundles(opts)
       {}, -- views-marks
       {}, -- history-deleted
       {}, -- main / alternate / inactive
-      { remaining = true },
+      {}, -- { remaining = true } is implied
     },
   })
 
