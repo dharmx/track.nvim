@@ -4,23 +4,22 @@ local State = require("track.state")
 local Util = require("track.util")
 local Root = require("track.containers.root")
 local Log = require("track.log")
+M.root_path = Util.cwd()
 
----@param root_path string
 ---@param file string
 ---@param bundle_label? string
 ---@param save? function
-function M.mark(root_path, file, bundle_label, save)
-  Log.errors(root_path, "root_path needs to be present.", "Core.mark")
+function M:mark(file, bundle_label, save)
   Log.errors(file, "file cannot be nil.", "Core.mark")
   file = Util.filter_path(file) -- remove // and trailing /
   State.load() -- load state from savefile if it exists
 
   -- create a root if it does not exist
-  local root = State._roots[root_path]
+  local root = State._roots[self.root_path]
   if not root then
     ---@type Root
-    local new_root = Root(root_path)
-    State._roots[root_path] = new_root
+    local new_root = Root(self.root_path)
+    State._roots[self.root_path] = new_root
     root = new_root
   end
 
@@ -35,25 +34,20 @@ function M.mark(root_path, file, bundle_label, save)
   ---@diagnostic disable-next-line: undefined-field
   local mark = root.bundles[bundle_label]:add_mark(file)
   ---@diagnostic disable-next-line: assign-type-mismatch
-  if mark then
-    local stat = vim.loop.fs_stat(file)
-    mark.type = stat and stat.type or "terminal"
-  end
+  if mark then mark.type = Util.filetype(file) end
   if save then State.save() end
 end
 
----@param root_path string
 ---@param file string
 ---@param bundle_label? string
 ---@param save? function
-function M.unmark(root_path, file, bundle_label, save)
-  Log.errors(root_path, "root_path needs to be present.", "Core.unmark")
+function M:unmark(file, bundle_label, save)
   file = Util.filter_path(file)
   State.load()
 
-  local root = State._roots[root_path]
+  local root = State._roots[self.root_path]
   if not root then
-    Log.warn("Core.unmark(): cannot unmark as the root " .. root_path .. " does not exist")
+    Log.warn("Core.unmark(): cannot unmark as the root " .. self.root_path .. " does not exist")
     return
   end
 
@@ -63,56 +57,48 @@ function M.unmark(root_path, file, bundle_label, save)
   if save then State.save() end
 end
 
----@param root_path string
 ---@param save? function
-function M.stash(root_path, save)
-  Log.errors(root_path, "root_path needs to be present.", "Core.stash")
-  local root = State._roots[root_path]
+function M:stash(save)
+  local root = State._roots[self.root_path]
   if not root then
-    Log.warn("Core.stash(): cannot stash bundle as the root " .. root_path .. " does not exist")
+    Log.warn("Core.stash(): cannot stash bundle as the root " .. self.root_path .. " does not exist")
     return
   end
   root:stash_bundle()
   if save then State.save() end
 end
 
----@param root_path string
 ---@param save? function
-function M.restore(root_path, save)
-  Log.errors(root_path, "root_path needs to be present.", "Core.restore")
+function M:restore(save)
   State.load()
-  local root = State._roots[root_path]
+  local root = State._roots[self.root_path]
   if not root then
-    Log.warn("Core.restore(): cannot restore bundle as the root " .. root_path .. " does not exist")
+    Log.warn("Core.restore(): cannot restore bundle as the root " .. self.root_path .. " does not exist")
     return
   end
   root:restore_bundle()
   if save then State.save() end
 end
 
----@param root_path string
 ---@param save? function
-function M.alternate(root_path, save)
-  Log.errors(root_path, "root_path needs to be present.", "Core.alternate")
+function M:alternate(save)
   State.load()
-  local root = State._roots[root_path]
+  local root = State._roots[self.root_path]
   if not root then
-    Log.warn("Core.alternate(): cannot alternate bundle as the root " .. root_path .. " does not exist")
+    Log.warn("Core.alternate(): cannot alternate bundle as the root " .. self.root_path .. " does not exist")
     return
   end
   root:alternate_bundle()
   if save then State.save() end
 end
 
----@param root_path string
 ---@param bundle_label? string
 ---@param save? function
-function M.delete(root_path, bundle_label, save)
-  Log.errors(root_path, "root_path needs to be present.", "Core.delete")
+function M:delete(bundle_label, save)
   State.load()
-  local root = State._roots[root_path]
+  local root = State._roots[self.root_path]
   if not root then
-    Log.warn("Core.delete(): cannot delete bundle as the root " .. root_path .. " does not exist")
+    Log.warn("Core.delete(): cannot delete bundle as the root " .. self.root_path .. " does not exist")
     return
   end
 
@@ -124,21 +110,18 @@ function M.delete(root_path, bundle_label, save)
   if save then State.save() end
 end
 
----@param root_path string
 ---@param file string
 ---@param direction? boolean
 ---@param bundle_label string
 ---@param save? function
 ---@return Bundle?
-function M.move(root_path, file, direction, bundle_label, save)
-  Log.errors(root_path, "root_path needs to be present.", "Core.move")
+function M:move(file, direction, bundle_label, save)
   Log.errors(file, "file needs to be present.", "Core.move")
   Log.errors(bundle_label, "bundle_label needs to be present.", "Core.move")
-
   file = Util.filter_path(file)
   State.load()
 
-  local root = State._roots[root_path]
+  local root = State._roots[self.root_path]
   if not root or not root.bundles[bundle_label] then return end
 
   ---@type Bundle
@@ -167,13 +150,11 @@ function M.move(root_path, file, direction, bundle_label, save)
   return root.bundles[bundle_label]
 end
 
----@param root_path string
 ---@param bundle_label? string
 ---@param disable_history? boolean
 ---@param maximum_history? number
-function M.history(root_path, bundle_label, disable_history, maximum_history)
-  Log.errors(root_path, "root_path needs to be present.", "Core.delete")
-  local root = State._roots[root_path]
+function M:history(bundle_label, disable_history, maximum_history)
+  local root = State._roots[self.root_path]
   if root then
     bundle_label = vim.F.if_nil(bundle_label, root.main)
     local bundle = root.bundles[bundle_label]
@@ -184,7 +165,13 @@ function M.history(root_path, bundle_label, disable_history, maximum_history)
     end
     return
   end
-  Log.warn("Core.history(): cannot insert into history as the root " .. root_path .. " does not exist")
+  Log.warn("Core.history(): cannot insert into history as the root " .. self.root_path .. " does not exist")
 end
 
-return M
+return setmetatable(M, {
+  __call = function(self, root_path)
+    Log.errors(self.root_path, "root_path needs to be present.", "Core.__call")
+    self.root_path = root_path
+    return self
+  end,
+})

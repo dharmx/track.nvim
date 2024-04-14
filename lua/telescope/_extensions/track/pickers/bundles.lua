@@ -21,7 +21,7 @@ end
 function M.finder(opts, results)
   return finders.new_table({
     results = results,
-    entry_maker = EntryMakers.gen_from_bundles(opts),
+    entry_maker = EntryMakers.gen_from_bundle(opts),
   })
 end
 

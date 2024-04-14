@@ -67,10 +67,9 @@ cmd("Mark", function(...)
   if vim.tbl_isempty(files) then table.insert(files, V.expand("%")) end
   local Config = require("track.config").get()
   local Core = require("track.core")
-  local cwd = V.getcwd()
   for _, file in ipairs(files) do
-    Core.mark(cwd, file)
-    Core.history(cwd, nil, Config.disable_history, Config.maximum_history)
+    Core:mark(file)
+    Core:history(nil, Config.disable_history, Config.maximum_history)
   end
 end, {
   complete = "file",
@@ -81,13 +80,12 @@ end, {
 cmd("MarkOpened", function()
   local Config = require("track.config").get()
   local Core = require("track.core")
-  local cwd = V.getcwd()
   local listed_buffers = V.getbufinfo({ listed = 1 })
   for _, info in ipairs(listed_buffers) do
     local name = V.bufname(info.bufnr)
     if name ~= "" and not name:match("^term://") then
-      Core.mark(cwd, name)
-      Core.history(cwd, nil, Config.disable_history, Config.maximum_history)
+      Core:mark(name)
+      Core:history(nil, Config.disable_history, Config.maximum_history)
     end
   end
 end, {
@@ -99,10 +97,7 @@ cmd("Unmark", function(...)
   local files = (...).fargs
   if vim.tbl_isempty(files) then table.insert(files, V.expand("%")) end
   local Core = require("track.core")
-  local cwd = V.getcwd()
-  for _, file in ipairs(files) do
-    Core.unmark(cwd, file)
-  end
+  for _, file in ipairs(files) do Core:unmark(file) end
 end, {
   complete = function()
     local cwd = V.getcwd()
@@ -120,8 +115,7 @@ end, {
 
 ---@todo
 cmd("StashBundle", function()
-  local Core = require("track.core")
-  Core.stash(V.getcwd())
+  require("track.core"):stash()
 end, {
   complete = function()
     local cwd = V.getcwd()
@@ -142,9 +136,8 @@ cmd("RestoreBundle", function() require("track.core").restore(V.getcwd()) end, {
 cmd("DeleteBundle", function(...)
   local label = (...).args
   local Core = require("track.core")
-  local cwd = V.getcwd()
   if label == "" then label = nil end
-  Core.delete(cwd, label)
+  Core:delete(label)
 end, {
   desc = "Delete bundle.",
   nargs = "?",

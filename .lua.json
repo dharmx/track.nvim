@@ -12,9 +12,7 @@
     "plugins": {
       "lua_ls": {
         "enabled": true,
-        "diagnostics.globals": [
-          "vim"
-        ],
+        "diagnostics.globals": [ "vim" ],
         "Lua.workspace.library": [
           "/usr/share/nvim/runtime",
           "/usr/lib/nvim"
