@@ -24,12 +24,33 @@ function M.open_entry(entry)
   end
 end
 
+function M.filetype(uri)
+  local uri_type = vim.F.if_nil(string.match(uri, "^(%w+):/"), "file")
+  if uri_type == "file" then
+    local stat, _, e = vim.loop.fs_stat(uri)
+    if e == "EACCES" then
+      return "no_access"
+    elseif e == "ENOENT" then
+      return "no_exists"
+    else
+      return stat and stat.type or "error"
+    end
+  end
+  return vim.trim(uri_type) == "" and "default" or uri_type
+end
+
 function M.filter_path(path)
   local length = path:len()
   path = path:gsub("//", "/")
   if path == "/" then return path end
   if path:sub(length, length) == "/" then return path:sub(1, length - 1) end
   return path
+end
+
+---Get cwd. Like really.
+---@return string
+function M.cwd()
+  return (vim.loop.cwd()) or vim.fn.getcwd() or vim.env.PWD
 end
 
 return M
