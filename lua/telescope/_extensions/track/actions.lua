@@ -61,7 +61,7 @@ function M.change_mark_view(buffer)
     local root = State._roots[pack.entry.value.root_path]
     local bundle = root.bundles[pack.entry.value.bundle_label]
     local mark = bundle:change_mark_path(pack.entry.value, input)
-    if mark then mark.type = vim.loop.fs_stat(mark.absolute).type end
+    if mark then mark.type = Util.filetype(mark.absolute) end
   end)
 end
 
