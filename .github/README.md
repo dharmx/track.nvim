@@ -6,6 +6,6 @@ Harpoon like file tracking. Supercharged by [telescope.nvim](https:/github.com/n
 
 ![views](./views.png) 
 
-![bookmarks](./bookmarks.png) 
+![bundles](./bundles.png) 
 
 </samp>

@@ -36,7 +36,7 @@ M.loaded = false
 ---@private
 
 ---@type Path
-local savepath = Path:new(Config.savepath)
+local save_path = Path:new(Config.save_path)
 
 ---Clear all recorded roots. This will clear histories as well.
 function M.wipe()
@@ -82,9 +82,9 @@ end
 ---@param action "wipe"|"extend" Wipe will clear `M._roots` and then assign the decoded values. Merge will extend existing `M._roots` value.
 ---@param loadpath string Path to save file that should be loaded.
 ---@param on_load? function Run this callback after the save file is loaded.
-function M.loadsave(action, loadpath, on_load)
-  if not savepath:exists() then
-    Log.warn("State.loadsave(): " .. savepath.filename .. " does not exist")
+function M.load_save(action, loadpath, on_load)
+  if not save_path:exists() then
+    Log.warn("State.load_save(): " .. save_path.filename .. " does not exist")
     return
   end
 
@@ -92,7 +92,7 @@ function M.loadsave(action, loadpath, on_load)
   loadpath = Path:new(loadpath)
   local data = vim.trim(loadpath:read()) -- strip leading and trailing whitespaces
   if data == "" then
-    Log.warn("State.loadsave(): " .. savepath.filename .. " is empty")
+    Log.warn("State.load_save(): " .. save_path.filename .. " is empty")
     return
   end
 
@@ -120,15 +120,15 @@ function M.loadsave(action, loadpath, on_load)
     M._roots[path].stashed = root.stashed
     M._roots[path].previous = root.previous
   end
-  Log.info("State.loadsave(): loaded state from " .. savepath.filename)
+  Log.info("State.load_save(): loaded state from " .. save_path.filename)
   if on_load then on_load(M._roots) end
 end
 
 ---Reload and merge `Config.savepath` path into `M._roots` again.
 ---@param on_reload? function Callback that gets called after reload.
 function M.reload(on_reload)
-  M.loadsave("extend", savepath.filename, on_reload)
-  Log.info("State.reload(): reloaded " .. savepath.filename)
+  M.load_save("extend", save_path.filename, on_reload)
+  Log.info("State.reload(): reloaded " .. save_path.filename)
 end
 
 -- you will see this called practically everywhere in core.lua
@@ -138,7 +138,7 @@ end
 function M.load(on_load)
   if M._loaded then return end
   M._loaded = true -- allow calling this only once.
-  Log.info("State.load(): loaded state from " .. savepath.filename)
+  Log.info("State.load(): loaded state from " .. save_path.filename)
   M.reload(on_load)
 end
 
@@ -146,30 +146,30 @@ end
 ---@param before_save? function Callback that is called exactly before changes are written in `Config.savepath`.
 ---@param on_save? function Callback that is called after changes are written to `Config.savepath`.
 function M.save(before_save, on_save)
-  if not savepath:exists() then
-    Log.warn("M.save(): " .. savepath.filename .. " does not exist. Creating...")
-    savepath:touch({ parents = true })
+  if not save_path:exists() then
+    Log.warn("M.save(): " .. save_path.filename .. " does not exist. Creating...")
+    save_path:touch({ parents = true })
   end
 
   -- before_save seems too much?
   if before_save and before_save() then return end
   local encoded = vim.json.encode(M._roots)
-  savepath:write(encoded, "w")
-  Log.info("State.save(): saved current state into " .. savepath.filename)
+  save_path:write(encoded, "w")
+  Log.info("State.save(): saved current state into " .. save_path.filename)
   if on_save then on_save() end
 end
 
 ---Remove or clear the save file.
 ---@param clean? boolean
-function M.rm(clean)
+function M.remove(clean)
   if clean then
     -- empty JSON object
-    savepath:write("{}", "w")
-    Log.info("State.rm(): cleared " .. savepath.filename)
+    save_path:write("{}", "w")
+    Log.info("State.remove(): cleared " .. save_path.filename)
     return
   end
-  Log.info("State.rm(): removed " .. savepath.filename)
-  savepath:rm()
+  Log.info("State.remove(): removed " .. save_path.filename)
+  save_path:rm()
 end
 
 return M
