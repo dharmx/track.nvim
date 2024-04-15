@@ -14,15 +14,14 @@ local HI = vim.api.nvim_set_hl
 -- TODO: Implement bang, range, repeat, motions and bar.
 
 cmd("Track", function(...)
-  local function get_root_and_bundle_opted()
-    local State = require("track.state")
-    State.load()
-    local cwd = vim.fn.getcwd()
+  local function get_opts()
+    local cwd = require("track.core").root_path
+    local root = require("track.state")._roots[cwd]
     return {
       track = {
         root_path = cwd,
-        bundle_label = State._roots[cwd] and State._roots[cwd].main or "main",
-      }
+        bundle_label = root and root.main or "main",
+      },
     }
   end
 
@@ -33,17 +32,17 @@ cmd("Track", function(...)
     require("track.state").load()
   elseif args[1] == "loadsave" then
     assert(args[2] and type(args[2]) == "string", "Needs a path value.")
-    require("track.state").loadsave("wipe", args[2])
+    require("track.state").load_save("wipe", args[2])
   elseif args[1] == "reload" then
     require("track.state").reload()
   elseif args[1] == "wipe" then
     require("track.state").wipe()
   elseif args[1] == "remove" then
-    require("track.state").rm()
+    require("track.state").remove()
   elseif args[1] == "bundles" then
-    require("telescope").extensions.track.bundles(get_root_and_bundle_opted())
+    require("telescope").extensions.track.bundles(get_opts())
   else
-    require("telescope").extensions.track.views(get_root_and_bundle_opted())
+    require("telescope").extensions.track.views(get_opts())
   end
 end, {
   desc = "State operations like: save, load, loadsave, reload, wipe and remove. marks for showing current mark list.",
@@ -68,8 +67,7 @@ cmd("Mark", function(...)
   local Config = require("track.config").get()
   local Core = require("track.core")
   for _, file in ipairs(files) do
-    Core:mark(file)
-    Core:history(nil, Config.disable_history, Config.maximum_history)
+    Core:mark(file):history(Config.disable_history, Config.maximum_history)
   end
 end, {
   complete = "file",
@@ -84,8 +82,7 @@ cmd("MarkOpened", function()
   for _, info in ipairs(listed_buffers) do
     local name = V.bufname(info.bufnr)
     if name ~= "" and not name:match("^term://") then
-      Core:mark(name)
-      Core:history(nil, Config.disable_history, Config.maximum_history)
+      Core:mark(name):history(Config.disable_history, Config.maximum_history)
     end
   end
 end, {
@@ -97,7 +94,9 @@ cmd("Unmark", function(...)
   local files = (...).fargs
   if vim.tbl_isempty(files) then table.insert(files, V.expand("%")) end
   local Core = require("track.core")
-  for _, file in ipairs(files) do Core:unmark(file) end
+  for _, file in ipairs(files) do
+    Core:unmark(file)
+  end
 end, {
   complete = function()
     local cwd = V.getcwd()
@@ -114,9 +113,7 @@ end, {
 })
 
 ---@todo
-cmd("StashBundle", function()
-  require("track.core"):stash()
-end, {
+cmd("StashBundle", function() require("track.core"):stash() end, {
   complete = function()
     local cwd = V.getcwd()
     local root = require("track.state")._roots[cwd]
@@ -128,16 +125,15 @@ end, {
 })
 
 ---@todo
-cmd("RestoreBundle", function() require("track.core").restore(V.getcwd()) end, {
+cmd("RestoreBundle", function() require("track.core"):restore() end, {
   desc = "Restore stashed bundle.",
   nargs = 0,
 })
 
 cmd("DeleteBundle", function(...)
   local label = (...).args
-  local Core = require("track.core")
   if label == "" then label = nil end
-  Core:delete(label)
+  require("track.core"):delete(label)
 end, {
   desc = "Delete bundle.",
   nargs = "?",
@@ -150,9 +146,7 @@ end, {
 })
 
 ---@todo
-cmd("AlternateBundle", function()
-  require("track.core").alternate(V.getcwd())
-end, {
+cmd("AlternateBundle", function() require("track.core"):alternate() end, {
   desc = "Restore stashed bundle.",
   nargs = 0,
 })

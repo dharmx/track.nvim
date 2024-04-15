@@ -13,7 +13,7 @@ local Util = require("track.util")
 ---Default **track.nvim** opts.
 ---@type TrackOpts
 M._defaults = {
-  savepath = vim.fn.stdpath("state") .. "/track.json",
+  save_path = vim.fn.stdpath("state") .. "/track.json",
   disable_history = true,
   maximum_history = 10,
   save = {

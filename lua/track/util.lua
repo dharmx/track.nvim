@@ -39,14 +39,6 @@ function M.filetype(uri)
   return vim.trim(uri_type) == "" and "default" or uri_type
 end
 
-function M.filter_path(path)
-  local length = path:len()
-  path = path:gsub("//", "/")
-  if path == "/" then return path end
-  if path:sub(length, length) == "/" then return path:sub(1, length - 1) end
-  return path
-end
-
 ---Get cwd. Like really.
 ---@return string
 function M.cwd()

@@ -58,7 +58,7 @@
 ---@field plugin string Name of the plugin.
 
 ---@class TrackOpts
----@field savepath string JSON file where the current state will be saved.
+---@field save_path string JSON file where the current state will be saved.
 ---@field disable_history boolean Change state of all bundle histories.
 ---@field maximum_history number Change the maximum number of marks to be stored in all bundle history tables.
 ---@field save TrackSave Sub-configuration for when current state will be saved.
@@ -120,3 +120,5 @@
 ---@field path string Path to mark.
 ---@field label? string Optional label for the mark.
 ---@field type? MarkType Optional type for the mark.
+
+---@alias Core table
