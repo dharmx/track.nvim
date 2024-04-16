@@ -38,6 +38,7 @@ function M.picker(opts)
     sorter = config.values.generic_sorter(opts),
     attach_mappings = function(buffer, _)
       local status = state.get_status(buffer)
+      status.picker._current_opts = opts
       ---@diagnostic disable-next-line: undefined-field
       actions.close:enhance({
         post = function(_)

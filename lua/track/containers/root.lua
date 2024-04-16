@@ -209,4 +209,25 @@ function Root:insert_history(bundle, force)
   Log.trace("Root.insert_history(): bundle " .. bundle.label .. " has been recorded into history")
 end
 
+-- TODO: Implement force = true i.e. overwrite a bundle
+function Root:rename_bundle(bundle, new_label)
+  local bundle_type = type(bundle)
+  assert(bundle_type == "string" or (bundle_type == "table" and bundle._NAME == "bundle"), "bundle: bundle needs to be Bundle|string")
+  local label = type(bundle) == "string" and bundle or bundle.label
+  if self:bundle_exists(new_label) then return end
+  local old_bundle = self.bundles[label]
+
+  local main = self:get_main_bundle().label == label
+  local stashed = self.stashed == label
+  local previous = self.previous == label
+
+  old_bundle.label = new_label
+  self.bundles[label] = nil
+  self.bundles[new_label] = old_bundle
+
+  self.main = main and new_label or self.main
+  self.stashed = stashed and new_label or self.stashed
+  self.previous = previous and new_label or self.previous
+end
+
 return Root

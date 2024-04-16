@@ -174,6 +174,12 @@ function M:history(...)
   Log.warn("Core.history(): cannot insert into history as the root " .. self.root_path .. " does not exist")
 end
 
+function M:select(index, bubdle_label, save)
+end
+
+function M:cycle(size, bundle_label, save)
+end
+
 return setmetatable(M, {
   ---@overload fun(self, root_path: string)
   __call = function(self, root_path)
