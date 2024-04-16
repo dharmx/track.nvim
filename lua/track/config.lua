@@ -8,7 +8,6 @@ local Util = require("track.util")
 -- TODO: Implement a way to show hidden files.
 -- TODO: Implement exclude filetypes.
 -- TODO: Implement exclude buffer names.
--- TODO: Asyncify saving.
 
 ---Default **track.nvim** opts.
 ---@type TrackOpts
@@ -40,6 +39,18 @@ M._defaults = {
           require("track.state")._roots[opts.track.root_path]:change_main_bundle(selected.value.label)
         end,
       },
+      attach_mappings = function(_, map)
+        local actions = require("telescope.actions")
+        map("n", "q", actions.close)
+        map("n", "v", actions.select_all)
+
+        local Actions = require("telescope._extensions.track.actions")
+        map("n", "D", actions.select_all + Actions.delete_bundle)
+        map("n", "dd", Actions.delete_bundle)
+        map("i", "<C-D>", Actions.delete_bundle)
+        map("i", "<C-E>", Actions.change_bundle_label)
+        return true -- compulsory
+      end,
       track = {
         bundle_label = nil,
         root_path = nil,
