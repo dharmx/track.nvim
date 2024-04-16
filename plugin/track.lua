@@ -174,5 +174,5 @@ HI(0, "TrackBundlesAlternate", { foreground = "#36C692" })
 HI(0, "TrackBundlesDisplayAlternate", { foreground = "#79DCAA" })
 HI(0, "TrackBundlesMark", { foreground = "#FFE59E" })
 HI(0, "TrackBundlesHistory", { foreground = "#F87070" })
-HI(0, "TrackBundlesDivide", { foreground = "#4B5259" })
+HI(0, "TrackBundlesDivide", { foreground = "#151A1F" })
 -- }}}
