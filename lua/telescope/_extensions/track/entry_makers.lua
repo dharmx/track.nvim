@@ -89,7 +89,7 @@ end
 
 function M.gen_from_bundle(opts)
   ---@type Root
-  local root = require("track.state")._roots[opts.track.root_path]
+  local root = require("track.state")._roots[opts.root_path]
   local icons = opts.icons
   local displayer = entry_display.create({
     separator = icons.separator,

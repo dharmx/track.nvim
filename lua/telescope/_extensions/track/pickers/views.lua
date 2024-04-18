@@ -1,7 +1,6 @@
 local M = {}
 
 local Config = require("track.config")
-local SaveConfig = Config.get_save_config()
 local Log = require("track.log")
 
 local State = require("track.state")
@@ -15,9 +14,9 @@ local state = require("telescope.state")
 
 function M.resulter(opts)
   local results = {}
-  local root_path = opts.track.root_path
+  local root_path = opts.root_path
   local root = State._roots[root_path]
-  local bundle_label = opts.track.bundle_label
+  local bundle_label = opts.bundle_label
 
   if root then
     local bundle = root.bundles[bundle_label]
@@ -61,7 +60,7 @@ function M.picker(opts)
       ---@diagnostic disable-next-line: undefined-field
       actions.close:enhance({
         post = function(_)
-          if SaveConfig.on_views_close then
+          if opts.save_on_close then
             State.save()
             Log.info("Telescope.Views.picker(): closed telescope.track.views and saved state")
           end

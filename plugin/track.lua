@@ -18,10 +18,8 @@ cmd("Track", function(...)
     local cwd = require("track.core").root_path
     local root = require("track.state")._roots[cwd]
     return {
-      track = {
-        root_path = cwd,
-        bundle_label = root and root.main or "main",
-      },
+      root_path = cwd,
+      bundle_label = root and root.main or "main",
     }
   end
 
@@ -41,8 +39,10 @@ cmd("Track", function(...)
     require("track.state").remove()
   elseif args[1] == "bundles" then
     require("telescope").extensions.track.bundles(get_opts())
-  else
+  elseif args[1] == "views" then
     require("telescope").extensions.track.views(get_opts())
+  else
+    require("track.pad").toggle_bundle()
   end
 end, {
   desc = "State operations like: save, load, loadsave, reload, wipe and remove. marks for showing current mark list.",
@@ -152,6 +152,8 @@ cmd("AlternateBundle", function() require("track.core"):alternate() end, {
 })
 
 -- Highlights {{{
+HI(0, "TrackPadTitle", { link = "TelescopeResultsTitle" })
+
 HI(0, "TrackViewsAccessible", { foreground = "#79DCAA" })
 HI(0, "TrackViewsInaccessible", { foreground = "#F87070" })
 HI(0, "TrackViewsFocusedDisplay", { foreground = "#7AB0DF" })

@@ -17,13 +17,14 @@ function M.open_entry(entry)
     if not replaced then
       vim.notify("Could not open terminal for `" .. entry .. "`.")
     else
-      vim.cmd.terminal(vim.split(entry, "[;:]")[3])
+      vim.cmd("confirm edit " .. entry)
     end
   else
     vim.cmd("confirm edit " .. entry)
   end
 end
 
+---@return string
 function M.filetype(uri)
   local uri_type = vim.F.if_nil(string.match(uri, "^(%w+):/"), "file")
   if uri_type == "file" then

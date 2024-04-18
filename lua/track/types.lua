@@ -1,15 +1,7 @@
----@class TrackSave
----@field on_views_close boolean Save state when the views telescope buffer is closed.
----@field on_bundles_close boolean Save state when the bundles telescope buffer is closed.
-
 ---@class TrackPickersViewsHooks
 ---@field on_open function This will be called before the picker window is opened.
 ---@field on_close function(buffer: number, picker: Picker) This will be called right after the picker window is closed.
 ---@field on_choose function(buffer: number, picker: Picker) Will be called after the choice is made and the picker os closed.
-
----@class TrackPickersViewsTrack
----@field bundle_label? string string Function that must return the root path.
----@field root_path? string Function that must return the path to the current working directory.
 
 ---@class TrackPickersViewsIcons
 ---@field separator string Separator between columns in the views picker.
@@ -25,28 +17,26 @@
 ---Other config opts that are not documented here can be found at |telecope.nvim| help page.
 ---@class TrackPickersViews
 ---@field hooks TrackPickersViewsHooks Callbacks related to the views picker.
----@field track TrackPickersViewsTrack Defaults like `bundle_label` and `root_path` for calling the view list.
+---@field bundle_label? string string Function that must return the root path.
+---@field root_path? string Function that must return the path to the current working directory.
+---@field save_on_close boolean Save state when the views telescope buffer is closed.
 ---@field icons TrackPickersViewsIcons File-indicators, state-indicators, separators and default icons.
 
 -- TODO: START {{{
-
 ---Other config opts that are not documented here can be found at |telecope.nvim| help page.
 ---@class TrackPickersBundles
 ---@field hooks TrackPickersBundlesHooks Callbacks related to the views picker.
----@field track TrackPickersBundlesTrack Defaults like `bundle_label` and `root_path` for calling the view list.
 ---@field icons TrackPickersBundlesIcons File-indicators, state-indicators, separators and default icons.
+---@field bundle_label? string string Function that must return the root path.
+---@field root_path? string Function that must return the path to the current working directory.
+---@field save_on_close boolean Save state when the bundles telescope buffer is closed.
 
 ---@class TrackPickersBundlesHooks
 ---@field on_open function This will be called before the picker window is opened.
 ---@field on_close function(buffer: number, picker: Picker) This will be called right after the picker window is closed.
 ---@field on_choose function(buffer: number, picker: Picker) Will be called after the choice is made and the picker os closed.
 
----@class TrackPickersBundlesTrack
----@field root_path? string Function that must return the path to the current working directory.
----@field bundle_label? string string Function that must return the root path.
-
 ---@class TrackPickersBundlesIcons
-
 -- TODO: END }}}
 
 ---@class TrackPickers
@@ -57,13 +47,21 @@
 ---@field level "error"|"warn"|"info"|"trace"|"debug"|"off" Log level. The higher the level is, lesser the STDOUT messages will be shown.
 ---@field plugin string Name of the plugin.
 
+-- TODO: {{{
+---@class TrackPad
+---@field window table
+---@field root_path? string Function that must return the path to the current working directory.
+---@field bundle_label? string string Function that must return the root path.
+---@field save_on_close boolean Save state when the views pad buffer is closed.
+-- }}}
+
 ---@class TrackOpts
 ---@field save_path string JSON file where the current state will be saved.
 ---@field disable_history boolean Change state of all bundle histories.
 ---@field maximum_history number Change the maximum number of marks to be stored in all bundle history tables.
----@field save TrackSave Sub-configuration for when current state will be saved.
 ---@field pickers TrackPickers Sub-configuration for telescope pickers.
 ---@field log TrackLog Sub-configuration for logging and debugging.
+---@field pad TrackPad Sub-configuration for pad UI.
 
 ---@class Root
 ---@field path string Path to root.

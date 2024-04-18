@@ -1,7 +1,6 @@
 local M = {}
 
 local Config = require("track.config")
-local SaveConfig = Config.get_save_config()
 local Log = require("track.log")
 
 local State = require("track.state")
@@ -14,7 +13,7 @@ local config = require("telescope.config")
 local state = require("telescope.state")
 
 function M.resulter(opts)
-  return State._roots[opts.track.root_path].bundles()
+  return State._roots[opts.root_path].bundles()
 end
 
 -- this can be passed into picker:refresh(<finder>)
@@ -42,7 +41,7 @@ function M.picker(opts)
       ---@diagnostic disable-next-line: undefined-field
       actions.close:enhance({
         post = function(_)
-          if SaveConfig.on_bundles_close then
+          if opts.save_on_close then
             State.save()
             Log.info("Telescope.Bundles.picker(): closed telescope.track.bundles and saved state")
           end
