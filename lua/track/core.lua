@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field
 local M = {}
 
 local State = require("track.state")
@@ -33,10 +34,16 @@ function M:mark(file, bundle_label, save)
   elseif not root.bundles[bundle_label] then
     root:new_bundle(bundle_label)
   end
-  ---@diagnostic disable-next-line: undefined-field
-  local mark = root.bundles[bundle_label]:add_mark(file)
-  ---@diagnostic disable-next-line: assign-type-mismatch
-  if mark then mark.type = Util.filetype(file) end
+
+  local bundle = root.bundles[bundle_label]
+  local mark = bundle:add_mark(file)
+  if mark then
+    mark.type = Util.filetype(file)
+    if mark.type == "term" then
+      local path_cmd = vim.split(mark.path, ":", { plain = true })
+      bundle:change_mark_path(mark, string.format("term://%s", path_cmd[#path_cmd]))
+    end
+  end
   if save then State.save() end
   return self
 end
@@ -133,7 +140,6 @@ function M:move(file, direction, bundle_label, save)
   if direction == "next" then
     for index, view in ipairs(bundle.views) do
       if view == file then
-        ---@diagnostic disable-next-line: undefined-field
         bundle:swap_marks(index + 1, index)
         break
       end
@@ -141,7 +147,6 @@ function M:move(file, direction, bundle_label, save)
   else
     for index, view in ipairs(bundle.views) do
       if view == file then
-        ---@diagnostic disable-next-line: undefined-field
         bundle:swap_marks(index, index - 1)
         break
       end

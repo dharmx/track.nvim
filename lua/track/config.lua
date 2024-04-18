@@ -15,12 +15,28 @@ M._defaults = {
   save_path = vim.fn.stdpath("state") .. "/track.json",
   disable_history = true,
   maximum_history = 10,
-  save = {
-    on_views_close = true, -- save when the view telescope picker is closed
-    on_bundles_close = true, -- vice-versa
+  pad = {
+    serial_maps = true,
+    save_on_close = true,
+    hooks = {
+      on_choose = Util.open_entry,
+      on_serial_choose = Util.open_entry,
+    },
+    window = {
+      style = "minimal",
+      border = "solid",
+      focusable = true,
+      relative = "editor",
+      width = 60,
+      height = 10,
+      title_pos = "center",
+    },
   },
   pickers = {
     bundles = {
+      save_on_close = true,
+      bundle_label = nil,
+      root_path = nil,
       prompt_prefix = "   ",
       selection_caret = "   ",
       previewer = false,
@@ -36,7 +52,7 @@ M._defaults = {
         on_choose = function(status, opts)
           local selected = status.picker:get_selection()
           if not selected then return end
-          require("track.state")._roots[opts.track.root_path]:change_main_bundle(selected.value.label)
+          require("track.state")._roots[opts.root_path]:change_main_bundle(selected.value.label)
         end,
       },
       attach_mappings = function(_, map)
@@ -51,10 +67,6 @@ M._defaults = {
         map("i", "<C-E>", Actions.change_bundle_label)
         return true -- compulsory
       end,
-      track = {
-        bundle_label = nil,
-        root_path = nil,
-      },
       icons = {
         separator = " ┃ ",
         main = " ",
@@ -65,6 +77,9 @@ M._defaults = {
       }
     },
     views = {
+      on_bundles_close = true, -- save when the view telescope picker is closed
+      bundle_label = nil,
+      root_path = nil,
       selection_caret = "   ",
       path_display = {
         absolute = false, -- /home/name/projects/hello/mark.lua -> hello/mark.lua
@@ -101,10 +116,6 @@ M._defaults = {
         map("i", "<C-E>", Actions.change_mark_view)
         return true -- compulsory
       end,
-      track = {
-        bundle_label = nil,
-        root_path = nil,
-      },
       disable_devicons = false,
       icons = {
         separator = " ",
@@ -147,6 +158,13 @@ function M.merge_pickers(opts)
   M._current.pickers = vim.tbl_deep_extend("keep", opts, M._current.pickers)
 end
 
+---@param opts TrackPad
+function M.merge_pad(opts)
+  ---@type TrackPad
+  opts = vim.F.if_nil(opts, {})
+  M._current.pad = vim.tbl_deep_extend("keep", opts, M._current.pad)
+end
+
 ---Merge `opts` with current track opts and return it. This will not write to `M._current`.
 ---@param opts TrackOpts
 ---@return TrackOpts
@@ -156,6 +174,10 @@ function M.extend(opts) return vim.tbl_deep_extend("keep", opts, M._current) end
 ---@param opts TrackPickers
 ---@return TrackPickers
 function M.extend_pickers(opts) return vim.tbl_deep_extend("keep", opts, M._current.pickers) end
+
+---@param opts TrackPad
+---@return TrackPad
+function M.extend_pad(opts) return vim.tbl_deep_extend("keep", opts, M._current.pad) end
 
 ---Return current track config.
 ---@return TrackOpts
@@ -168,5 +190,8 @@ function M.get_pickers() return M._current.pickers end
 ---Return current track save config.
 ---@return TrackSave
 function M.get_save_config() return M._current.save end
+
+---@return TrackPad
+function M.get_pad() return M._current.pad end
 
 return M

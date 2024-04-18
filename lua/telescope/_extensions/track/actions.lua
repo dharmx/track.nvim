@@ -14,7 +14,7 @@ function M.delete_view(buffer)
   current_picker:delete_selection(Util.mute)
   if #entries == 0 then table.insert(entries, current_picker:get_selection()) end
 
-  local root = State._roots[current_picker._current_opts.track.root_path]
+  local root = State._roots[current_picker._current_opts.root_path]
   for _, entry in ipairs(entries) do
     if root then
       local bundle = root.bundles[entry.value.bundle_label]
@@ -61,7 +61,7 @@ function M.change_mark_view(buffer)
     input = vim.trim(vim.F.if_nil(input, ""))
     if input == "" then return end
 
-    local root = State._roots[pack.picker._current_opts.track.root_path]
+    local root = State._roots[pack.picker._current_opts.root_path]
     local bundle = root.bundles[pack.entry.value.bundle_label]
     local mark = bundle:change_mark_path(pack.entry.value, input)
     if mark then mark.type = Util.filetype(mark.absolute) end
@@ -75,7 +75,7 @@ function M.delete_bundle(buffer)
   current_picker:delete_selection(Util.mute)
   if #entries == 0 then table.insert(entries, current_picker:get_selection()) end
 
-  local root = State._roots[current_picker._current_opts.track.root_path]
+  local root = State._roots[current_picker._current_opts.root_path]
   for _, entry in ipairs(entries) do
     if root and root:bundle_exists(entry.value.label) then
       root:delete_bundle(entry.value.label)
@@ -86,7 +86,7 @@ end
 function M.change_bundle_label(buffer)
   local current_picker = actions_state.get_current_picker(buffer)
   local entry = current_picker:get_selection()
-  local root = State._roots[current_picker._current_opts.track.root_path]
+  local root = State._roots[current_picker._current_opts.root_path]
   local pack = {
     bundle = root.bundles[entry.value.label],
     picker = current_picker,
