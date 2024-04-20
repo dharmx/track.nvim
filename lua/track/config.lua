@@ -16,8 +16,14 @@ M._defaults = {
   disable_history = true,
   maximum_history = 10,
   pad = {
+    icons = {
+      saved = "",
+      save = "",
+    },
     serial_maps = true,
     save_on_close = true,
+    auto_create = true,
+    save_on_hide = true,
     hooks = {
       on_choose = Util.open_entry,
       on_serial_choose = Util.open_entry,
@@ -29,7 +35,7 @@ M._defaults = {
       relative = "editor",
       width = 60,
       height = 10,
-      title_pos = "center",
+      title_pos = "left",
     },
   },
   pickers = {
