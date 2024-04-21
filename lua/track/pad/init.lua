@@ -33,14 +33,13 @@ function M.open_bundle(opts, bundle)
     vim.keymap.set("n", "<C-S>", State.save, { buffer = pad.buffer })
     vim.keymap.set("n", "<cr>", function()
       local line = A.nvim_win_get_cursor(pad.window)[1] - 1
-      local line_content = A.nvim_buf_get_lines(pad.buffer, line, line + 1, true)[1]
-
+      local line_content = PadUtil.get_entries(pad, line, line + 1, true)[1]
       M.hide_bundle(opts, bundle)
       opts.hooks.on_choose(vim.trim(line_content), bundle.views[line + 1])
     end, { buffer = pad.buffer })
     M.pads[bundle.label] = pad
   end
-  A.nvim_buf_set_lines(pad.buffer, 0, -1, false, bundle.views)
+  PadUtil.add_devicon(pad, bundle)
 
   if opts.serial_maps then
     PadUtil.apply_serial_maps(pad, bundle, function(...)
