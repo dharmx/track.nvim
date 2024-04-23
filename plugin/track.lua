@@ -41,7 +41,7 @@ cmd("Track", function(...)
   elseif args[1] == "views" then
     require("telescope").extensions.track.views(get_opts())
   else
-    require("track.pad").toggle_bundle()
+    require("telescope").extensions.track.views(get_opts())
   end
 end, {
   desc = "State operations like: save, load, loadsave, reload, wipe and remove. marks for showing current mark list.",
