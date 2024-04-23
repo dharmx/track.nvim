@@ -45,7 +45,6 @@ end
 
 function M.picker(opts)
   opts = vim.F.if_nil(opts, {})
-  ---@diagnostic disable-next-line: missing-fields
   opts = Config.extend_pickers({ views = opts }).views
   local hooks = opts.hooks
   State.load()
@@ -57,7 +56,6 @@ function M.picker(opts)
     attach_mappings = function(buffer, _)
       local status = state.get_status(buffer)
       status.picker._current_opts = opts
-      ---@diagnostic disable-next-line: undefined-field
       actions.close:enhance({
         post = function(_)
           if opts.save_on_close then

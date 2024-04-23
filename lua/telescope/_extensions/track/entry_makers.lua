@@ -37,7 +37,6 @@ function M.gen_from_view(opts)
       marker, marker_hl = icons.terminal, "TrackViewsTerminal"
     elseif mark.type == "man" then
       marker, marker_hl = icons.manual, "TrackViewsManual"
-    ---@diagnostic disable-next-line: undefined-field
     elseif not mark:exists() then
       marker, marker_hl = icons.missing, "TrackViewsMissing"
     end

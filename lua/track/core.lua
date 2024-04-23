@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-field
 local M = {}
 
 local State = require("track.state")

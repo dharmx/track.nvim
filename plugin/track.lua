@@ -1,4 +1,3 @@
----@diagnostic disable: param-type-mismatch
 if vim.version().minor < 8 then
   vim.notify("track.nvim requires at least nvim-0.8.0.")
   return

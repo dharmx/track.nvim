@@ -1,12 +1,9 @@
 local M = {}
 
--- WARN: Do not import track.config in track.util.
 local Util = require("track.util")
 
 -- TODO: Implement validation (vim.validate) and config fallback.
 -- TODO: Defaults (M.defaults) will be used if config values are invalid.
--- TODO: Implement a way to show hidden files.
--- TODO: Implement exclude filetypes.
 -- TODO: Implement exclude buffer names.
 
 ---Default **track.nvim** opts.
@@ -83,7 +80,7 @@ M._defaults = {
       }
     },
     views = {
-      on_bundles_close = true, -- save when the view telescope picker is closed
+      save_on_close = true, -- save when the view telescope picker is closed
       bundle_label = nil,
       root_path = nil,
       selection_caret = "   ",
@@ -192,10 +189,6 @@ function M.get() return M._current end
 ---Return current track pickers config.
 ---@return TrackPickers
 function M.get_pickers() return M._current.pickers end
-
----Return current track save config.
----@return TrackSave
-function M.get_save_config() return M._current.save end
 
 ---@return TrackPad
 function M.get_pad() return M._current.pad end

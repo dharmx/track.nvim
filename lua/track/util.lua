@@ -1,4 +1,3 @@
----@diagnostic disable: param-type-mismatch
 local M = {}
 
 ---Dummy function that does noting.
