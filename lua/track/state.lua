@@ -88,7 +88,6 @@ function M.load_save(action, loadpath, on_load)
     return
   end
 
-  ---@diagnostic disable-next-line: cast-local-type
   loadpath = Path:new(loadpath)
   local data = vim.trim(loadpath:read()) -- strip leading and trailing whitespaces
   if data == "" then
@@ -103,7 +102,6 @@ function M.load_save(action, loadpath, on_load)
   if action == "wipe" then M.wipe() end
   assert(action == "extend" or action == "wipe", "action: string[extend|wipe]")
 
-  ---@diagnostic disable-next-line: param-type-mismatch
   for path, root in pairs(roots) do
     M._roots[path] = Root({
       path = root.path,

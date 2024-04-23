@@ -29,7 +29,6 @@ function Mark:_new(fields)
   self.label = fields.label
   self.type = vim.F.if_nil(fields.type, "file")
   self.absolute = V.fnamemodify(self.path, ":p")
-  ---@diagnostic disable-next-line: missing-return
   self._NAME = "mark"
 end
 

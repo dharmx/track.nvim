@@ -30,7 +30,6 @@ local Log = require("track.log")
 function Bundle:_new(fields)
   local fieldstype = type(fields)
   assert(fieldstype ~= "table" or fieldstype ~= "string", "expected: fields: string|table found: " .. fieldstype)
-  ---@diagnostic disable-next-line: missing-fields
   if fieldstype == "string" then fields = { label = fields } end
   assert(fields.label and type(fields.label) == "string", "fields.label: string cannot be nil")
 
@@ -40,7 +39,6 @@ function Bundle:_new(fields)
   self.disable_history = vim.F.if_nil(fields.disable_history, true)
   self.maximum_history = vim.F.if_nil(fields.maximum_history, 10)
   self.history = vim.F.if_nil(fields.history, {})
-  ---@diagnostic disable-next-line: missing-return
   self._NAME = "bundle"
 end
 
@@ -83,7 +81,6 @@ function Bundle:add_mark(mark, label)
     return self.marks[mark.path]
   end
   -- if it does not exist then create it
-  ---@diagnostic disable-next-line: assign-type-mismatch
   self.marks[mark] = Mark({ path = mark, label = label })
   -- adding a mark will add its path to the views table
   table.insert(self.views, mark)
