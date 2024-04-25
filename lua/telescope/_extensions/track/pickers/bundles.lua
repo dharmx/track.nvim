@@ -13,11 +13,14 @@ local config = require("telescope.config")
 local state = require("telescope.state")
 
 function M.resulter(opts)
-  return State._roots[opts.root_path].bundles()
+  local root = State._roots[opts.root_path]
+  if root then return root.bundles() end
+  return {}
 end
 
 -- this can be passed into picker:refresh(<finder>)
 function M.finder(opts, results)
+  if vim.tbl_isempty(results) then vim.notify("No root found! Create one first.") end
   return finders.new_table({
     results = results,
     entry_maker = EntryMakers.gen_from_bundle(opts),
