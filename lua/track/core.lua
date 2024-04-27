@@ -35,9 +35,10 @@ function M:mark(file, bundle_label, save)
   end
 
   local filetype = Util.filetype(file)
-  -- BUG: piping breaks this i.e. marking :edit term:///home/dharmx/.local/state/nvim//cat\ track.json\ \|\ jq
-  -- jq is recognised as a different command (they are not escaped - this is a guess)
-  if filetype == "term" then file = file:gsub("^(term://.+//)%d+:(.*)$", "%1%2") end
+  if filetype == "term" then
+    file = file:gsub("^(term://.+//)%d+:(.*)$", "%1%2")
+    file = file:gsub(" | ", " \\| ")
+  end
   local mark = Mark({ path = file, type = filetype })
   root.bundles[bundle_label]:add_mark(mark)
   if save then State.save() end

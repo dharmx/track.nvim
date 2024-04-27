@@ -96,7 +96,7 @@ M._defaults = {
       end,
       disable_devicons = false,
       icons = {
-        constant = " ",
+        locked = " ",
         separator = " ",
         terminal = " ",
         manual = " ",

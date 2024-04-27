@@ -5,7 +5,7 @@ function M.mute() end
 
 function M.open_entry(entry)
   if entry.value.type == "https" or entry.value.type == "http" then
-    vim.fn.jobstart("xdg-open " .. entry.value.path, { detach = true })
+    vim.fn.jobstart({ "xdg-open", entry.value.path }, { detach = true })
     return
   end
   vim.cmd("confirm edit " .. entry.value.path)
@@ -28,7 +28,15 @@ function M.filetype(uri)
 end
 
 function M.transform_term_uri(uri)
-  return uri:match("^term://.+//%d+:(.+)$") or uri:match("^term://.+//(.+)$") or uri:match("term://(.+)")
+  return (uri:match("^term://.+//%d+:(.+)$") or uri:match("^term://.+//(.+)$") or uri:match("term://(.+)")):gsub("\\|", "|")
+end
+
+function M.transform_man_uri(uri)
+  return uri:match("man://(.+)")
+end
+
+function M.transform_site_uri(uri)
+  return uri:match("https?://w?w?w?%.?(.+)")
 end
 
 function M.get_cwd_from_term_uri(uri)

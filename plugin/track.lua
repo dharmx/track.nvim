@@ -167,7 +167,7 @@ HI(0, "TrackViewsSite", { foreground = "#66B3FF" })
 HI(0, "TrackViewsTerminal", { foreground = "#36C692" })
 HI(0, "TrackViewsManual", { foreground = "#5FB0FC" })
 HI(0, "TrackViewsDivide", { foreground = "#4B5259" })
-HI(0, "TrackViewsConstant", { foreground = "#FFDF8F" })
+HI(0, "TrackViewsLocked", { foreground = "#E37070" })
 
 HI(0, "TrackBundlesInactive", { foreground = "#4B5259" })
 HI(0, "TrackBundlesDisplayInactive", { foreground = "#4B5259" })

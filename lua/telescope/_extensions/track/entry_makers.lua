@@ -14,7 +14,7 @@ function M.gen_from_view(opts)
     separator_hl = "TrackViewsDivide",
     items = {
       -- hardcoded
-      { width = 1 },
+      { width = 2 },
       {},
       {},
       {},
@@ -36,15 +36,23 @@ function M.gen_from_view(opts)
 
     -- the marked value might be deleted - priority: 2
     if allowed then
-      marker, marker_hl = icons.constant, "TrackViewsConstant"
+      marker, marker_hl = icons.locked, "TrackViewsLocked"
     elseif not mark:exists() then
       marker, marker_hl = icons.missing, "TrackViewsMissing"
     end
 
     -- file must be currently being edited - priority: 3
     local display, display_hl = mark.absolute, ""
-    if not allowed then display = utils.transform_path(opts, mark.absolute) end
-    if mark.type == "term" then display = Util.transform_term_uri(mark.path) end
+    if not allowed then
+      display = utils.transform_path(opts, mark.absolute)
+    elseif mark.type == "term" then
+      display = Util.transform_term_uri(mark.path)
+    elseif mark.type == "man" then
+      display = Util.transform_man_uri(mark.path)
+    elseif mark.type == "https" then
+      display = Util.transform_site_uri(mark.path)
+    end
+
     if entry.value.focused_path == mark.absolute then
       display_hl = "TrackViewsFocusedDisplay"
       marker, marker_hl = icons.focused, "TrackViewsFocused"
