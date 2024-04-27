@@ -20,6 +20,7 @@ end
 
 -- this can be passed into picker:refresh(<finder>)
 function M.finder(opts, results)
+  if vim.tbl_isempty(results) then vim.notify("No root found! Create one first.") end
   return finders.new_table({
     results = results,
     entry_maker = EntryMakers.gen_from_bundle(opts),
