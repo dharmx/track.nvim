@@ -4,11 +4,11 @@ local V = vim.fn
 
 local entry_display = require("telescope.pickers.entry_display")
 local utils = require("telescope.utils")
+local Util = require("track.util")
 local make_entry = require("telescope.make_entry")
 
 function M.gen_from_view(opts)
   local icons = opts.icons
-  local disable_devicons = opts.disable_devicons
   local displayer = entry_display.create({
     separator = icons.separator,
     separator_hl = "TrackViewsDivide",
@@ -17,7 +17,7 @@ function M.gen_from_view(opts)
       { width = 1 },
       {},
       {},
-      { width = 1 },
+      {},
       {},
     },
   })
@@ -26,6 +26,8 @@ function M.gen_from_view(opts)
   local function make_display(entry)
     ---@type Mark
     local mark = entry.value
+    local allowed = vim.tbl_contains({ "term", "man", "http", "https" }, mark.type)
+
     -- we may/may not have read permissions on that file - priority: 1
     local marker, marker_hl = icons.accessible, "TrackViewsAccessible"
     if not vim.loop.fs_access(mark.path, "R") then
@@ -33,30 +35,23 @@ function M.gen_from_view(opts)
     end
 
     -- the marked value might be deleted - priority: 2
-    if mark.type == "term" then
-      marker, marker_hl = icons.terminal, "TrackViewsTerminal"
-    elseif mark.type == "man" then
-      marker, marker_hl = icons.manual, "TrackViewsManual"
+    if allowed then
+      marker, marker_hl = icons.constant, "TrackViewsConstant"
     elseif not mark:exists() then
       marker, marker_hl = icons.missing, "TrackViewsMissing"
     end
 
     -- file must be currently being edited - priority: 3
-    local display, display_hl = utils.transform_path(opts, mark.absolute), ""
+    local display, display_hl = mark.absolute, ""
+    if not allowed then display = utils.transform_path(opts, mark.absolute) end
+    if mark.type == "term" then display = Util.transform_term_uri(mark.path) end
     if entry.value.focused_path == mark.absolute then
       display_hl = "TrackViewsFocusedDisplay"
       marker, marker_hl = icons.focused, "TrackViewsFocused"
     end
     -- add more?
 
-    -- if the entry is a directory
-    -- if there is no icons of that filetype in the devicons db
-    local icon, icon_hl = utils.get_devicons(entry.value.absolute, disable_devicons)
-    if mark.type == "directory" then
-      icon, icon_hl = icons.directory, "TrackViewsDirectoryIcon"
-    elseif not icon_hl then
-      icon, icon_hl = icons.file, "TrackViewsFileIcon"
-    end
+    local icon, icon_hl = Util.get_icon(mark, opts)
 
     -- is the buffer listed (is it opened in nvim currently)
     local listed, listed_hl = icons.unlisted, "TrackViewsMarkUnlisted"

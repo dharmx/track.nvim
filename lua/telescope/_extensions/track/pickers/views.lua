@@ -49,9 +49,15 @@ function M.picker(opts)
   local hooks = opts.hooks
   State.load()
 
+  local finder = M.finder(opts, M.resulter(opts))
+  if vim.tbl_isempty(finder.results) then
+    vim.notify("Bundle is empty. No marks found.")
+    return
+  end
+
   local picker = pickers.new(opts, {
     prompt_title = "Views",
-    finder = M.finder(opts, M.resulter(opts)),
+    finder = finder,
     sorter = config.values.file_sorter(opts),
     attach_mappings = function(buffer, _)
       local status = state.get_status(buffer)

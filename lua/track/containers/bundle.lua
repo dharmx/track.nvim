@@ -77,6 +77,7 @@ end
 function Bundle:add_mark(mark, label)
   if type(mark) == "table" and mark._NAME == "mark" then
     self.marks[mark.path] = mark
+    table.insert(self.views, mark.path)
     Log.trace("Bundle.add_mark(): new mark " .. mark.path .. " has been added")
     return self.marks[mark.path]
   end

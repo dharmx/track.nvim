@@ -3,6 +3,7 @@ local M = {}
 local State = require("track.state")
 local Util = require("track.util")
 local Root = require("track.containers.root")
+local Mark = require("track.containers.mark")
 local Log = require("track.log")
 
 M.root_path = Util.cwd()
@@ -14,7 +15,6 @@ State.load() -- load state from savefile if it exists
 ---@return Core?
 function M:mark(file, bundle_label, save)
   Log.errors(file, "file cannot be nil.", "Core.mark")
-  file = vim.fs.normalize(file, { expand_env = true })
 
   -- create a root if it does not exist
   local root = State._roots[self.root_path]
@@ -34,15 +34,12 @@ function M:mark(file, bundle_label, save)
     root:new_bundle(bundle_label)
   end
 
-  local bundle = root.bundles[bundle_label]
-  local mark = bundle:add_mark(file)
-  if mark then
-    mark.type = Util.filetype(file)
-    if mark.type == "term" then
-      local path_cmd = vim.split(mark.path, ":", { plain = true })
-      bundle:change_mark_path(mark, string.format("term://%s", path_cmd[#path_cmd]))
-    end
-  end
+  local filetype = Util.filetype(file)
+  -- BUG: piping breaks this i.e. marking :edit term:///home/dharmx/.local/state/nvim//cat\ track.json\ \|\ jq
+  -- jq is recognised as a different command (they are not escaped - this is a guess)
+  if filetype == "term" then file = file:gsub("^(term://.+//)%d+:(.*)$", "%1%2") end
+  local mark = Mark({ path = file, type = filetype })
+  root.bundles[bundle_label]:add_mark(mark)
   if save then State.save() end
   return self
 end
@@ -178,11 +175,9 @@ function M:history(...)
   Log.warn("Core.history(): cannot insert into history as the root " .. self.root_path .. " does not exist")
 end
 
-function M:select(index, bubdle_label, save)
-end
+function M:select(index, bubdle_label, save) end
 
-function M:cycle(size, bundle_label, save)
-end
+function M:cycle(size, bundle_label, save) end
 
 return setmetatable(M, {
   ---@overload fun(self, root_path: string)

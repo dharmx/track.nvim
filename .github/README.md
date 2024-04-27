@@ -9,6 +9,8 @@ Harpoon like file tracking. Supercharged by [telescope.nvim](https:/github.com/n
 
 Using [lazy.nvim](https://github.com/folke/lazy.nvim).
 
+<details>
+
 ```lua
 -- no configuration needed
 "dharmx/track.nvim",
@@ -69,12 +71,14 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim).
 },
 ```
 
+</details>
+
 ## Quickstart
 
-Q. How does tracking files work?
+### Q. How does tracking files work?
 
 - Create a mark by `:Mark`. You can map a key to it.
-- Now, open the telescope window by `:Track` views.
+- Now, open the telescope window by `:Track views`.
 - You can move the entries up and down by pressing `i_<C-n>` and `i_<C-p>`.
 - You can select all entries by pressing `v`. And, `<cr>` to open.
 - Or, press `<tab>` to select multiple entries.
@@ -83,22 +87,24 @@ Q. How does tracking files work?
 - Close the telescope window then do `:Unmark`.
 - Open `:Track views` again. And, you should see the mark being erased.
 
-Note, that you can also track commands, manpages and helpdocs.
+Note that, you can also track commands, man-pages and help-docs.
 
-Q. How does bundles work?
+### Q. How does bundles work?
 
 - Open `:Track bundles`.
-- If the picker is empty then the current diretory is not being tracked.
-- Then start by marking a file in that directory `:Mark some/path/to/file` or, just `:Mark`.
+- If the picker is empty then the current directory is not being tracked.
+- Then start by marking a file in that directory `:Mark some/path/to/file` or,
+  just `:Mark`.
 - Now, open `:Track bundles` again. You will see a `main` branch being created.
 - You can change the bundle name in telescope by pressing `i_<C-e>` on the entry.
-- `:StashBundle` will create another bundle with a auto-generated label and replace the place of the **main** bundle.
+- `:StashBundle` will create another bundle with an auto-generated label and
+  replace the place of the **main** bundle.
 - Try `Track bundles` again.
-- `:AlternateBundle` will swap the current **main** bundle with the **alternate** bundle. This functions same as Vim's
-  default `^` mapping.
+- `:AlternateBundle` will swap the current **main** bundle with the **alternate**
+  bundle. This functions the same way as Vim's default `^` mapping.
 
-Note that there can only be one `main` bundle and one **alternate** bundle. And, a bundle will have a main bundle
-always. It is not recommended to remove it.
+Note that, there can only be one `main` bundle and one **alternate** bundle. And,
+a bundle will always have a main bundle. It is not recommended to remove it.
 
 ## Defaults
 
@@ -107,31 +113,6 @@ local Util = require("track.util")
 
 local defaults = {
   save_path = vim.fn.stdpath("state") .. "/track.json",
-  disable_history = true,
-  maximum_history = 10,
-  pad = {
-    icons = {
-      saved = "",
-      save = "",
-    },
-    serial_maps = true,
-    save_on_close = true,
-    auto_create = true,
-    save_on_hide = true,
-    hooks = {
-      on_choose = Util.open_entry,
-      on_serial_choose = Util.open_entry,
-    },
-    window = {
-      style = "minimal",
-      border = "solid",
-      focusable = true,
-      relative = "editor",
-      width = 60,
-      height = 10,
-      title_pos = "left",
-    },
-  },
   pickers = {
     bundles = {
       save_on_close = true,
@@ -236,5 +217,36 @@ local defaults = {
     plugin = "track",
     level = "warn",
   },
+  -- dev features / not implemented
+  disable_history = true,
+  maximum_history = 10,
+  pad = {
+    icons = {
+      saved = "",
+      save = "",
+    },
+    serial_maps = true,
+    save_on_close = true,
+    auto_create = true,
+    save_on_hide = true,
+    hooks = {
+      on_choose = Util.open_entry,
+      on_serial_choose = Util.open_entry,
+    },
+    window = {
+      style = "minimal",
+      border = "solid",
+      focusable = true,
+      relative = "editor",
+      width = 60,
+      height = 10,
+      title_pos = "left",
+    },
+  },
 }
 ```
+
+## Credits
+
+- harpoon
+- @nikfp

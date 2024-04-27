@@ -10,31 +10,6 @@ local Util = require("track.util")
 ---@type TrackOpts
 M._defaults = {
   save_path = vim.fn.stdpath("state") .. "/track.json",
-  disable_history = true,
-  maximum_history = 10,
-  pad = {
-    icons = {
-      saved = "",
-      save = "",
-    },
-    serial_maps = true,
-    save_on_close = true,
-    auto_create = true,
-    save_on_hide = true,
-    hooks = {
-      on_choose = Util.open_entry,
-      on_serial_choose = Util.open_entry,
-    },
-    window = {
-      style = "minimal",
-      border = "solid",
-      focusable = true,
-      relative = "editor",
-      width = 60,
-      height = 10,
-      title_pos = "left",
-    },
-  },
   pickers = {
     bundles = {
       save_on_close = true,
@@ -102,7 +77,7 @@ M._defaults = {
         on_choose = function(status, _)
           local entries = vim.F.if_nil(status.picker:get_multi_selection(), {})
           if #entries == 0 then table.insert(entries, status.picker:get_selection()) end
-          for _, entry in ipairs(entries) do Util.open_entry(entry.value.path) end
+          for _, entry in ipairs(entries) do Util.open_entry(entry) end
         end,
       },
       attach_mappings = function(_, map)
@@ -121,9 +96,11 @@ M._defaults = {
       end,
       disable_devicons = false,
       icons = {
+        constant = " ",
         separator = " ",
         terminal = " ",
         manual = " ",
+        site = " ",
         missing = " ",
         accessible = " ",
         inaccessible = " ",
@@ -138,6 +115,32 @@ M._defaults = {
   log = {
     plugin = "track",
     level = "warn",
+  },
+  -- dev features / not implemented
+  disable_history = true,
+  maximum_history = 10,
+  pad = {
+    icons = {
+      saved = "",
+      save = "",
+    },
+    serial_maps = true,
+    save_on_close = true,
+    auto_create = true,
+    save_on_hide = true,
+    hooks = {
+      on_choose = Util.open_entry,
+      on_serial_choose = Util.open_entry,
+    },
+    window = {
+      style = "minimal",
+      border = "solid",
+      focusable = true,
+      relative = "editor",
+      width = 60,
+      height = 10,
+      title_pos = "left",
+    },
   },
 }
 
