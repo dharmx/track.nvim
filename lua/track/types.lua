@@ -111,7 +111,7 @@
 ---@field path string Path to mark.
 ---@field label? string Optional label for that the mark.
 ---@field absolute string Absolute path to mark.
----@field type? MarkType Type of mark.
+---@field type? string Type of mark.
 ---@field _NAME string Type.
 
 ---@class MarkFields
