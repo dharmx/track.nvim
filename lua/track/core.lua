@@ -45,6 +45,8 @@ function M:mark(file, bundle_label, save)
   return self
 end
 
+-- TODO: Add unmarking commands and manpages (websites need to be manually removed)
+
 ---@param file string
 ---@param bundle_label? string
 ---@param save? function

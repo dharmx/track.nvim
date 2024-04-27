@@ -121,8 +121,11 @@ local defaults = {
       prompt_prefix = "   ",
       selection_caret = "   ",
       previewer = false,
-      initial_mode = "insert", -- alternatively: "normal"
+      initial_mode = "normal", -- alternatively: "insert"
+      sorting_strategy = "ascending",
+      results_title = false,
       layout_config = {
+        prompt_position = "top",
         preview_cutoff = 1,
         width = function(_, max_col, _) return math.min(max_col, 70) end,
         height = function(_, _, max_line) return math.min(max_line, 15) end,
@@ -168,8 +171,11 @@ local defaults = {
       },
       prompt_prefix = "   ",
       previewer = false,
-      initial_mode = "insert", -- alternatively: "normal"
+      initial_mode = "normal", -- alternatively: "insert"
+      results_title = false,
+      sorting_strategy = "ascending",
       layout_config = {
+        prompt_position = "top",
         preview_cutoff = 1,
         width = function(_, max_col, _) return math.min(max_col, 70) end,
         height = function(_, _, max_line) return math.min(max_line, 15) end,
@@ -180,7 +186,7 @@ local defaults = {
         on_choose = function(status, _)
           local entries = vim.F.if_nil(status.picker:get_multi_selection(), {})
           if #entries == 0 then table.insert(entries, status.picker:get_selection()) end
-          for _, entry in ipairs(entries) do Util.open_entry(entry.value.path) end
+          for _, entry in ipairs(entries) do Util.open_entry(entry) end
         end,
       },
       attach_mappings = function(_, map)
@@ -199,9 +205,11 @@ local defaults = {
       end,
       disable_devicons = false,
       icons = {
+        locked = " ",
         separator = " ",
         terminal = " ",
         manual = " ",
+        site = " ",
         missing = " ",
         accessible = " ",
         inaccessible = " ",
@@ -244,6 +252,67 @@ local defaults = {
     },
   },
 }
+```
+
+## Theme
+
+Modify these to change colors. This section is mainly geared towards theme plugin authors.
+
+```lua
+local function HI(...) vim.api.nvim_set_hl(0, ...) end
+
+HI("TrackPadTitle", { link = "TelescopeResultsTitle" })
+
+HI("TrackViewsAccessible", { foreground = "#79DCAA" })
+HI("TrackViewsInaccessible", { foreground = "#F87070" })
+HI("TrackViewsFocusedDisplay", { foreground = "#7AB0DF" })
+HI("TrackViewsFocused", { foreground = "#7AB0DF" })
+HI("TrackViewsIndex", { foreground = "#54CED6" })
+HI("TrackViewsMarkListed", { foreground = "#4B5259" })
+HI("TrackViewsMarkUnlisted", { foreground = "#C397D8" })
+HI("TrackViewsMissing", { foreground = "#FFE59E" })
+HI("TrackViewsFile", { foreground = "#FFE59E" })
+HI("TrackViewsDirectory", { foreground = "#FFE59E" })
+HI("TrackViewsSite", { foreground = "#66B3FF" })
+HI("TrackViewsTerminal", { foreground = "#36C692" })
+HI("TrackViewsManual", { foreground = "#5FB0FC" })
+HI("TrackViewsDivide", { foreground = "#4B5259" })
+HI("TrackViewsLocked", { foreground = "#E37070" })
+
+HI("TrackBundlesInactive", { foreground = "#4B5259" })
+HI("TrackBundlesDisplayInactive", { foreground = "#4B5259" })
+HI("TrackBundlesMain", { foreground = "#7AB0DF" })
+HI("TrackBundlesDisplayMain", { foreground = "#7AB0DF" })
+HI("TrackBundlesAlternate", { foreground = "#36C692" })
+HI("TrackBundlesDisplayAlternate", { foreground = "#79DCAA" })
+HI("TrackBundlesMark", { foreground = "#FFE59E" })
+HI("TrackBundlesHistory", { foreground = "#F87070" })
+HI("TrackBundlesDivide", { foreground = "#151A1F" })
+```
+## Commands
+
+```vim
+:Mark                   " add current buffer as mark
+:Mark <URI>             " add passed <URI> as mark
+:Unmark                 " rm current mark (if exists)
+:Unmark <URI>           " rm <URI> mark (if exists)
+:MarkOpened             " mark all opened buffers
+:StashBundle            " stash current main bundle and make new bundle as main 
+:RestoreBundle          " restore previous bundle
+:DeleteBundle           " rm main bundle
+:AlternateBundle        " swap stashed and main bundles
+:Track                  " open default pad UI (view)
+:Track pad              " open default pad UI (view)
+:Track views            " open views telescope picker
+:Track bundles          " open bundles telescope picker
+:Track save             " save current state to file
+:Track load             " load saved state for the first time
+:Track loadsave         " load saved state from a file
+:Track reload           " load last saved state to cache
+:Track wipe             " clear caches
+:Track remove           " rm save file
+:Track menu             " telescope picker for available track pickers
+" TODO: no root, roots, bundles indicators for Track menu
 ```
 
 ## Credits

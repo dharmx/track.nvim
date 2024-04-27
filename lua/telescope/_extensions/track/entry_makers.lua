@@ -7,6 +7,8 @@ local utils = require("telescope.utils")
 local Util = require("track.util")
 local make_entry = require("telescope.make_entry")
 
+-- TODO: Add a way to match if the current focused_path is a command or, a manpage
+
 function M.gen_from_view(opts)
   local icons = opts.icons
   local displayer = entry_display.create({

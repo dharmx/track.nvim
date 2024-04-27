@@ -8,7 +8,7 @@ vim.g.loaded_track = 1
 
 local V = vim.fn
 local cmd = vim.api.nvim_create_user_command
-local HI = vim.api.nvim_set_hl
+local function HI(...) vim.api.nvim_set_hl(0, ...) end
 
 -- TODO: Implement bang, range, repeat, motions and bar.
 
@@ -151,31 +151,31 @@ cmd("AlternateBundle", function() require("track.core"):alternate() end, {
 })
 
 -- Highlights {{{
-HI(0, "TrackPadTitle", { link = "TelescopeResultsTitle" })
+HI("TrackPadTitle", { link = "TelescopeResultsTitle" })
 
-HI(0, "TrackViewsAccessible", { foreground = "#79DCAA" })
-HI(0, "TrackViewsInaccessible", { foreground = "#F87070" })
-HI(0, "TrackViewsFocusedDisplay", { foreground = "#7AB0DF" })
-HI(0, "TrackViewsFocused", { foreground = "#7AB0DF" })
-HI(0, "TrackViewsIndex", { foreground = "#54CED6" })
-HI(0, "TrackViewsMarkListed", { foreground = "#4B5259" })
-HI(0, "TrackViewsMarkUnlisted", { foreground = "#C397D8" })
-HI(0, "TrackViewsMissing", { foreground = "#FFE59E" })
-HI(0, "TrackViewsFile", { foreground = "#FFE59E" })
-HI(0, "TrackViewsDirectory", { foreground = "#FFE59E" })
-HI(0, "TrackViewsSite", { foreground = "#66B3FF" })
-HI(0, "TrackViewsTerminal", { foreground = "#36C692" })
-HI(0, "TrackViewsManual", { foreground = "#5FB0FC" })
-HI(0, "TrackViewsDivide", { foreground = "#4B5259" })
-HI(0, "TrackViewsLocked", { foreground = "#E37070" })
+HI("TrackViewsAccessible", { foreground = "#79DCAA" })
+HI("TrackViewsInaccessible", { foreground = "#F87070" })
+HI("TrackViewsFocusedDisplay", { foreground = "#7AB0DF" })
+HI("TrackViewsFocused", { foreground = "#7AB0DF" })
+HI("TrackViewsIndex", { foreground = "#54CED6" })
+HI("TrackViewsMarkListed", { foreground = "#4B5259" })
+HI("TrackViewsMarkUnlisted", { foreground = "#C397D8" })
+HI("TrackViewsMissing", { foreground = "#FFE59E" })
+HI("TrackViewsFile", { foreground = "#FFE59E" })
+HI("TrackViewsDirectory", { foreground = "#FFE59E" })
+HI("TrackViewsSite", { foreground = "#66B3FF" })
+HI("TrackViewsTerminal", { foreground = "#36C692" })
+HI("TrackViewsManual", { foreground = "#5FB0FC" })
+HI("TrackViewsDivide", { foreground = "#4B5259" })
+HI("TrackViewsLocked", { foreground = "#E37070" })
 
-HI(0, "TrackBundlesInactive", { foreground = "#4B5259" })
-HI(0, "TrackBundlesDisplayInactive", { foreground = "#4B5259" })
-HI(0, "TrackBundlesMain", { foreground = "#7AB0DF" })
-HI(0, "TrackBundlesDisplayMain", { foreground = "#7AB0DF" })
-HI(0, "TrackBundlesAlternate", { foreground = "#36C692" })
-HI(0, "TrackBundlesDisplayAlternate", { foreground = "#79DCAA" })
-HI(0, "TrackBundlesMark", { foreground = "#FFE59E" })
-HI(0, "TrackBundlesHistory", { foreground = "#F87070" })
-HI(0, "TrackBundlesDivide", { foreground = "#151A1F" })
+HI("TrackBundlesInactive", { foreground = "#4B5259" })
+HI("TrackBundlesDisplayInactive", { foreground = "#4B5259" })
+HI("TrackBundlesMain", { foreground = "#7AB0DF" })
+HI("TrackBundlesDisplayMain", { foreground = "#7AB0DF" })
+HI("TrackBundlesAlternate", { foreground = "#36C692" })
+HI("TrackBundlesDisplayAlternate", { foreground = "#79DCAA" })
+HI("TrackBundlesMark", { foreground = "#FFE59E" })
+HI("TrackBundlesHistory", { foreground = "#F87070" })
+HI("TrackBundlesDivide", { foreground = "#151A1F" })
 -- }}}
