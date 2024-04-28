@@ -18,6 +18,7 @@
 ---@class TrackPickersViews
 ---@field hooks TrackPickersViewsHooks Callbacks related to the views picker.
 ---@field save_on_close boolean Save state when the views telescope buffer is closed.
+---@field switch_directory boolean Change directory and refresh picker if a marked directory is in state.
 ---@field icons TrackPickersViewsIcons File-indicators, state-indicators, separators and default icons.
 
 -- TODO: START {{{

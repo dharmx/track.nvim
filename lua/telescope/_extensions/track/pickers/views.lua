@@ -37,13 +37,13 @@ function M.picker(opts)
   local hooks = opts.hooks
   state.load()
 
+  opts._focused = vim.fn.fnamemodify(vim.fn.bufname(), ":p")
   local finder = M.finder(opts, M.resulter(opts))
   if vim.tbl_isempty(finder.results) then
     vim.notify("Bundle is empty. No marks found.")
     return
   end
 
-  opts._focused = vim.fn.fnamemodify(vim.fn.bufname(), ":p")
   local picker = pickers.new(opts, {
     prompt_title = "Views",
     finder = finder,
@@ -65,8 +65,8 @@ function M.picker(opts)
         local entry = status.picker:get_selection()
         local new_root_path = entry.value.absolute
         if new_root_path:len() > 1 then new_root_path = new_root_path:gsub("/$", "") end
-        if entry.value.type == "directory" and state._roots[new_root_path] then
-          vim.cmd.chdir(new_root_path)
+        if opts.switch_directory and entry.value.type == "directory" and state._roots[new_root_path] then
+          vim.loop.chdir(new_root_path)
           status.picker:refresh(M.finder(opts, M.resulter(opts)), { reset_prompt = true })
           return
         end

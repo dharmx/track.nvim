@@ -1,6 +1,7 @@
 # track.nvim
 
-Harpoon like file tracking. Supercharged by [telescope.nvim](https:/github.com/nvim-telescope/telescope.nvim).
+Most over-engineered marking system. Harpoon like file tracking.
+Supercharged by [telescope.nvim](https:/github.com/nvim-telescope/telescope.nvim).
 
 ![views](./views.png) 
 ![bundles](./bundles.png) 
@@ -75,6 +76,8 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim).
 
 ## Quickstart
 
+Feature walkthrough.
+
 ### Q. How does tracking files work?
 
 - Create a mark by `:Mark`. You can map a key to it.
@@ -108,20 +111,49 @@ a bundle will always have a main bundle. It is not recommended to remove it.
 
 ### Q. How do I mark a terminal command?
 
-- Open terminal by `:terminal`
+- Open terminal by `:terminal ls /sys/class`
+- Alternatively, you can also do `:edit term://ls /sys/class`
+- Then `:Mark` that buffer.
+- Open `:Track` and you should see the command being stored there.
+
+See <samp>:help terminal</samp> for more details.
+
+### Q. How do I mark a command that'll run on a particular directory?
+
+- Open terminal by `:edit term:///home/dharmx//rg --files \|\ awk -F'.' '{print $NF}'`
+- Then `:Mark` that buffer.
+- Open `:Track` and you should see the command being stored there.
+- Run it by pressing enter and it should run that command in that particualar directory.
+
+Note that, if you mark with `:edit` then you would only need to escape pipes i.e. `| -> \|`.
+And, if you mark with `:Mark` then you need to escape pipes and spaces as well.
+
+### Q. What else can we mark?
+
+- You can mark websites i.e. `:Mark https://www.google.com/search?q=gnu+rule34`.
+- You can mark manpages i.e. `:Mark man://find(1)`.
+- You can mark a directory as well.
+
+Note that, selecting a directory i.e. tracked will `:chdir` into that directory and
+refresh the UI for viewing that directory's marks. This behavior is off by default.
+
+Additionally, while you can mark virtually anything, it is not recommended to do so.
+This is because only a few filetypes are actually handled. For instance, marking a
+PDF file and opening it won't open it in a PDF reader but in Neovim.
 
 ## Defaults
 
 ```lua
-local Util = require("track.util")
+local util = require("track.util")
 
-local defaults = {
+---@type TrackOpts
+M._defaults = {
   save_path = vim.fn.stdpath("state") .. "/track.json",
+  root_path = true,
+  bundle_label = true,
   pickers = {
     bundles = {
       save_on_close = true,
-      bundle_label = nil,
-      root_path = nil,
       prompt_prefix = "   ",
       selection_caret = "   ",
       previewer = false,
@@ -135,12 +167,13 @@ local defaults = {
         height = function(_, _, max_line) return math.min(max_line, 15) end,
       },
       hooks = {
-        on_close = Util.mute,
-        on_open = Util.mute,
+        on_close = util.mute,
+        on_open = util.mute,
         on_choose = function(status, opts)
           local selected = status.picker:get_selection()
           if not selected then return end
-          require("track.state")._roots[opts.root_path]:change_main_bundle(selected.value.label)
+          local root, _ = util.root_and_bundle()
+          root:change_main_bundle(selected.value.label)
         end,
       },
       attach_mappings = function(_, map)
@@ -148,11 +181,11 @@ local defaults = {
         map("n", "q", actions.close)
         map("n", "v", actions.select_all)
 
-        local Actions = require("telescope._extensions.track.actions")
-        map("n", "D", actions.select_all + Actions.delete_bundle)
-        map("n", "dd", Actions.delete_bundle)
-        map("i", "<C-D>", Actions.delete_bundle)
-        map("i", "<C-E>", Actions.change_bundle_label)
+        local track_actions = require("telescope._extensions.track.actions")
+        map("n", "D", actions.select_all + track_actions.delete_bundle)
+        map("n", "dd", track_actions.delete_bundle)
+        map("i", "<C-D>", track_actions.delete_bundle)
+        map("i", "<C-E>", track_actions.change_bundle_label)
         return true -- compulsory
       end,
       icons = {
@@ -166,8 +199,6 @@ local defaults = {
     },
     views = {
       save_on_close = true, -- save when the view telescope picker is closed
-      bundle_label = nil,
-      root_path = nil,
       selection_caret = "   ",
       path_display = {
         absolute = false, -- /home/name/projects/hello/mark.lua -> hello/mark.lua
@@ -185,12 +216,12 @@ local defaults = {
         height = function(_, _, max_line) return math.min(max_line, 15) end,
       },
       hooks = {
-        on_close = Util.mute,
-        on_open = Util.mute,
+        on_close = util.mute,
+        on_open = util.mute,
         on_choose = function(status, _)
-          local entries = vim.F.if_nil(status.picker:get_multi_selection(), {})
+          local entries = if_nil(status.picker:get_multi_selection(), {})
           if #entries == 0 then table.insert(entries, status.picker:get_selection()) end
-          for _, entry in ipairs(entries) do Util.open_entry(entry) end
+          for _, entry in ipairs(entries) do util.open_entry(entry) end
         end,
       },
       attach_mappings = function(_, map)
@@ -198,13 +229,18 @@ local defaults = {
         map("n", "q", actions.close)
         map("n", "v", actions.select_all)
 
-        local Actions = require("telescope._extensions.track.actions")
-        map("n", "D", actions.select_all + Actions.delete_view)
-        map("n", "dd", Actions.delete_view)
-        map("i", "<C-D>", Actions.delete_view)
-        map("i", "<C-N>", Actions.move_view_next)
-        map("i", "<C-P>", Actions.move_view_previous)
-        map("i", "<C-E>", Actions.change_mark_view)
+        local track_actions = require("telescope._extensions.track.actions")
+        map("n", "D", actions.select_all + track_actions.delete_view)
+        map("n", "dd", track_actions.delete_view)
+        map("n", "s", track_actions.change_mark_view)
+        map("n", "<C-b>", track_actions.delete_buffer)
+        map("n", "<C-j>", track_actions.move_view_next)
+        map("n", "<C-k>", track_actions.move_view_previous)
+
+        map("i", "<C-d>", track_actions.delete_view)
+        map("i", "<C-n>", track_actions.move_view_next)
+        map("i", "<C-p>", track_actions.move_view_previous)
+        map("i", "<C-e>", track_actions.change_mark_view)
         return true -- compulsory
       end,
       disable_devicons = false,
@@ -242,8 +278,8 @@ local defaults = {
     auto_create = true,
     save_on_hide = true,
     hooks = {
-      on_choose = Util.open_entry,
-      on_serial_choose = Util.open_entry,
+      on_choose = util.open_entry,
+      on_serial_choose = util.open_entry,
     },
     window = {
       style = "minimal",
@@ -255,6 +291,20 @@ local defaults = {
       title_pos = "left",
     },
   },
+}
+```
+
+## Integrations
+
+Use track.nvim for marking elements in other plugins.
+
+### rnvimr
+
+Mark current selected file.
+
+```lua
+vim.g.rnvimr_action = {
+  ["<C-t>"] = "NvimEdit Mark true",
 }
 ```
 
@@ -292,7 +342,9 @@ HI("TrackBundlesDisplayAlternate", { foreground = "#79DCAA" })
 HI("TrackBundlesMark", { foreground = "#FFE59E" })
 HI("TrackBundlesHistory", { foreground = "#F87070" })
 HI("TrackBundlesDivide", { foreground = "#151A1F" })
+HI("TrackBundlesIndex", { foreground = "#54CED6" })
 ```
+
 ## Commands
 
 ```vim

@@ -1,7 +1,7 @@
 local M = {}
 
-local util = require("track.util")
 local if_nil = vim.F.if_nil
+local util = require("track.util")
 
 -- TODO: Implement validation (vim.validate) and config fallback.
 -- TODO: Defaults (M.defaults) will be used if config values are invalid.
@@ -60,6 +60,7 @@ M._defaults = {
       }
     },
     views = {
+      switch_directory = true,
       save_on_close = true, -- save when the view telescope picker is closed
       selection_caret = "   ",
       path_display = {
