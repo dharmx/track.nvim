@@ -1,8 +1,9 @@
 local M = {}
-local Log = require("plenary.log")
-local Config = require("track.config").get()
 
-M._log = Log.new(Config.log)
+local log = require("plenary.log")
+local config = require("track.config").get()
+
+M._log = log.new(config.log)
 
 function M.errors(bool, message, title)
   assert(message and title, "All params are required.")

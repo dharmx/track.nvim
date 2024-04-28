@@ -1,5 +1,7 @@
 local M = {}
 
+local U = vim.loop
+
 ---Dummy function that does noting.
 function M.mute() end
 
@@ -15,7 +17,7 @@ end
 function M.filetype(uri)
   local uri_type = vim.F.if_nil(string.match(uri, "^(%w+)://"), "file")
   if uri_type == "file" then
-    local stat, _, e = vim.loop.fs_stat(uri)
+    local stat, _, e = U.fs_stat(uri)
     if e == "EACCES" then
       return "no_access"
     elseif e == "ENOENT" then
@@ -48,7 +50,7 @@ end
 ---Get cwd. Like really.
 ---@return string
 function M.cwd()
-  return (vim.loop.cwd()) or vim.fn.getcwd() or vim.env.PWD
+  return (U.cwd()) or vim.fn.getcwd() or vim.env.PWD
 end
 
 function M.get_icon(mark, opts)
@@ -78,6 +80,23 @@ function M.get_icon(mark, opts)
 
   if opts.color_devicons ~= false then return icon, group end
   return icon, nil
+end
+
+function M.root_and_bundle(opts)
+  opts = vim.F.if_nil(opts, {})
+  opts = require("track.config").extend(opts)
+  local bundle_label = opts.bundle_label
+  local root_path = opts.root_path ~= true and opts.root_path or M.cwd()
+  assert(type(root_path) == "string", "Config.root_path needs to be string")
+
+  local bundle = nil
+  local root = require("track.state")._roots[root_path]
+  if root and bundle_label == true then
+    bundle = root:get_main_bundle()
+  elseif type(bundle_label) == "string" then
+    bundle = root.bundles[bundle_label]
+  end
+  return root, bundle
 end
 
 return M

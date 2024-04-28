@@ -13,15 +13,6 @@ local function HI(...) vim.api.nvim_set_hl(0, ...) end
 -- TODO: Implement bang, range, repeat, motions and bar.
 
 cmd("Track", function(...)
-  local function get_opts()
-    local cwd = require("track.core").root_path
-    local root = require("track.state")._roots[cwd]
-    return {
-      root_path = cwd,
-      bundle_label = root and root.main or "main",
-    }
-  end
-
   local args = (...).fargs
   if args[1] == "save" then
     require("track.state").save()
@@ -37,11 +28,11 @@ cmd("Track", function(...)
   elseif args[1] == "remove" then
     require("track.state").remove()
   elseif args[1] == "bundles" then
-    require("telescope").extensions.track.bundles(get_opts())
+    require("telescope").extensions.track.bundles()
   elseif args[1] == "views" then
-    require("telescope").extensions.track.views(get_opts())
+    require("telescope").extensions.track.views()
   else
-    require("telescope").extensions.track.views(get_opts())
+    require("telescope").extensions.track.views()
   end
 end, {
   desc = "State operations like: save, load, loadsave, reload, wipe and remove. marks for showing current mark list.",
@@ -63,10 +54,10 @@ end, {
 cmd("Mark", function(...)
   local files = (...).fargs
   if vim.tbl_isempty(files) then table.insert(files, V.expand("%")) end
-  local Config = require("track.config").get()
-  local Core = require("track.core")
+  local config = require("track.config").get()
+  local core = require("track.core")
   for _, file in ipairs(files) do
-    Core:mark(file):history(Config.disable_history, Config.maximum_history)
+    core:mark(file):history(config.disable_history, config.maximum_history)
   end
 end, {
   complete = "file",
@@ -75,13 +66,13 @@ end, {
 })
 
 cmd("MarkOpened", function()
-  local Config = require("track.config").get()
-  local Core = require("track.core")
+  local config = require("track.config").get()
+  local core = require("track.core")
   local listed_buffers = V.getbufinfo({ listed = 1 })
   for _, info in ipairs(listed_buffers) do
     local name = V.bufname(info.bufnr)
     if name ~= "" and not name:match("^term://") then
-      Core:mark(name):history(Config.disable_history, Config.maximum_history)
+      core:mark(name):history(config.disable_history, config.maximum_history)
     end
   end
 end, {
@@ -92,9 +83,9 @@ end, {
 cmd("Unmark", function(...)
   local files = (...).fargs
   if vim.tbl_isempty(files) then table.insert(files, V.expand("%")) end
-  local Core = require("track.core")
+  local core = require("track.core")
   for _, file in ipairs(files) do
-    Core:unmark(file)
+    core:unmark(file)
   end
 end, {
   complete = function()
@@ -178,4 +169,5 @@ HI("TrackBundlesDisplayAlternate", { foreground = "#79DCAA" })
 HI("TrackBundlesMark", { foreground = "#FFE59E" })
 HI("TrackBundlesHistory", { foreground = "#F87070" })
 HI("TrackBundlesDivide", { foreground = "#151A1F" })
+HI("TrackBundlesIndex", { foreground = "#54CED6" })
 -- }}}

@@ -1,6 +1,7 @@
 local M = {}
 
-local Util = require("track.util")
+local util = require("track.util")
+local if_nil = vim.F.if_nil
 
 -- TODO: Implement validation (vim.validate) and config fallback.
 -- TODO: Defaults (M.defaults) will be used if config values are invalid.
@@ -10,11 +11,11 @@ local Util = require("track.util")
 ---@type TrackOpts
 M._defaults = {
   save_path = vim.fn.stdpath("state") .. "/track.json",
+  root_path = true,
+  bundle_label = true,
   pickers = {
     bundles = {
       save_on_close = true,
-      bundle_label = nil,
-      root_path = nil,
       prompt_prefix = "   ",
       selection_caret = "   ",
       previewer = false,
@@ -28,12 +29,13 @@ M._defaults = {
         height = function(_, _, max_line) return math.min(max_line, 15) end,
       },
       hooks = {
-        on_close = Util.mute,
-        on_open = Util.mute,
+        on_close = util.mute,
+        on_open = util.mute,
         on_choose = function(status, opts)
           local selected = status.picker:get_selection()
           if not selected then return end
-          require("track.state")._roots[opts.root_path]:change_main_bundle(selected.value.label)
+          local root, _ = util.root_and_bundle()
+          root:change_main_bundle(selected.value.label)
         end,
       },
       attach_mappings = function(_, map)
@@ -41,11 +43,11 @@ M._defaults = {
         map("n", "q", actions.close)
         map("n", "v", actions.select_all)
 
-        local Actions = require("telescope._extensions.track.actions")
-        map("n", "D", actions.select_all + Actions.delete_bundle)
-        map("n", "dd", Actions.delete_bundle)
-        map("i", "<C-D>", Actions.delete_bundle)
-        map("i", "<C-E>", Actions.change_bundle_label)
+        local track_actions = require("telescope._extensions.track.actions")
+        map("n", "D", actions.select_all + track_actions.delete_bundle)
+        map("n", "dd", track_actions.delete_bundle)
+        map("i", "<C-D>", track_actions.delete_bundle)
+        map("i", "<C-E>", track_actions.change_bundle_label)
         return true -- compulsory
       end,
       icons = {
@@ -59,8 +61,6 @@ M._defaults = {
     },
     views = {
       save_on_close = true, -- save when the view telescope picker is closed
-      bundle_label = nil,
-      root_path = nil,
       selection_caret = "   ",
       path_display = {
         absolute = false, -- /home/name/projects/hello/mark.lua -> hello/mark.lua
@@ -78,12 +78,12 @@ M._defaults = {
         height = function(_, _, max_line) return math.min(max_line, 15) end,
       },
       hooks = {
-        on_close = Util.mute,
-        on_open = Util.mute,
+        on_close = util.mute,
+        on_open = util.mute,
         on_choose = function(status, _)
-          local entries = vim.F.if_nil(status.picker:get_multi_selection(), {})
+          local entries = if_nil(status.picker:get_multi_selection(), {})
           if #entries == 0 then table.insert(entries, status.picker:get_selection()) end
-          for _, entry in ipairs(entries) do Util.open_entry(entry) end
+          for _, entry in ipairs(entries) do util.open_entry(entry) end
         end,
       },
       attach_mappings = function(_, map)
@@ -91,13 +91,18 @@ M._defaults = {
         map("n", "q", actions.close)
         map("n", "v", actions.select_all)
 
-        local Actions = require("telescope._extensions.track.actions")
-        map("n", "D", actions.select_all + Actions.delete_view)
-        map("n", "dd", Actions.delete_view)
-        map("i", "<C-D>", Actions.delete_view)
-        map("i", "<C-N>", Actions.move_view_next)
-        map("i", "<C-P>", Actions.move_view_previous)
-        map("i", "<C-E>", Actions.change_mark_view)
+        local track_actions = require("telescope._extensions.track.actions")
+        map("n", "D", actions.select_all + track_actions.delete_view)
+        map("n", "dd", track_actions.delete_view)
+        map("n", "s", track_actions.change_mark_view)
+        map("n", "<C-b>", track_actions.delete_buffer)
+        map("n", "<C-j>", track_actions.move_view_next)
+        map("n", "<C-k>", track_actions.move_view_previous)
+
+        map("i", "<C-d>", track_actions.delete_view)
+        map("i", "<C-n>", track_actions.move_view_next)
+        map("i", "<C-p>", track_actions.move_view_previous)
+        map("i", "<C-e>", track_actions.change_mark_view)
         return true -- compulsory
       end,
       disable_devicons = false,
@@ -135,8 +140,8 @@ M._defaults = {
     auto_create = true,
     save_on_hide = true,
     hooks = {
-      on_choose = Util.open_entry,
-      on_serial_choose = Util.open_entry,
+      on_choose = util.open_entry,
+      on_serial_choose = util.open_entry,
     },
     window = {
       style = "minimal",
@@ -158,7 +163,7 @@ M._current = vim.deepcopy(M._defaults)
 ---@param opts TrackOpts
 function M.merge(opts)
   ---@type TrackOpts
-  opts = vim.F.if_nil(opts, {})
+  opts = if_nil(opts, {})
   M._current = vim.tbl_deep_extend("keep", opts, M._current)
 end
 
@@ -166,14 +171,14 @@ end
 ---@param opts TrackPickers
 function M.merge_pickers(opts)
   ---@type TrackPickers
-  opts = vim.F.if_nil(opts, {})
+  opts = if_nil(opts, {})
   M._current.pickers = vim.tbl_deep_extend("keep", opts, M._current.pickers)
 end
 
 ---@param opts TrackPad
 function M.merge_pad(opts)
   ---@type TrackPad
-  opts = vim.F.if_nil(opts, {})
+  opts = if_nil(opts, {})
   M._current.pad = vim.tbl_deep_extend("keep", opts, M._current.pad)
 end
 

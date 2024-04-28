@@ -17,8 +17,6 @@
 ---Other config opts that are not documented here can be found at |telecope.nvim| help page.
 ---@class TrackPickersViews
 ---@field hooks TrackPickersViewsHooks Callbacks related to the views picker.
----@field bundle_label? string string Function that must return the root path.
----@field root_path? string Function that must return the path to the current working directory.
 ---@field save_on_close boolean Save state when the views telescope buffer is closed.
 ---@field icons TrackPickersViewsIcons File-indicators, state-indicators, separators and default icons.
 
@@ -27,8 +25,6 @@
 ---@class TrackPickersBundles
 ---@field hooks TrackPickersBundlesHooks Callbacks related to the views picker.
 ---@field icons TrackPickersBundlesIcons File-indicators, state-indicators, separators and default icons.
----@field bundle_label? string string Function that must return the root path.
----@field root_path? string Function that must return the path to the current working directory.
 ---@field save_on_close boolean Save state when the bundles telescope buffer is closed.
 
 ---@class TrackPickersBundlesHooks
@@ -51,12 +47,13 @@
 ---@class TrackPad
 ---@field window table
 ---@field root_path? string Function that must return the path to the current working directory.
----@field bundle_label? string string Function that must return the root path.
 ---@field save_on_close boolean Save state when the views pad buffer is closed.
 -- }}}
 
 ---@class TrackOpts
 ---@field save_path string JSON file where the current state will be saved.
+---@field root_path string|true Default `root_path`. Setting to to true fetches automatically.
+---@field bundle_label string|true Default `bundle_label` to open based on `root_path`.
 ---@field disable_history boolean Change state of all bundle histories.
 ---@field maximum_history number Change the maximum number of marks to be stored in all bundle history tables.
 ---@field pickers TrackPickers Sub-configuration for telescope pickers.

@@ -4,7 +4,7 @@ local V = vim.fn
 
 local entry_display = require("telescope.pickers.entry_display")
 local utils = require("telescope.utils")
-local Util = require("track.util")
+local util = require("track.util")
 local make_entry = require("telescope.make_entry")
 
 -- TODO: Add a way to match if the current focused_path is a command or, a manpage
@@ -48,20 +48,20 @@ function M.gen_from_view(opts)
     if not allowed then
       display = utils.transform_path(opts, mark.absolute)
     elseif mark.type == "term" then
-      display = Util.transform_term_uri(mark.path)
+      display = util.transform_term_uri(mark.path)
     elseif mark.type == "man" then
-      display = Util.transform_man_uri(mark.path)
+      display = util.transform_man_uri(mark.path)
     elseif mark.type == "https" then
-      display = Util.transform_site_uri(mark.path)
+      display = util.transform_site_uri(mark.path)
     end
 
-    if entry.value.focused_path == mark.absolute then
+    if opts._focused == mark.absolute then
       display_hl = "TrackViewsFocusedDisplay"
       marker, marker_hl = icons.focused, "TrackViewsFocused"
     end
     -- add more?
 
-    local icon, icon_hl = Util.get_icon(mark, opts)
+    local icon, icon_hl = util.get_icon(mark, opts)
 
     -- is the buffer listed (is it opened in nvim currently)
     local listed, listed_hl = icons.unlisted, "TrackViewsMarkUnlisted"
@@ -73,7 +73,7 @@ function M.gen_from_view(opts)
     end
 
     return displayer({
-      { entry.value.index, "TrackViewsIndex" },
+      { entry.index, "TrackViewsIndex" },
       { marker, marker_hl },
       { listed, listed_hl },
       { icon, icon_hl },
@@ -82,10 +82,9 @@ function M.gen_from_view(opts)
   end
 
   return function(entry)
-    entry.focused_path = V.fnamemodify(V.bufname(), ":p")
     return make_entry.set_default_entry_mt({
       value = entry,
-      ordinal = entry.index .. ":" .. entry.absolute,
+      ordinal = entry.absolute,
       display = make_display,
     }, opts)
   end
@@ -93,12 +92,13 @@ end
 
 function M.gen_from_bundle(opts)
   ---@type Root
-  local root = require("track.state")._roots[opts.root_path]
+  local root, _ = util.root_and_bundle()
   local icons = opts.icons
   local displayer = entry_display.create({
     separator = icons.separator,
     separator_hl = "TrackBundlesDivide",
     items = {
+      { width = 2 }, -- hardcoded
       {}, -- views-marks
       {}, -- history-deleted
       {}, -- main / alternate / inactive
@@ -122,6 +122,7 @@ function M.gen_from_bundle(opts)
     local mark, mark_hl = string.format("%s %s", icons.mark, #bundle.views), "TrackBundlesMark"
     local history, history_hl = string.format("%s %s", icons.history, #bundle.history), "TrackBundlesHistory"
     return displayer({
+      { entry.index, "TrackBundlesIndex" },
       { mark, mark_hl },
       { history, history_hl },
       { state, state_hl },

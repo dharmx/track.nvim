@@ -106,6 +106,10 @@ Note that, you can also track commands, man-pages and help-docs.
 Note that, there can only be one `main` bundle and one **alternate** bundle. And,
 a bundle will always have a main bundle. It is not recommended to remove it.
 
+### Q. How do I mark a terminal command?
+
+- Open terminal by `:terminal`
+
 ## Defaults
 
 ```lua
