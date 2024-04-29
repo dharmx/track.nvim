@@ -10,6 +10,7 @@ local entry_makers = require("telescope._extensions.track.entry_makers")
 local actions = require("telescope.actions")
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
+local mappings = require("telescope.mappings")
 
 local tele_config = require("telescope.config")
 local tele_state = require("telescope.state")
@@ -48,6 +49,17 @@ function M.picker(opts)
     prompt_title = "Bundles",
     finder = finder,
     sorter = tele_config.values.generic_sorter(opts),
+    on_complete = {
+      function(self)
+        if not opts.hooks.on_serial then return end
+        for entry in self.manager:iter() do
+          vim.keymap.set("n", tostring(entry.index), function()
+            actions.close(self.layout.prompt.bufnr)
+            opts.hooks.on_serial(entry, self)
+          end, { buffer = self.layout.prompt.bufnr })
+        end
+      end,
+    },
     attach_mappings = function(buffer, _)
       local status = tele_state.get_status(buffer)
       actions.close:enhance({
