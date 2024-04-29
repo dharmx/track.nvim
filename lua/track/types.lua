@@ -2,6 +2,7 @@
 ---@field on_open function This will be called before the picker window is opened.
 ---@field on_close function(buffer: number, picker: Picker) This will be called right after the picker window is closed.
 ---@field on_choose function(buffer: number, picker: Picker) Will be called after the choice is made and the picker os closed.
+---@field on_serial function(entry: table, picker: Picker)|nil|false Map a callback numerical keys with respect to entry index.
 
 ---@class TrackPickersViewsIcons
 ---@field separator string Separator between columns in the views picker.
@@ -32,6 +33,7 @@
 ---@field on_open function This will be called before the picker window is opened.
 ---@field on_close function(buffer: number, picker: Picker) This will be called right after the picker window is closed.
 ---@field on_choose function(buffer: number, picker: Picker) Will be called after the choice is made and the picker os closed.
+---@field on_serial function(entry: table, picker: Picker)|nil|false Map a callback numerical keys with respect to entry index.
 
 ---@class TrackPickersBundlesIcons
 -- TODO: END }}}

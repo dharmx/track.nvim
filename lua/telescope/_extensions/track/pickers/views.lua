@@ -48,6 +48,17 @@ function M.picker(opts)
     prompt_title = "Views",
     finder = finder,
     sorter = tele_config.values.file_sorter(opts),
+    on_complete = {
+      function(self)
+        if not opts.hooks.on_serial then return end
+        for entry in self.manager:iter() do
+          vim.keymap.set("n", tostring(entry.index), function()
+            actions.close(self.layout.prompt.bufnr)
+            opts.hooks.on_serial(entry, self)
+          end, { buffer = self.layout.prompt.bufnr })
+        end
+      end,
+    },
     attach_mappings = function(buffer, _)
       local status = tele_state.get_status(buffer)
       actions.close:enhance({

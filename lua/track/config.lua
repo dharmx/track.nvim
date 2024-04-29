@@ -31,6 +31,10 @@ M._defaults = {
       hooks = {
         on_close = util.mute,
         on_open = util.mute,
+        on_serial = function(entry)
+          local root, _ = util.root_and_bundle()
+          root:change_main_bundle(entry.value.label)
+        end,
         on_choose = function(status, opts)
           local selected = status.picker:get_selection()
           if not selected then return end
@@ -48,6 +52,7 @@ M._defaults = {
         map("n", "dd", track_actions.delete_bundle)
         map("i", "<C-D>", track_actions.delete_bundle)
         map("i", "<C-E>", track_actions.change_bundle_label)
+        map("n", "s", track_actions.change_bundle_label)
         return true -- compulsory
       end,
       icons = {
@@ -81,6 +86,7 @@ M._defaults = {
       hooks = {
         on_close = util.mute,
         on_open = util.mute,
+        on_serial = util.open_entry,
         on_choose = function(status, _)
           local entries = if_nil(status.picker:get_multi_selection(), {})
           if #entries == 0 then table.insert(entries, status.picker:get_selection()) end
