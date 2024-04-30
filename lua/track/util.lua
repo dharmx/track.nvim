@@ -53,22 +53,22 @@ function M.cwd()
   return (U.cwd()) or vim.fn.getcwd() or vim.env.PWD
 end
 
-function M.get_icon(mark, opts)
+function M.get_icon(mark, extra_icons, opts)
   local icon, group = "", nil
   if opts.disable_devicons then return icon end
 
   if mark.type == "term" then
-    icon, group = opts.icons.terminal, "TrackViewsTerminal"
+    icon, group = extra_icons.terminal, "TrackViewsTerminal"
   elseif mark.type == "man" then
-    icon, group = opts.icons.manual, "TrackViewsManual"
+    icon, group = extra_icons.manual, "TrackViewsManual"
   elseif mark.type == "directory" then
-    icon, group = opts.icons.directory, "TrackViewsDirectory"
+    icon, group = extra_icons.directory, "TrackViewsDirectory"
   elseif mark.type == "http" or mark.type == "https" then
-    icon, group = opts.icons.site, "TrackViewsSite"
+    icon, group = extra_icons.site, "TrackViewsSite"
   else
     local ok, devicons = pcall(require, "nvim-web-devicons")
     if not ok then
-      icon, group = opts.icons.file, "TrackViewsFile"
+      icon, group = extra_icons.file, "TrackViewsFile"
     else
       if not devicons.has_loaded() then devicons.setup() end
       icon, group = devicons.get_icon(vim.fs.basename(mark.path))
