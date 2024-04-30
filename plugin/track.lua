@@ -12,6 +12,7 @@ local function HI(...) vim.api.nvim_set_hl(0, ...) end
 
 -- TODO: Implement bang, range, repeat, motions and bar.
 
+local pad
 cmd("Track", function(...)
   local args = (...).fargs
   if args[1] == "save" then
@@ -32,7 +33,12 @@ cmd("Track", function(...)
   elseif args[1] == "views" then
     require("telescope").extensions.track.views()
   else
-    require("telescope").extensions.track.views()
+    if not pad then
+      require("track.state").load()
+      local Pad = require("track.pad")
+      pad = Pad(require("track.config").get().pad)
+    end
+    pad:toggle()
   end
 end, {
   desc = "State operations like: save, load, loadsave, reload, wipe and remove. marks for showing current mark list.",

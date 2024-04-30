@@ -34,6 +34,9 @@ M._defaults = {
     inactive = " ",
     mark = "",
     history = "",
+    -- pad
+    saved = "",
+    save = "",
   },
   pickers = {
     bundles = {
@@ -137,18 +140,25 @@ M._defaults = {
   disable_history = true,
   maximum_history = 10,
   pad = {
-    icons = {
-      saved = "",
-      save = "",
-    },
     serial_maps = true,
-    save_on_close = true,
     auto_create = true,
+    save_on_close = true,
     save_on_hide = true,
+    path_display = {
+      absolute = false, -- /home/name/projects/hello/mark.lua -> hello/mark.lua
+      shorten = 1, -- /aname/bname/cname/dname.e -> /a/b/c/dname.e
+    },
     hooks = {
       on_choose = util.open_entry,
-      on_serial_choose = util.open_entry,
+      on_serial = util.open_entry,
     },
+    mappings = {
+      n = {
+        q = function(self) self:close() end,
+        ["<C-s>"] = function(self) self:sync() end,
+      }
+    },
+    disable_devicons = false,
     config = {
       style = "minimal",
       border = "solid",
