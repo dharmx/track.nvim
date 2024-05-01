@@ -78,6 +78,8 @@ end
 function Bundle:add_mark(mark, label)
   if type(mark) == "table" and mark._NAME == "mark" then
     self.marks[mark.path] = mark
+    -- BUG: Views are inserted twice if :add_mark is called on same files
+    -- FIX: remove previous mark first (i.e. just update the order)
     table.insert(self.views, mark.path)
     log.trace("Bundle.add_mark(): new mark " .. mark.path .. " has been added")
     return self.marks[mark.path]

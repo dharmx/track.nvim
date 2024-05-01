@@ -55,25 +55,25 @@ function M.picker(opts)
         for entry in self.manager:iter() do
           vim.keymap.set("n", tostring(entry.index), function()
             actions.close(self.layout.prompt.bufnr)
-            opts.hooks.on_serial(entry, self)
+            opts.hooks.on_serial(entry)
           end, { buffer = self.layout.prompt.bufnr })
         end
       end,
     },
     attach_mappings = function(buffer, _)
-      local status = tele_state.get_status(buffer)
+      local self = tele_state.get_status(buffer).picker
       actions.close:enhance({
         post = function(_)
           if opts.save_on_close then
             state.save()
             log.info("Telescope.Bundles.picker(): closed telescope.track.bundles and saved state")
           end
-          hooks.on_close(status, opts)
+          hooks.on_close(self)
         end,
       })
       actions.select_default:replace(function(...)
         actions.close(...)
-        hooks.on_choose(status, opts)
+        hooks.on_choose(self)
       end)
       -- dynamic keymaps
       return true

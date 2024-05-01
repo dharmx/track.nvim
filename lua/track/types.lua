@@ -48,7 +48,7 @@
 
 -- TODO: {{{
 ---@class TrackPad
----@field window table
+---@field config table
 ---@field root_path? string Function that must return the path to the current working directory.
 ---@field save_on_close boolean Save state when the views pad buffer is closed.
 -- }}}

@@ -13,6 +13,31 @@ M._defaults = {
   save_path = vim.fn.stdpath("state") .. "/track.json",
   root_path = true,
   bundle_label = true,
+  icons = {
+    -- marks
+    separator = " ",
+    locked = " ",
+    terminal = " ",
+    manual = " ",
+    site = " ",
+    missing = " ",
+    accessible = " ",
+    inaccessible = " ",
+    focused = " ",
+    listed = "",
+    unlisted = "≖",
+    file = "",
+    directory = "",
+    -- bundles
+    main = " ",
+    alternate = " ",
+    inactive = " ",
+    mark = "",
+    history = "",
+    -- pad
+    saved = "",
+    save = "",
+  },
   pickers = {
     bundles = {
       save_on_close = true,
@@ -35,11 +60,11 @@ M._defaults = {
           local root, _ = util.root_and_bundle()
           root:change_main_bundle(entry.value.label)
         end,
-        on_choose = function(status, opts)
-          local selected = status.picker:get_selection()
-          if not selected then return end
+        on_choose = function(self)
+          local entry = self:get_selection()
+          if not entry then return end
           local root, _ = util.root_and_bundle()
-          root:change_main_bundle(selected.value.label)
+          root:change_main_bundle(entry.value.label)
         end,
       },
       attach_mappings = function(_, map)
@@ -55,14 +80,6 @@ M._defaults = {
         map("n", "s", track_actions.change_bundle_label)
         return true -- compulsory
       end,
-      icons = {
-        separator = " ┃ ",
-        main = " ",
-        alternate = " ",
-        inactive = " ",
-        mark = "",
-        history = "",
-      }
     },
     views = {
       switch_directory = true,
@@ -87,9 +104,9 @@ M._defaults = {
         on_close = util.mute,
         on_open = util.mute,
         on_serial = util.open_entry,
-        on_choose = function(status, _)
-          local entries = if_nil(status.picker:get_multi_selection(), {})
-          if #entries == 0 then table.insert(entries, status.picker:get_selection()) end
+        on_choose = function(self)
+          local entries = if_nil(self:get_multi_selection(), {})
+          if #entries == 0 then table.insert(entries, self:get_selection()) end
           for _, entry in ipairs(entries) do util.open_entry(entry) end
         end,
       },
@@ -113,21 +130,6 @@ M._defaults = {
         return true -- compulsory
       end,
       disable_devicons = false,
-      icons = {
-        locked = " ",
-        separator = " ",
-        terminal = " ",
-        manual = " ",
-        site = " ",
-        missing = " ",
-        accessible = " ",
-        inaccessible = " ",
-        focused = " ",
-        listed = "",
-        unlisted = "≖",
-        file = "",
-        directory = "",
-      },
     },
   },
   log = {
@@ -138,19 +140,22 @@ M._defaults = {
   disable_history = true,
   maximum_history = 10,
   pad = {
-    icons = {
-      saved = "",
-      save = "",
-    },
+    spacing = 1,
     serial_maps = true,
-    save_on_close = true,
     auto_create = true,
-    save_on_hide = true,
+    save_on_close = true,
     hooks = {
       on_choose = util.open_entry,
-      on_serial_choose = util.open_entry,
+      on_serial = util.open_entry,
     },
-    window = {
+    mappings = {
+      n = {
+        q = function(self) self:close() end,
+        ["<C-s>"] = function(self) self:sync(true) end,
+      },
+    },
+    disable_devicons = false,
+    config = {
       style = "minimal",
       border = "solid",
       focusable = true,
