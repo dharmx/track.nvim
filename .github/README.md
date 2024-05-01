@@ -172,6 +172,9 @@ M._defaults = {
     inactive = " ",
     mark = "",
     history = "",
+    -- pad
+    saved = "",
+    save = "",
   },
   pickers = {
     bundles = {
@@ -275,18 +278,21 @@ M._defaults = {
   disable_history = true,
   maximum_history = 10,
   pad = {
-    icons = {
-      saved = "",
-      save = "",
-    },
+    spacing = 1,
     serial_maps = true,
-    save_on_close = true,
     auto_create = true,
-    save_on_hide = true,
+    save_on_close = true,
     hooks = {
       on_choose = util.open_entry,
-      on_serial_choose = util.open_entry,
+      on_serial = util.open_entry,
     },
+    mappings = {
+      n = {
+        q = function(self) self:close() end,
+        ["<C-s>"] = function(self) self:sync(true) end,
+      },
+    },
+    disable_devicons = false,
     config = {
       style = "minimal",
       border = "solid",
