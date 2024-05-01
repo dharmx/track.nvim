@@ -149,6 +149,7 @@ cmd("AlternateBundle", function() require("track.core"):alternate() end, {
 
 -- Highlights {{{
 HI("TrackPadTitle", { link = "TelescopeResultsTitle" })
+HI("TrackPadEntryFocused", { foreground = "#7AB0DF" })
 
 HI("TrackViewsAccessible", { foreground = "#79DCAA" })
 HI("TrackViewsInaccessible", { foreground = "#F87070" })
