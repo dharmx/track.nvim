@@ -14,6 +14,7 @@ local if_nil = vim.F.if_nil
 
 local Mark = require("track.containers.mark")
 local util = require("track.util")
+local utils = require("telescope.utils")
 local state = require("track.state")
 local config = require("track.config").get()
 local strings = require("plenary.strings")
@@ -22,9 +23,10 @@ function Pad:_new(fields)
   local field_types = type(fields)
   assert(field_types == "table", "expected: fields: table found: " .. field_types)
 
+  self.path_display = fields.path_display
   self.mappings = if_nil(fields.mappings, {})
   self.entries = if_nil(fields, {})
-  self.spacing = fields.spacing
+  self.path_display = fields.path_display
   self.disable_devicons = fields.disable_devicons
   self.color_devicons = fields.color_devicons
 
@@ -34,7 +36,7 @@ function Pad:_new(fields)
   self.hooks = fields.hooks
   self.mappings.n["<cr>"] = function()
     if self:hidden() then return end
-    local parsed_line = Pad.line2mark(A.nvim_get_current_line(), self.spacing, self.disable_devicons)
+    local parsed_line = Pad.line2mark(A.nvim_get_current_line(), self.disable_devicons)
     if not parsed_line then return end
     self:close()
     self.hooks.on_choose({ value = parsed_line })
@@ -70,13 +72,16 @@ function Pad:_new(fields)
   end
 
   A.nvim_buf_attach(self.buffer, false, {
-    on_lines = function() self:apply_serial() end,
+    on_lines = function()
+      -- TODO: self:clean() + self:theme()
+      self:apply_serial()
+    end,
   })
 
   self._NAME = "pad"
 end
 
-function Pad.make_entry(index, view_mark, spacing, disable_devicons, color_devicons)
+function Pad.make_entry(index, view_mark, disable_devicons, color_devicons)
   local entry = { index = index, value = view_mark }
   local icon, group = util.get_icon(entry.value, config.icons, {
     disable_devicons = disable_devicons,
@@ -85,7 +90,7 @@ function Pad.make_entry(index, view_mark, spacing, disable_devicons, color_devic
   entry.icon = icon
   entry.group = group
 
-  entry.display = (disable_devicons and "" or (icon .. string.rep(" ", spacing))) .. entry.value.path
+  entry.display = (disable_devicons and "" or icon .. " ") .. entry.value.path
   entry.range = { { { 0, #icon }, entry.group }, "TrackPadEntry" }
   return entry
 end
@@ -98,7 +103,7 @@ function Pad:apply_serial()
 
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, false)
   for serial, line in ipairs(lines) do
-    local mark = Pad.line2mark(line, self.spacing, self.disable_devicons)
+    local mark = Pad.line2mark(line, self.disable_devicons)
     if mark then
       vim.keymap.set("n", tostring(serial), function()
         self:close()
@@ -108,13 +113,40 @@ function Pad:apply_serial()
   end
 end
 
+function Pad:conceal_path(line, range, path)
+  local norm = vim.split(path, "/", { plain = true })
+  local short = vim.split(utils.transform_path(self, path), "/", { plain = true })
+  if #short ~= #norm or norm[#norm] ~= short[#short] then return end
+  table.remove(short)
+  table.remove(norm)
+
+  local index = 1
+  local count = range[1]
+  while index <= #short do
+    count = count + #short[index]
+    local start = count
+    count = count + #norm[index] - #short[index]
+    local finish = count
+    if (finish - start) ~= #norm[index] then
+      A.nvim_buf_set_extmark(self.buffer, self.namespace, line, start, {
+        end_row = line,
+        end_col = finish,
+        conceal = "",
+      })
+    end
+    count = count + 1
+    index = index + 1
+  end
+end
+
 -- stylua: ignore
 function Pad:render()
   self:clean()
   self:clear()
   local view_marks = self.bundle.views()
   for index, view_mark in ipairs(view_marks) do
-    local entry = Pad.make_entry(index, view_mark, self.spacing, self.disable_devicons, self.color_devicons)
+    local entry = Pad.make_entry(index, view_mark, self.disable_devicons, self.color_devicons)
+    local mark = entry.value
     local line = index - 1
     local range = entry.range
     if entry.value.absolute == self._focused then range[2] = range[2] .. "Focused" end
@@ -122,12 +154,15 @@ function Pad:render()
 
     A.nvim_buf_set_lines(self.buffer, line, line, true, { entry.display })
     A.nvim_buf_add_highlight(self.buffer, self.namespace, range[1][2], line, range[1][1][1], range[1][1][2])
-    A.nvim_buf_add_highlight(self.buffer, self.namespace, range[2], line, range[1][1][2] + self.spacing, range[1][1][2] + self.spacing + #entry.value.path)
+    A.nvim_buf_add_highlight(self.buffer, self.namespace, range[2], line, range[1][1][2] + 1, range[1][1][2] + 1 + #mark.path)
+    if mark.type == "file" or mark.type == "directory" then
+      self:conceal_path(line, { range[1][1][2] + 1, range[1][1][2] + 1 + #mark.path }, mark.path)
+    end
   end
   self:apply_serial()
 end
 
-function Pad.line2mark(line, spacing, disable_devicons)
+function Pad.line2mark(line, disable_devicons)
   -- BUG: Handle spaces in entries. They are mistaken for an icon.
   -- FIX: Limit icon length? (need help)
   local trimmed = vim.trim(line)
@@ -136,7 +171,7 @@ function Pad.line2mark(line, spacing, disable_devicons)
     if disable_devicons then
       mark = Mark({ path = trimmed, type = util.filetype(trimmed) })
     else
-      local icon, content = line:match("^([^%s]+)" .. string.rep("%s", spacing) .. "(.+)$")
+      local icon, content = line:match("^([^%s]+)%s(.+)$")
       if icon then
         mark = Mark({ path = content, type = util.filetype(content) })
       else
@@ -151,7 +186,7 @@ function Pad:sync(save)
   self.bundle:clear()
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, true)
   for _, line in ipairs(lines) do
-    local parsed_mark = Pad.line2mark(line, self.spacing, self.disable_devicons)
+    local parsed_mark = Pad.line2mark(line, self.disable_devicons)
     if parsed_mark then self.bundle:add_mark(parsed_mark) end
   end
   self:render()

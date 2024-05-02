@@ -144,6 +144,10 @@ M._defaults = {
     serial_maps = true,
     auto_create = true,
     save_on_close = true,
+    path_display = {
+      absolute = false,
+      shorten = 1,
+    },
     hooks = {
       on_choose = util.open_entry,
       on_serial = util.open_entry,
