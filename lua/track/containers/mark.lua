@@ -18,17 +18,18 @@ local V = vim.fn
 local U = vim.loop
 
 ---Create a new `Mark` object.
----@param fields MarkFields Available mark attributes/fields.
+---@param opts MarkFields Available mark attributes/fields.
 ---@return Mark
-function Mark:_new(fields)
-  local field_types = type(fields)
-  assert(field_types == "table", "expected: fields: table found: " .. field_types)
-  assert(fields.path and type(fields.path) == "string", "fields.path: string cannot be nil")
+function Mark:_new(opts)
+  local types = type(opts)
+  assert(types == "table", "expected: fields: table found: " .. types)
+  assert(opts.path and type(opts.path) == "string", "fields.path: string cannot be nil")
 
-  self.path = fields.path
-  self.label = fields.label
-  self.type = vim.F.if_nil(fields.type, "file")
+  self.path = opts.path
+  self.label = opts.label
+  self.type = vim.F.if_nil(opts.type, "file")
   self.absolute = V.fnamemodify(self.path, ":p")
+  ---@diagnostic disable-next-line: missing-return
   self._NAME = "mark"
 end
 

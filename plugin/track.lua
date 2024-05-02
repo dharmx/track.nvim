@@ -12,7 +12,6 @@ local function HI(...) vim.api.nvim_set_hl(0, ...) end
 
 -- TODO: Implement bang, range, repeat, motions and bar.
 
-local pad
 cmd("Track", function(...)
   local args = (...).fargs
   if args[1] == "save" then
@@ -33,12 +32,7 @@ cmd("Track", function(...)
   elseif args[1] == "views" then
     require("telescope").extensions.track.views()
   else
-    if not pad then
-      require("track.state").load()
-      local Pad = require("track.pad")
-      pad = Pad(require("track.config").get().pad)
-    end
-    pad:toggle()
+    require("track.core").pad:toggle()
   end
 end, {
   desc = "State operations like: save, load, loadsave, reload, wipe and remove. marks for showing current mark list.",
@@ -52,23 +46,26 @@ end, {
       "wipe",
       "remove",
       "menu",
+      "views",
+      "pad",
       "bundles",
     }
   end,
 })
 
 cmd("Mark", function(...)
-  local files = (...).fargs
-  if vim.tbl_isempty(files) then table.insert(files, V.expand("%")) end
+  local uri = (...).args
+  if vim.trim(uri) == "" then uri = V.expand("%") end
   local config = require("track.config").get()
   local core = require("track.core")
-  for _, file in ipairs(files) do
-    core:mark(file):history(config.disable_history, config.maximum_history)
-  end
+  local uri_type = require("track.util").filetype(uri)
+  local P = require("plenary.path")
+  if uri_type == "file" or uri_type == "directory" then uri = P:new(uri):make_relative(core.root_path) end
+  core:mark(uri):history(config.disable_history, config.maximum_history)
 end, {
   complete = "file",
   desc = "Mark current file.",
-  nargs = "*",
+  nargs = "?",
 })
 
 cmd("MarkOpened", function()

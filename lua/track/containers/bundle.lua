@@ -26,20 +26,21 @@ local log = require("track.log")
 local if_nil = vim.F.if_nil
 
 ---Create a new `Bundle` object.
----@param fields BundleFields Available bundle attributes/fields.
+---@param opts BundleFields Available bundle attributes/fields.
 ---@return Bundle
-function Bundle:_new(fields)
-  local fieldstype = type(fields)
-  assert(fieldstype ~= "table" or fieldstype ~= "string", "expected: fields: string|table found: " .. fieldstype)
-  if fieldstype == "string" then fields = { label = fields } end
-  assert(fields.label and type(fields.label) == "string", "fields.label: string cannot be nil")
+function Bundle:_new(opts)
+  local types = type(opts)
+  assert(types ~= "table" or types ~= "string", "expected: fields: string|table found: " .. types)
+  if types == "string" then opts = { label = opts } end
+  assert(opts.label and type(opts.label) == "string", "fields.label: string cannot be nil")
 
-  self.label = fields.label
+  self.label = opts.label
   self.marks = {}
   self.views = {}
-  self.disable_history = if_nil(fields.disable_history, true)
-  self.maximum_history = if_nil(fields.maximum_history, 10)
-  self.history = if_nil(fields.history, {})
+  self.disable_history = if_nil(opts.disable_history, true)
+  self.maximum_history = if_nil(opts.maximum_history, 10)
+  self.history = if_nil(opts.history, {})
+  ---@diagnostic disable-next-line: missing-return
   self._NAME = "bundle"
 end
 
@@ -78,16 +79,14 @@ end
 function Bundle:add_mark(mark, label)
   if type(mark) == "table" and mark._NAME == "mark" then
     self.marks[mark.path] = mark
-    -- BUG: Views are inserted twice if :add_mark is called on same files
-    -- FIX: remove previous mark first (i.e. just update the order)
-    table.insert(self.views, mark.path)
+    if #vim.tbl_keys(self.marks) ~= #self.views then table.insert(self.views, mark.path) end
     log.trace("Bundle.add_mark(): new mark " .. mark.path .. " has been added")
     return self.marks[mark.path]
   end
   -- if it does not exist then create it
   self.marks[mark] = Mark({ path = mark, label = label })
   -- adding a mark will add its path to the views table
-  table.insert(self.views, mark)
+  if #vim.tbl_keys(self.marks) ~= #self.views then table.insert(self.views, mark) end
   log.trace("Bundle.add_mark(): new mark " .. mark .. " has been added")
   return self.marks[mark]
 end
