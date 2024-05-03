@@ -106,9 +106,7 @@ end
 
 ---Get the main `Bundle` instance. This is not a copy but a reference.
 ---@return Bundle
-function Root:get_main_bundle()
-  return self.bundles[self.main]
-end
+function Root:get_main_bundle() return self.bundles[self.main] end
 
 ---Generate a random bundle name using current time (in milliseconds).
 ---@return string
@@ -211,7 +209,10 @@ end
 -- TODO: Implement force = true i.e. overwrite a bundle
 function Root:rename_bundle(bundle, new_label)
   local bundle_type = type(bundle)
-  assert(bundle_type == "string" or (bundle_type == "table" and bundle._NAME == "bundle"), "bundle: bundle needs to be Bundle|string")
+  assert(
+    bundle_type == "string" or (bundle_type == "table" and bundle._NAME == "bundle"),
+    "bundle: bundle needs to be Bundle|string"
+  )
   local label = type(bundle) == "string" and bundle or bundle.label
   if self:bundle_exists(new_label) then return end
   local old_bundle = self.bundles[label]

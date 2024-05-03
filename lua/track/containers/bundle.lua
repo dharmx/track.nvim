@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field
 ---A virtual mark-map. Allows one to create different versions of marks that
 ---is better suitted to a part of a project that you might be working on.
 ---

@@ -40,10 +40,7 @@ function M:mark(file, bundle_label, save)
   end
 
   local filetype = util.filetype(file)
-  if filetype == "term" then
-    file = file:gsub("^(term://.+//)%d+:(.*)$", "%1%2")
-    file = file:gsub(" | ", " \\| ")
-  end
+  if filetype == "term" then file = util.clean_term_uri(file) end
   local mark = Mark({ path = file, type = filetype })
   root.bundles[bundle_label]:add_mark(mark)
   if save then state.save() end

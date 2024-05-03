@@ -1,9 +1,3 @@
----@mod mark Mark
-
--- TODO: Add position sub-mark.
--- TODO: Add line sub-mark.
--- TODO: Add URL sub-mark.
-
 local Mark = {}
 Mark.__index = Mark
 setmetatable(Mark, {

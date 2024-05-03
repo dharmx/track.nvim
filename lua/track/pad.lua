@@ -23,7 +23,7 @@ local strings = require("plenary.strings")
 
 function Pad:_new(opts)
   local types = type(opts)
-  assert(types == "table", "expected: fields: table found: " .. types)
+  assert(types == "table", "expected table")
 
   self.root_path = opts.root_path
   self.path_display = opts.path_display
@@ -33,7 +33,7 @@ function Pad:_new(opts)
   self.disable_devicons = opts.disable_devicons
   self.color_devicons = opts.color_devicons
 
-  self.bundle = if_nil(opts.bundle, select(2, util.root_and_bundle()))
+  self.bundle = if_nil(opts.bundle, select(2, util.root_and_bundle({}, true)))
   self.buffer = A.nvim_create_buf(false, false)
   self.namespace = A.nvim_create_namespace("TrackPad")
   self.hooks = opts.hooks
@@ -42,7 +42,7 @@ function Pad:_new(opts)
   -- TODO: Apply root entry as pickers.views.
   self.mappings.n["<cr>"] = function()
     if self:hidden() then return end
-    local parsed_line = Pad.line2mark(A.nvim_get_current_line(), self.disable_devicons)
+    local parsed_line = Pad.line2entry(A.nvim_get_current_line(), self.disable_devicons)
     if not parsed_line then return end
     self:close()
     self.hooks.on_choose({ value = parsed_line })
@@ -100,9 +100,7 @@ function Pad.make_entry(index, view_mark, disable_devicons, color_devicons)
   return entry
 end
 
-function Pad.line2mark(line, disable_devicons)
-  -- BUG: Handle spaces in entries. They are mistaken for an icon.
-  -- FIX: Limit icon length? (need help)
+function Pad.line2entry(line, disable_devicons)
   local trimmed = vim.trim(line)
   if trimmed ~= "" then
     local mark
@@ -110,10 +108,12 @@ function Pad.line2mark(line, disable_devicons)
       mark = Mark({ path = trimmed, type = util.filetype(trimmed) })
     else
       local icon, content = line:match("^([^%s]+)%s(.+)$")
-      if icon then
+      if icon and not utils.is_uri(icon) then
         mark = Mark({ path = content, type = util.filetype(content) })
       else
-        mark = Mark({ path = trimmed, type = util.filetype(trimmed) })
+        local filetype = util.filetype(trimmed)
+        if filetype == "term" then trimmed = util.clean_term_uri(trimmed) end
+        mark = Mark({ path = trimmed, type = filetype })
       end
     end
     return mark
@@ -128,7 +128,7 @@ function Pad:apply_serial()
 
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, false)
   for serial, line in ipairs(lines) do
-    local mark = Pad.line2mark(line, self.disable_devicons)
+    local mark = Pad.line2entry(line, self.disable_devicons)
     if mark then
       vim.keymap.set("n", tostring(serial), function()
         self:close()
@@ -138,7 +138,43 @@ function Pad:apply_serial()
   end
 end
 
-function Pad:conceal_mark(line, offset, path)
+function Pad:_extmark(line, start, finish)
+  A.nvim_buf_set_extmark(self.buffer, self.namespace, line, start, {
+    end_row = line,
+    end_col = finish,
+    conceal = "",
+  })
+end
+
+function Pad:conceal_term(line, offset, path)
+  local start, finish = string.find(path, "^(term://.+//)%d+?:.*$")
+  if start and finish then
+    self:_extmark(line, start + offset - 1, finish + offset)
+  else
+    start, finish = string.find(path, "^(term://.+//)")
+    if start and finish then self:_extmark(line, start + offset - 1, finish + offset) end
+  end
+
+  local count = 1
+  start, finish = nil, nil
+  while true do
+    start, finish = string.find(path, "\\|", count)
+    if start == nil then break end
+    self:_extmark(line, start + offset - 1, finish + offset - 1)
+    count = finish + 1
+  end
+end
+
+function Pad:conceal_uri(line, offset, path)
+  local start, finish = string.find(path, "^%w+://")
+  if start and finish then
+    start = offset
+    finish = finish + start
+    self:_extmark(line, start, finish)
+  end
+end
+
+function Pad:conceal_path(line, offset, path)
   local normp = vim.split(path, "/", { plain = true })
   local tranp = vim.split(utils.transform_path(self, path), "/", { plain = true })
 
@@ -152,13 +188,7 @@ function Pad:conceal_mark(line, offset, path)
     pointer = pointer + #tranp[index]
     local start = pointer
     pointer = pointer + #normp[index] - #tranp[index]
-    if (pointer - start) ~= #normp[index] then
-      A.nvim_buf_set_extmark(self.buffer, self.namespace, line, start, {
-        end_row = line,
-        end_col = pointer,
-        conceal = "",
-      })
-    end
+    if (pointer - start) ~= #normp[index] then self:_extmark(line, start, pointer) end
     pointer = pointer + 1
     index = index + 1
   end
@@ -183,7 +213,13 @@ function Pad:render()
     A.nvim_buf_set_lines(self.buffer, line, line, true, { entry.display })
     A.nvim_buf_add_highlight(self.buffer, self.namespace, range[1][2], line, range[1][1][1], range[1][1][2])
     A.nvim_buf_add_highlight(self.buffer, self.namespace, range[2], line, range[1][1][2] + 1, range[1][1][2] + 1 + #mark.path)
-    if mark.type == "file" or mark.type == "directory" then self:conceal_mark(line, range[1][1][2] + 1, mark.path) end
+    if mark.type == "file" or mark.type == "directory" then
+      self:conceal_path(line, range[1][1][2] + 1, mark.path)
+    elseif mark.type == "term" then
+      self:conceal_term(line, range[1][1][2] + 1, mark.path)
+    elseif mark.type ~= "file" then
+      self:conceal_uri(line, range[1][1][2] + 1, mark.path)
+    end
   end
   self:apply_serial()
 end
@@ -192,7 +228,7 @@ function Pad:sync(save)
   self.bundle:clear()
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, true)
   for _, line in ipairs(lines) do
-    local parsed_mark = Pad.line2mark(line, self.disable_devicons)
+    local parsed_mark = Pad.line2entry(line, self.disable_devicons)
     if parsed_mark then self.bundle:add_mark(parsed_mark) end
   end
   self:render()

@@ -15,15 +15,15 @@ M._defaults = {
   bundle_label = true,
   icons = {
     -- marks
-    separator = " ",
-    locked = " ",
-    terminal = " ",
-    manual = " ",
-    site = " ",
+    separator = "  ",
+    locked = "",
+    terminal = "",
+    manual = "",
+    site = "",
     missing = " ",
     accessible = " ",
     inaccessible = " ",
-    focused = " ",
+    focused = "",
     listed = "",
     unlisted = "≖",
     file = "",
@@ -107,7 +107,9 @@ M._defaults = {
         on_choose = function(self)
           local entries = if_nil(self:get_multi_selection(), {})
           if #entries == 0 then table.insert(entries, self:get_selection()) end
-          for _, entry in ipairs(entries) do util.open_entry(entry) end
+          for _, entry in ipairs(entries) do
+            util.open_entry(entry)
+          end
         end,
       },
       attach_mappings = function(_, map)

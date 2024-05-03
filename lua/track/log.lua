@@ -14,8 +14,6 @@ function M.errors(bool, message, title)
 end
 
 setmetatable(M, {
-  __index = function(_, key)
-    return M._log[key]
-  end
+  __index = function(_, key) return M._log[key] end,
 })
 return M
