@@ -30,16 +30,15 @@ function M.filetype(uri)
 end
 
 function M.transform_term_uri(uri)
-  return (uri:match("^term://.+//%d+:(.+)$") or uri:match("^term://.+//(.+)$") or uri:match("term://(.+)")):gsub("\\|", "|")
+  return (uri:match("^term://.+//%d+:(.+)$") or uri:match("^term://.+//(.+)$") or uri:match("term://(.+)")):gsub(
+    "\\|",
+    "|"
+  )
 end
 
-function M.transform_man_uri(uri)
-  return uri:match("man://(.+)")
-end
+function M.transform_man_uri(uri) return uri:match("man://(.+)") end
 
-function M.transform_site_uri(uri)
-  return uri:match("https?://w?w?w?%.?(.+)")
-end
+function M.transform_site_uri(uri) return uri:match("https?://w?w?w?%.?(.+)") end
 
 function M.get_cwd_from_term_uri(uri)
   local working = uri:match("^term://(.+)//%d+:.+$")
@@ -49,9 +48,7 @@ end
 
 ---Get cwd. Like really.
 ---@return string
-function M.cwd()
-  return (U.cwd()) or vim.fn.getcwd() or vim.env.PWD
-end
+function M.cwd() return (U.cwd()) or vim.fn.getcwd() or vim.env.PWD end
 
 function M.get_icon(mark, extra_icons, opts)
   local icon, group = "", nil
@@ -82,19 +79,35 @@ function M.get_icon(mark, extra_icons, opts)
   return icon, nil
 end
 
-function M.root_and_bundle(opts)
+function M.clean_term_uri(uri)
+  local trimmed = vim.trim(uri)
+  trimmed = trimmed:gsub("^(term://.+//)%d+:(.*)$", "%1%2")
+  trimmed = trimmed:gsub("|", "\\|")
+  return trimmed
+end
+
+function M.root_and_bundle(opts, force)
   opts = vim.F.if_nil(opts, {})
   opts = require("track.config").extend(opts)
   local bundle_label = opts.bundle_label
   local root_path = opts.root_path ~= true and opts.root_path or M.cwd()
   assert(type(root_path) == "string", "Config.root_path needs to be string")
 
+  local state = require("track.state")
   local bundle = nil
-  local root = require("track.state")._roots[root_path]
+  local root = state._roots[root_path]
   if root and bundle_label == true then
     bundle = root:get_main_bundle()
   elseif type(bundle_label) == "string" then
     bundle = root.bundles[bundle_label]
+  elseif force then
+    if not root then
+      local Root = require("track.containers.root")
+      local new_root = Root(root_path)
+      state._roots[root_path] = new_root
+      root = new_root
+    end
+    bundle = root:get_main_bundle()
   end
   return root, bundle
 end

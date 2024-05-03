@@ -35,7 +35,9 @@ local function apply_root_entry(self, entry, opts)
   local root_path = entry.value.absolute
   if root_path:len() > 1 then root_path = root_path:gsub("/$", "") end
   if opts.switch_directory and entry.value.type == "directory" and state._roots[root_path] then
+    vim.cmd.doautocmd("DirChangedPre")
     vim.loop.chdir(root_path)
+    vim.cmd.doautocmd("DirChanged")
     self:refresh(M.finder(opts, M.resulter(opts)), { reset_prompt = true })
     return true
   end

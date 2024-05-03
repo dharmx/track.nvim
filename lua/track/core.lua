@@ -1,19 +1,18 @@
 local M = {}
 
--- TODO: Document that terminal commands can also be marked.
--- TODO: Document that manpages and websites can also be marked.
-
 local state = require("track.state")
 local util = require("track.util")
 
 local Root = require("track.containers.root")
 local Mark = require("track.containers.mark")
+local Pad = require("track.pad")
 
 local log = require("track.log")
 local if_nil = vim.F.if_nil
 
 M.root_path = util.cwd()
 state.load() -- load state from savefile if it exists
+M.pad = Pad(require("track.config").get_pad())
 
 ---@param file string
 ---@param bundle_label? string
@@ -41,10 +40,7 @@ function M:mark(file, bundle_label, save)
   end
 
   local filetype = util.filetype(file)
-  if filetype == "term" then
-    file = file:gsub("^(term://.+//)%d+:(.*)$", "%1%2")
-    file = file:gsub(" | ", " \\| ")
-  end
+  if filetype == "term" then file = util.clean_term_uri(file) end
   local mark = Mark({ path = file, type = filetype })
   root.bundles[bundle_label]:add_mark(mark)
   if save then state.save() end
@@ -193,6 +189,8 @@ return setmetatable(M, {
   __call = function(self, root_path)
     log.errors(self.root_path, "root_path needs to be present.", "Core.__call")
     self.root_path = root_path
+    self.pad:delete()
+    self.pad = Pad(require("track.config").get_pad())
     return self
   end,
 })

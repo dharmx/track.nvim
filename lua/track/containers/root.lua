@@ -23,29 +23,31 @@ local Bundle = require("track.containers.bundle")
 -- TODO: Implement a way to distinguish projects. Like if cwd has .git then mark it as a git directory.
 
 ---Create a new `Root` instance.
----@param fields RootFields Available root attributes/fields.
+---@param opts RootFields Available root attributes/fields.
 ---@return Root
-function Root:_new(fields)
-  local fieldstype = type(fields)
-  assert(fieldstype ~= "table" or fieldstype ~= "string", "expected: fields: string|table found: " .. fieldstype)
-  if fieldstype == "string" then fields = { path = fields } end
-  assert(fields.path and type(fields.path) == "string", "fields.path: string cannot be nil")
+function Root:_new(opts)
+  local types = type(opts)
+  assert(types ~= "table" or types ~= "string", "expected: fields: string|table found: " .. types)
+  if types == "string" then opts = { path = opts } end
+  assert(opts.path and type(opts.path) == "string", "fields.path: string cannot be nil")
 
-  self.path = fields.path
-  self.label = fields.label
-  self.links = fields.links
+  self.path = opts.path
+  self.label = opts.label
+  self.links = opts.links
 
-  self.disable_history = if_nil(fields.disable_history, true)
-  self.maximum_history = if_nil(fields.maximum_history, 10)
+  self.disable_history = if_nil(opts.disable_history, true)
+  self.maximum_history = if_nil(opts.maximum_history, 10)
   self.history = {}
 
   self.bundles = {}
   self.stashed = nil -- currently stashed bundle (if any)
   self.previous = nil -- previous bundle (alternate)
   self._NAME = "root"
-  self.main = if_nil(fields.main, "main")
+  ---@diagnostic disable-next-line: missing-return
+  self.main = if_nil(opts.main, "main")
 end
 
+-- Metatable Setters {{{
 ---@private
 ---Helper for re-registering the `__call` metatable to `Root.bundles` field.
 function Root:_callize_bundles()
@@ -56,6 +58,7 @@ function Root:_callize_bundles()
     end,
   })
 end
+-- }}}
 
 ---Create a new `Bundle` inside the `Root`. No collision handling implemented. If an existing bundle name
 ---is supplied then it will get erased with an empty one.
@@ -103,9 +106,7 @@ end
 
 ---Get the main `Bundle` instance. This is not a copy but a reference.
 ---@return Bundle
-function Root:get_main_bundle()
-  return self.bundles[self.main]
-end
+function Root:get_main_bundle() return self.bundles[self.main] end
 
 ---Generate a random bundle name using current time (in milliseconds).
 ---@return string
@@ -208,7 +209,10 @@ end
 -- TODO: Implement force = true i.e. overwrite a bundle
 function Root:rename_bundle(bundle, new_label)
   local bundle_type = type(bundle)
-  assert(bundle_type == "string" or (bundle_type == "table" and bundle._NAME == "bundle"), "bundle: bundle needs to be Bundle|string")
+  assert(
+    bundle_type == "string" or (bundle_type == "table" and bundle._NAME == "bundle"),
+    "bundle: bundle needs to be Bundle|string"
+  )
   local label = type(bundle) == "string" and bundle or bundle.label
   if self:bundle_exists(new_label) then return end
   local old_bundle = self.bundles[label]
