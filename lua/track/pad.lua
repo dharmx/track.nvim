@@ -25,12 +25,12 @@ function Pad:_new(opts)
   assert(types == "table", "expected table")
 
   self.root_path = opts.root_path
-  self.path_display = opts.path_display
+  self.serial_maps = if_nil(opts.serial_maps, false)
+  self.path_display = if_nil(opts.path_display, {})
   self.mappings = if_nil(opts.mappings, {})
   self.entries = if_nil(opts, {})
-  self.path_display = opts.path_display
   self.icons = opts.icons
-  self.disable_devicons = opts.disable_devicons
+  self.disable_devicons = if_nil(opts.disable_devicons, true)
   self.color_devicons = opts.color_devicons
 
   self.bundle = if_nil(opts.bundle, select(2, util.root_and_bundle({}, true)))
@@ -80,7 +80,7 @@ function Pad:_new(opts)
   A.nvim_buf_attach(self.buffer, false, {
     on_lines = function()
       -- TODO: self:clean() + self:theme()
-      self:apply_serial()
+      if self.serial_maps then self:apply_serial() end
     end,
   })
 
@@ -103,6 +103,7 @@ end
 
 -- BUG: The first item before a space in file/directory paths are recognised as an icon.
 -- FIX: Need to write a parser for this. And only take in alphanumerics if prefixed with %.
+-- FIX: Or, we could use a prompt to ask the user if there is an icon or, not.
 function Pad.line2mark(line, disable_devicons)
   local trimmed = vim.trim(line)
   if trimmed ~= "" then
@@ -214,17 +215,21 @@ function Pad:render()
     table.insert(self.entries, index, entry)
 
     A.nvim_buf_set_lines(self.buffer, line, line, true, { entry.display })
-    A.nvim_buf_add_highlight(self.buffer, self.namespace, range[1][2], line, range[1][1][1], range[1][1][2])
-    A.nvim_buf_add_highlight(self.buffer, self.namespace, range[2], line, range[1][1][2] + 1, range[1][1][2] + 1 + #mark.path)
+    if not self.disable_devicons then
+      A.nvim_buf_add_highlight(self.buffer, self.namespace, range[1][2], line, range[1][1][1], range[1][1][2])
+    end
+
+    local start = range[1][1][2] + (self.disable_devicons and 0 or 1)
+    A.nvim_buf_add_highlight(self.buffer, self.namespace, range[2], line, start, start + #mark.path)
     if mark.type == "file" or mark.type == "directory" then
-      self:conceal_path(line, range[1][1][2] + 1, mark.path)
+      self:conceal_path(line, start, mark.path)
     elseif mark.type == "term" then
-      self:conceal_term(line, range[1][1][2] + 1, mark.path)
+      self:conceal_term(line, start, mark.path)
     elseif mark.type ~= "file" then
-      self:conceal_uri(line, range[1][1][2] + 1, mark.path)
+      self:conceal_uri(line, start, mark.path)
     end
   end
-  self:apply_serial()
+  if self.serial_maps then self:apply_serial() end
 end
 
 function Pad:sync(save)
@@ -253,6 +258,8 @@ end
 function Pad:close()
   if self:hidden() then return end
   A.nvim_win_close(self.window, true)
+  self.hooks.on_close(self)
+  if self.save_on_close then state.save() end
   self.window = nil
 end
 

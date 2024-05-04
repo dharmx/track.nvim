@@ -25,7 +25,6 @@ M._defaults = {
     },
     spacing = 1,
     serial_maps = true,
-    auto_create = true,
     save_on_close = true,
     path_display = {
       absolute = false,
@@ -34,6 +33,7 @@ M._defaults = {
     hooks = {
       on_choose = util.open_entry,
       on_serial = util.open_entry,
+      on_close = util.mute,
     },
     mappings = {
       n = {
@@ -41,7 +41,7 @@ M._defaults = {
         ["<C-s>"] = function(self) self:sync(true) end,
       },
     },
-    disable_devicons = false,
+    disable_devicons = true,
     config = {
       style = "minimal",
       border = "solid",
