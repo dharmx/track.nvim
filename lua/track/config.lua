@@ -5,7 +5,6 @@ local util = require("track.util")
 
 -- TODO: Implement validation (vim.validate) and config fallback.
 -- TODO: Defaults (M.defaults) will be used if config values are invalid.
--- TODO: Implement exclude buffer names.
 
 ---Default **track.nvim** opts.
 ---@type TrackOpts
@@ -17,7 +16,7 @@ M._defaults = {
   maximum_history = 10,
   pad = {
     icons = {
-      saved = "",
+      save_done = "",
       save = "",
       directory = "",
       terminal = "",
@@ -176,8 +175,12 @@ M._defaults = {
     plugin = "track",
     level = "warn",
   },
-  -- dev feature
-  exclude = {},
+  exclude = {
+    "lua/track/pad%.lua",
+    ["^%.git/.*$"] = true,
+    ["^%.git$"] = true,
+    ["^LICENSE$"] = true,
+  },
 }
 
 ---Current **track.nvim** opts. This will be initially the same as `defaults`.

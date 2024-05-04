@@ -113,4 +113,18 @@ function M.root_and_bundle(opts, force)
   return root, bundle
 end
 
+function M.contains(patterns, item)
+  for k, v in pairs(patterns) do
+    local k_type = type(k)
+    if k_type == "string" then
+      if v then
+        if item:match(k) then return true end
+      end
+    elseif k_type == "number" then
+      if item:match(v) then return true end
+    end
+  end
+  return false
+end
+
 return M

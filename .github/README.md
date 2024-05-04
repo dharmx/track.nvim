@@ -141,6 +141,21 @@ Additionally, while you can mark virtually anything, it is not recommended to do
 This is because only a few filetypes are actually handled. For instance, marking a
 PDF file and opening it won't open it in a PDF reader but in Neovim.
 
+### Q. How do I exclude files that should not be marked?
+
+Just pass an `exclude` list into the setup function.
+
+```lua
+-- we use lua regexp for this
+require("track").setup({
+  exclude = {
+    vim.env.XDG_CONFIG_HOME .. "/nvim/.*", -- always skip
+    ["^%.git$"] = true, -- allow skipping
+    ["^%.github/README.md"] = false, -- skip from exclude
+  },
+})
+```
+
 ## Defaults
 
 ```lua
@@ -151,33 +166,56 @@ M._defaults = {
   save_path = vim.fn.stdpath("state") .. "/track.json",
   root_path = true,
   bundle_label = true,
-  icons = {
-    -- marks
-    separator = " ",
-    locked = " ",
-    terminal = " ",
-    manual = " ",
-    site = " ",
-    missing = " ",
-    accessible = " ",
-    inaccessible = " ",
-    focused = " ",
-    listed = "",
-    unlisted = "≖",
-    file = "",
-    directory = "",
-    -- bundles
-    main = " ",
-    alternate = " ",
-    inactive = " ",
-    mark = "",
-    history = "",
-    -- pad
-    saved = "",
-    save = "",
+  disable_history = true,
+  maximum_history = 10,
+  pad = {
+    icons = {
+      save_done = "",
+      save = "",
+      directory = "",
+      terminal = "",
+      manual = "",
+      site = "",
+    },
+    spacing = 1,
+    serial_maps = true,
+    auto_create = true,
+    save_on_close = true,
+    path_display = {
+      absolute = false,
+      shorten = 1,
+    },
+    hooks = {
+      on_choose = util.open_entry,
+      on_serial = util.open_entry,
+    },
+    mappings = {
+      n = {
+        q = function(self) self:close() end,
+        ["<C-s>"] = function(self) self:sync(true) end,
+      },
+    },
+    disable_devicons = false,
+    config = {
+      style = "minimal",
+      border = "solid",
+      focusable = true,
+      relative = "editor",
+      width = 60,
+      height = 10,
+      title_pos = "left",
+    },
   },
   pickers = {
     bundles = {
+      icons = {
+        separator = " │ ",
+        main = " ",
+        alternate = " ",
+        inactive = " ",
+        mark = "",
+        history = "",
+      },
       save_on_close = true,
       prompt_prefix = "   ",
       selection_caret = "   ",
@@ -220,6 +258,21 @@ M._defaults = {
       end,
     },
     views = {
+      icons = {
+        separator = " ",
+        locked = " ",
+        missing = " ",
+        accessible = " ",
+        inaccessible = " ",
+        focused = " ",
+        listed = "",
+        unlisted = "≖",
+        file = "",
+        directory = " ",
+        terminal = "",
+        manual = " ",
+        site = " ",
+      },
       switch_directory = true,
       save_on_close = true, -- save when the view telescope picker is closed
       selection_caret = "   ",
@@ -245,7 +298,9 @@ M._defaults = {
         on_choose = function(self)
           local entries = if_nil(self:get_multi_selection(), {})
           if #entries == 0 then table.insert(entries, self:get_selection()) end
-          for _, entry in ipairs(entries) do util.open_entry(entry) end
+          for _, entry in ipairs(entries) do
+            util.open_entry(entry)
+          end
         end,
       },
       attach_mappings = function(_, map)
@@ -274,34 +329,10 @@ M._defaults = {
     plugin = "track",
     level = "warn",
   },
-  -- dev features / not implemented
-  disable_history = true,
-  maximum_history = 10,
-  pad = {
-    spacing = 1,
-    serial_maps = true,
-    auto_create = true,
-    save_on_close = true,
-    hooks = {
-      on_choose = util.open_entry,
-      on_serial = util.open_entry,
-    },
-    mappings = {
-      n = {
-        q = function(self) self:close() end,
-        ["<C-s>"] = function(self) self:sync(true) end,
-      },
-    },
-    disable_devicons = false,
-    config = {
-      style = "minimal",
-      border = "solid",
-      focusable = true,
-      relative = "editor",
-      width = 60,
-      height = 10,
-      title_pos = "left",
-    },
+  exclude = {
+    ["^%.git/.*$"] = true,
+    ["^%.git$"] = true,
+    ["^LICENSE$"] = true,
   },
 }
 ```
