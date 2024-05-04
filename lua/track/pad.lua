@@ -16,7 +16,6 @@ local Mark = require("track.containers.mark")
 
 local util = require("track.util")
 local state = require("track.state")
-local config = require("track.config").get()
 
 local utils = require("telescope.utils")
 local strings = require("plenary.strings")
@@ -30,6 +29,7 @@ function Pad:_new(opts)
   self.mappings = if_nil(opts.mappings, {})
   self.entries = if_nil(opts, {})
   self.path_display = opts.path_display
+  self.icons = opts.icons
   self.disable_devicons = opts.disable_devicons
   self.color_devicons = opts.color_devicons
 
@@ -42,7 +42,7 @@ function Pad:_new(opts)
   -- TODO: Apply root entry as pickers.views.
   self.mappings.n["<cr>"] = function()
     if self:hidden() then return end
-    local parsed_line = Pad.line2entry(A.nvim_get_current_line(), self.disable_devicons)
+    local parsed_line = Pad.line2mark(A.nvim_get_current_line(), self.disable_devicons)
     if not parsed_line then return end
     self:close()
     self.hooks.on_choose({ value = parsed_line })
@@ -54,6 +54,7 @@ function Pad:_new(opts)
   self.config.col = (vim.o.columns - self.config.width) / 2
 
   A.nvim_buf_set_option(self.buffer, "filetype", "track")
+  A.nvim_buf_set_option(self.buffer, "indentexpr", "2")
   A.nvim_buf_set_name(self.buffer, self.bundle.label)
 
   for mode, maps in pairs(self.mappings) do
@@ -86,9 +87,9 @@ function Pad:_new(opts)
   self._NAME = "pad"
 end
 
-function Pad.make_entry(index, view_mark, disable_devicons, color_devicons)
+function Pad.make_entry(index, view_mark, icons, disable_devicons, color_devicons)
   local entry = { index = index, value = view_mark }
-  local icon, group = util.get_icon(entry.value, config.icons, {
+  local icon, group = util.get_icon(entry.value, icons, {
     disable_devicons = disable_devicons,
     color_devicons = color_devicons,
   })
@@ -100,7 +101,9 @@ function Pad.make_entry(index, view_mark, disable_devicons, color_devicons)
   return entry
 end
 
-function Pad.line2entry(line, disable_devicons)
+-- BUG: The first item before a space in file/directory paths are recognised as an icon.
+-- FIX: Need to write a parser for this. And only take in alphanumerics if prefixed with %.
+function Pad.line2mark(line, disable_devicons)
   local trimmed = vim.trim(line)
   if trimmed ~= "" then
     local mark
@@ -128,7 +131,7 @@ function Pad:apply_serial()
 
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, false)
   for serial, line in ipairs(lines) do
-    local mark = Pad.line2entry(line, self.disable_devicons)
+    local mark = Pad.line2mark(line, self.disable_devicons)
     if mark then
       vim.keymap.set("n", tostring(serial), function()
         self:close()
@@ -203,7 +206,7 @@ function Pad:render()
   self:clear()
   local view_marks = self.bundle.views()
   for index, view_mark in ipairs(view_marks) do
-    local entry = Pad.make_entry(index, view_mark, self.disable_devicons, self.color_devicons)
+    local entry = Pad.make_entry(index, view_mark, self.icons, self.disable_devicons, self.color_devicons)
     local mark = entry.value
     local line = index - 1
     local range = entry.range
@@ -228,7 +231,7 @@ function Pad:sync(save)
   self.bundle:clear()
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, true)
   for _, line in ipairs(lines) do
-    local parsed_mark = Pad.line2entry(line, self.disable_devicons)
+    local parsed_mark = Pad.line2mark(line, self.disable_devicons)
     if parsed_mark then self.bundle:add_mark(parsed_mark) end
   end
   self:render()

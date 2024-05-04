@@ -13,33 +13,56 @@ M._defaults = {
   save_path = vim.fn.stdpath("state") .. "/track.json",
   root_path = true,
   bundle_label = true,
-  icons = {
-    -- marks
-    separator = "  ",
-    locked = "",
-    terminal = "",
-    manual = "",
-    site = "",
-    missing = " ",
-    accessible = " ",
-    inaccessible = " ",
-    focused = "",
-    listed = "",
-    unlisted = "≖",
-    file = "",
-    directory = "",
-    -- bundles
-    main = " ",
-    alternate = " ",
-    inactive = " ",
-    mark = "",
-    history = "",
-    -- pad
-    saved = "",
-    save = "",
+  disable_history = true,
+  maximum_history = 10,
+  pad = {
+    icons = {
+      saved = "",
+      save = "",
+      directory = "",
+      terminal = "",
+      manual = "",
+      site = "",
+    },
+    spacing = 1,
+    serial_maps = true,
+    auto_create = true,
+    save_on_close = true,
+    path_display = {
+      absolute = false,
+      shorten = 1,
+    },
+    hooks = {
+      on_choose = util.open_entry,
+      on_serial = util.open_entry,
+    },
+    mappings = {
+      n = {
+        q = function(self) self:close() end,
+        ["<C-s>"] = function(self) self:sync(true) end,
+      },
+    },
+    disable_devicons = false,
+    config = {
+      style = "minimal",
+      border = "solid",
+      focusable = true,
+      relative = "editor",
+      width = 60,
+      height = 10,
+      title_pos = "left",
+    },
   },
   pickers = {
     bundles = {
+      icons = {
+        separator = " │ ",
+        main = " ",
+        alternate = " ",
+        inactive = " ",
+        mark = "",
+        history = "",
+      },
       save_on_close = true,
       prompt_prefix = "   ",
       selection_caret = "   ",
@@ -82,6 +105,21 @@ M._defaults = {
       end,
     },
     views = {
+      icons = {
+        separator = " ",
+        locked = " ",
+        missing = " ",
+        accessible = " ",
+        inaccessible = " ",
+        focused = " ",
+        listed = "",
+        unlisted = "≖",
+        file = "",
+        directory = " ",
+        terminal = "",
+        manual = " ",
+        site = " ",
+      },
       switch_directory = true,
       save_on_close = true, -- save when the view telescope picker is closed
       selection_caret = "   ",
@@ -138,39 +176,8 @@ M._defaults = {
     plugin = "track",
     level = "warn",
   },
-  -- dev features / not implemented
-  disable_history = true,
-  maximum_history = 10,
-  pad = {
-    spacing = 1,
-    serial_maps = true,
-    auto_create = true,
-    save_on_close = true,
-    path_display = {
-      absolute = false,
-      shorten = 1,
-    },
-    hooks = {
-      on_choose = util.open_entry,
-      on_serial = util.open_entry,
-    },
-    mappings = {
-      n = {
-        q = function(self) self:close() end,
-        ["<C-s>"] = function(self) self:sync(true) end,
-      },
-    },
-    disable_devicons = false,
-    config = {
-      style = "minimal",
-      border = "solid",
-      focusable = true,
-      relative = "editor",
-      width = 60,
-      height = 10,
-      title_pos = "left",
-    },
-  },
+  -- dev feature
+  exclude = {},
 }
 
 ---Current **track.nvim** opts. This will be initially the same as `defaults`.

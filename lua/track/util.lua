@@ -76,6 +76,7 @@ function M.get_icon(mark, extra_icons, opts)
   end
 
   if opts.color_devicons ~= false then return icon, group end
+  assert(icon:len() == 1, "icon should be only of length 1")
   return icon, nil
 end
 
