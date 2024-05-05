@@ -32,7 +32,7 @@ function M.finder(opts, results)
 end
 
 local function apply_root_entry(self, entry, opts)
-  local root_path = entry.value.absolute
+  local root_path = entry.value:absolute()
   if root_path:len() > 1 then root_path = root_path:gsub("/$", "") end
   if opts.switch_directory and entry.value.type == "directory" and state._roots[root_path] then
     vim.cmd.doautocmd("DirChangedPre")

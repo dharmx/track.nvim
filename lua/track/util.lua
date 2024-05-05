@@ -1,6 +1,7 @@
 local M = {}
 
 local U = vim.loop
+local A = vim.api
 
 ---Dummy function that does noting.
 function M.mute() end
@@ -15,8 +16,9 @@ end
 
 ---@return string
 function M.filetype(uri)
-  local uri_type = vim.F.if_nil(string.match(uri, "^(%w+)://"), "file")
+  local uri_type = vim.F.if_nil(uri:match("^(%w+)://"), "file")
   if uri_type == "file" then
+    uri = vim.fs.normalize(uri)
     local stat, _, e = U.fs_stat(uri)
     if e == "EACCES" then
       return "no_access"
@@ -51,7 +53,7 @@ end
 function M.cwd() return (U.cwd()) or vim.fn.getcwd() or vim.env.PWD end
 
 function M.get_icon(mark, extra_icons, opts)
-  local icon, group = "", nil
+  local icon, group = "", ""
   if opts.disable_devicons then return icon end
 
   if mark.type == "term" then
@@ -76,16 +78,24 @@ function M.get_icon(mark, extra_icons, opts)
   end
 
   if opts.color_devicons ~= false then return icon, group end
-  return icon, nil
+  assert(A.nvim_strwidth(icon) < 2, "icon length should be < 2")
+  return icon, ""
 end
 
 function M.clean_term_uri(uri)
   local trimmed = vim.trim(uri)
-  trimmed = trimmed:gsub("^(term://.+//)%d+:(.*)$", "%1%2")
+  local working = trimmed:match("^term://(.+)//%d+:.*$")
+  if working then
+    working = vim.fs.normalize(working)
+    trimmed = trimmed:gsub("^(term://)(.+)(//)%d+:(.*)$", "%1" .. working .. "%3%4")
+  else
+    trimmed = trimmed:gsub("^(term://.+//)%d+:(.*)$", "%1%2")
+  end
   trimmed = trimmed:gsub("|", "\\|")
   return trimmed
 end
 
+-- TODO: Allow opts.root_path and opts.bundle_label to be a function.
 function M.root_and_bundle(opts, force)
   opts = vim.F.if_nil(opts, {})
   opts = require("track.config").extend(opts)
@@ -110,6 +120,20 @@ function M.root_and_bundle(opts, force)
     bundle = root:get_main_bundle()
   end
   return root, bundle
+end
+
+function M.contains(patterns, item)
+  for k, v in pairs(patterns) do
+    local k_type = type(k)
+    if k_type == "string" then
+      if v then
+        if item:match(k) then return true end
+      end
+    elseif k_type == "number" then
+      if item:match(v) then return true end
+    end
+  end
+  return false
 end
 
 return M

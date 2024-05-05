@@ -4,12 +4,7 @@ if not present then
   return
 end
 
--- TODO: Implement the links picker.
--- TODO: Add ability to delete entries from bundles, views, links and marks pickers.
--- TODO: Implement copying and pasting (both mutiple and single).
--- TODO: Implement move up and move down (both multiple and single).
--- TODO: Implement row edits.
--- TODO: Implement save_modify.
+-- TODO: Implement copy and paste (mutiple & single). Copy/Paste JSON version of the containers.
 -- TODO: Implement a previewer for viewing metadata and file contents.
 
 return telescope.register_extension({

@@ -2,6 +2,7 @@ local M = {}
 
 local state = require("track.state")
 local util = require("track.util")
+local config = require("track.config")
 
 local Root = require("track.containers.root")
 local Mark = require("track.containers.mark")
@@ -12,7 +13,7 @@ local if_nil = vim.F.if_nil
 
 M.root_path = util.cwd()
 state.load() -- load state from savefile if it exists
-M.pad = Pad(require("track.config").get_pad())
+M.pad = Pad(config.get_pad())
 
 ---@param file string
 ---@param bundle_label? string
@@ -20,6 +21,7 @@ M.pad = Pad(require("track.config").get_pad())
 ---@return Core?
 function M:mark(file, bundle_label, save)
   log.errors(file, "file cannot be nil.", "Core.mark")
+  if util.contains(config.get().exclude, file) then return self end
 
   -- create a root if it does not exist
   local root = state._roots[self.root_path]
@@ -53,7 +55,8 @@ end
 ---@param bundle_label? string
 ---@param save? function
 function M:unmark(file, bundle_label, save)
-  file = vim.fs.normalize(file, { expand_env = true })
+  local filetype = util.filetype(file)
+  if filetype == "file" then file = vim.fs.normalize(file) end
   local root = state._roots[self.root_path]
   if not root then
     log.warn("Core.unmark(): cannot unmark as the root " .. self.root_path .. " does not exist")
@@ -61,6 +64,9 @@ function M:unmark(file, bundle_label, save)
   end
 
   if not bundle_label then bundle_label = root.main end
+  if filetype == "term" then
+    file = util.clean_term_uri(file)
+  end
   if not root.bundles[bundle_label] or not root.bundles[bundle_label].marks[file] then return end
   root.bundles[bundle_label]:remove_mark(file)
   if save then state.save() end
@@ -190,7 +196,7 @@ return setmetatable(M, {
     log.errors(self.root_path, "root_path needs to be present.", "Core.__call")
     self.root_path = root_path
     self.pad:delete()
-    self.pad = Pad(require("track.config").get_pad())
+    self.pad = Pad(config.get_pad())
     return self
   end,
 })

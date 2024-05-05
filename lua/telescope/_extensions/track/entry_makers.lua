@@ -6,12 +6,11 @@ local entry_display = require("telescope.pickers.entry_display")
 local utils = require("telescope.utils")
 local util = require("track.util")
 local make_entry = require("telescope.make_entry")
-local config = require("track.config").get()
 
 -- TODO: Add a way to match if the current focused_path is a command or, a manpage
 
 function M.gen_from_view(opts)
-  local icons = config.icons
+  local icons = opts.icons
   local displayer = entry_display.create({
     separator = icons.separator,
     separator_hl = "TrackViewsDivide",
@@ -45,9 +44,9 @@ function M.gen_from_view(opts)
     end
 
     -- file must be currently being edited - priority: 3
-    local display, display_hl = mark.absolute, ""
+    local display, display_hl = mark:absolute(), ""
     if not allowed then
-      display = utils.transform_path(opts, mark.absolute)
+      display = utils.transform_path(opts, mark.path)
     elseif mark.type == "term" then
       display = util.transform_term_uri(mark.path)
     elseif mark.type == "man" then
@@ -56,7 +55,7 @@ function M.gen_from_view(opts)
       display = util.transform_site_uri(mark.path)
     end
 
-    if opts._focused == mark.absolute then
+    if opts._focused == mark:absolute() then
       display_hl = "TrackViewsFocusedDisplay"
       marker, marker_hl = icons.focused, "TrackViewsFocused"
     end
@@ -67,7 +66,7 @@ function M.gen_from_view(opts)
     -- is the buffer listed (is it opened in nvim currently)
     local listed, listed_hl = icons.unlisted, "TrackViewsMarkUnlisted"
     for _, info in ipairs(V.getbufinfo({ loaded = 1 })) do
-      if info.name == mark.absolute and info.listed == 1 then
+      if info.name == mark:absolute() and info.listed == 1 then
         listed, listed_hl = icons.listed, "TrackViewsMarkListed"
         break
       end
@@ -85,7 +84,7 @@ function M.gen_from_view(opts)
   return function(entry)
     return make_entry.set_default_entry_mt({
       value = entry,
-      ordinal = entry.absolute,
+      ordinal = entry:absolute(),
       display = make_display,
     }, opts)
   end
@@ -94,7 +93,7 @@ end
 function M.gen_from_bundle(opts)
   ---@type Root
   local root, _ = util.root_and_bundle()
-  local icons = config.icons
+  local icons = opts.icons
   local displayer = entry_display.create({
     separator = icons.separator,
     separator_hl = "TrackBundlesDivide",

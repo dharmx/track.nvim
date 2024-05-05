@@ -61,7 +61,7 @@ function M.change_mark_view(buffer)
     if not bundle then return end
 
     local mark = bundle:change_mark_path(pack.entry.value, input)
-    if mark then mark.type = util.filetype(mark.absolute) end
+    if mark then mark.type = util.filetype(mark:absolute()) end
     refresh("views", pack, -1)
   end)
 end

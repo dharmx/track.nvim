@@ -3,8 +3,13 @@
 Most over-engineered marking system. Harpoon like file tracking.
 Supercharged by [telescope.nvim](https:/github.com/nvim-telescope/telescope.nvim).
 
+<details>
+
 ![views](./views.png) 
+
 ![bundles](./bundles.png) 
+
+</details>
 
 ## Installation
 
@@ -126,7 +131,6 @@ See <samp>:help terminal</samp> for more details.
 - Run it by pressing enter and it should run that command in that particualar directory.
 
 Note that, if you mark with `:edit` then you would only need to escape pipes i.e. `| -> \|`.
-And, if you mark with `:Mark` then you need to escape pipes and spaces as well.
 
 ### Q. What else can we mark?
 
@@ -139,7 +143,33 @@ refresh the UI for viewing that directory's marks. This behavior is off by defau
 
 Additionally, while you can mark virtually anything, it is not recommended to do so.
 This is because only a few filetypes are actually handled. For instance, marking a
-PDF file and opening it won't open it in a PDF reader but in Neovim.
+PDF file and opening it won't open it in a PDF reader but in Neovim albeit you can
+use `on_choose` for each UI to override that.
+
+### Q. How do I exclude files that should not be marked?
+
+Just pass an `exclude` list into the setup function.
+
+```lua
+-- we use lua regexp for this
+require("track").setup({
+  exclude = {
+    vim.env.XDG_CONFIG_HOME .. "/nvim/.*", -- always skip
+    "lua/track/pad%.lua", -- does not allow marking
+    ["^%.git/.*$"] = true, -- does not allow marking
+    ["^%.git$"] = false, -- allow marking
+    ["^LICENSE$"] = true, -- does not allow marking
+  },
+})
+```
+
+Note that, Lua patterns are used for this normal regex expressions will not completely
+work.
+
+### How do I unmark a website?
+
+There's is no way of doing that. You'd need to open an UI and then press `dd`
+on the entry that is a website.
 
 ## Defaults
 
@@ -149,35 +179,55 @@ local util = require("track.util")
 
 M._defaults = {
   save_path = vim.fn.stdpath("state") .. "/track.json",
-  root_path = true,
-  bundle_label = true,
-  icons = {
-    -- marks
-    separator = " ",
-    locked = " ",
-    terminal = " ",
-    manual = " ",
-    site = " ",
-    missing = " ",
-    accessible = " ",
-    inaccessible = " ",
-    focused = " ",
-    listed = "",
-    unlisted = "≖",
-    file = "",
-    directory = "",
-    -- bundles
-    main = " ",
-    alternate = " ",
-    inactive = " ",
-    mark = "",
-    history = "",
-    -- pad
-    saved = "",
-    save = "",
+  root_path = true, -- true for auto fetching the root_path, string otherwise
+  bundle_label = true, -- same as root_path
+  pad = {
+    icons = {
+      save_done = "",
+      save = "",
+      directory = "",
+      terminal = "",
+      manual = "",
+      site = "",
+    },
+    serial_maps = true,
+    save_on_close = true,
+    path_display = {
+      absolute = false,
+      shorten = 1,
+    },
+    hooks = {
+      on_choose = util.open_entry,
+      on_serial = util.open_entry,
+      on_close = util.mute,
+    },
+    mappings = {
+      n = {
+        q = function(self) self:close() end,
+        ["<C-s>"] = function(self) self:sync(true) end,
+      },
+    },
+    disable_devicons = true,
+    config = {
+      style = "minimal",
+      border = "solid",
+      focusable = true,
+      relative = "editor",
+      width = 60,
+      height = 10,
+      title_pos = "left",
+    },
   },
   pickers = {
     bundles = {
+      icons = {
+        separator = " │ ",
+        main = " ",
+        alternate = " ",
+        inactive = " ",
+        mark = "",
+        history = "",
+      },
       save_on_close = true,
       prompt_prefix = "   ",
       selection_caret = "   ",
@@ -194,7 +244,7 @@ M._defaults = {
       hooks = {
         on_close = util.mute,
         on_open = util.mute,
-        on_serial = function(entry)
+        on_serial = function(entry) -- mappings WRT to line numbers
           local root, _ = util.root_and_bundle()
           root:change_main_bundle(entry.value.label)
         end,
@@ -220,7 +270,22 @@ M._defaults = {
       end,
     },
     views = {
-      switch_directory = true,
+      icons = {
+        separator = " ",
+        locked = " ", -- existence cannot be checked (not a path i.e. a command/link/man)
+        missing = " ", -- path has been moved/deleted/renamed
+        accessible = " ", -- path still exists
+        inaccessible = " ", -- N/A / invalid perms
+        focused = " ", -- active buffer path (visible)
+        listed = "", -- loaded into a listed buffer (invisible)
+        unlisted = "≖", -- loaded into an unlisted buffer
+        file = "", -- default icon
+        directory = " ", -- directory icon
+        terminal = "", -- terminal URI icon
+        manual = " ", -- manpage URI type icon i.e. :Man find(1) or, :edit man://find(1)
+        site = " ", -- website link https://www.google.com
+      },
+      switch_directory = true, -- switch when a directory i.e. marked is a root object
       save_on_close = true, -- save when the view telescope picker is closed
       selection_caret = "   ",
       path_display = {
@@ -245,7 +310,9 @@ M._defaults = {
         on_choose = function(self)
           local entries = if_nil(self:get_multi_selection(), {})
           if #entries == 0 then table.insert(entries, self:get_selection()) end
-          for _, entry in ipairs(entries) do util.open_entry(entry) end
+          for _, entry in ipairs(entries) do
+            util.open_entry(entry)
+          end
         end,
       },
       attach_mappings = function(_, map)
@@ -270,39 +337,20 @@ M._defaults = {
       disable_devicons = false,
     },
   },
+  -- do not mark files that contain these patterns
+  exclude = {
+    ["^%.git/.*$"] = true, -- or, false
+    ["^%.git$"] = true,
+    ["^LICENSE$"] = true,
+  },
+  -- debugging
   log = {
     plugin = "track",
     level = "warn",
   },
   -- dev features / not implemented
-  disable_history = true,
   maximum_history = 10,
-  pad = {
-    spacing = 1,
-    serial_maps = true,
-    auto_create = true,
-    save_on_close = true,
-    hooks = {
-      on_choose = util.open_entry,
-      on_serial = util.open_entry,
-    },
-    mappings = {
-      n = {
-        q = function(self) self:close() end,
-        ["<C-s>"] = function(self) self:sync(true) end,
-      },
-    },
-    disable_devicons = false,
-    config = {
-      style = "minimal",
-      border = "solid",
-      focusable = true,
-      relative = "editor",
-      width = 60,
-      height = 10,
-      title_pos = "left",
-    },
-  },
+  disable_history = true, -- do not recycle deleted marks
 }
 ```
 
@@ -379,9 +427,31 @@ HI("TrackBundlesIndex", { foreground = "#54CED6" })
 :Track reload           " load last saved state to cache
 :Track wipe             " clear caches
 :Track remove           " rm save file
-:Track menu             " telescope picker for available track pickers
-" TODO: no root, roots, bundles indicators for Track menu
 ```
+
+## Caveats
+
+Some features need special attention when using. Workarounds are always being on the way.
+But, for the time being be careful.
+
+### Marking when pad icons are enabled.
+
+If `Pad` UI has `disable_devicons` set to `false` then, file paths (not URIs) that contains
+spaces i.e. `~/Documents/cv for applying as reddit mod.md` then the file that will actually
+be saved is `for applying as reddit mod.md` only.
+
+A workaround for this is to have a dot or, any placeholder at the very beginning of the path
+i.e., `* ~/Documents/cv for applying as reddit mod.md` this way only `* ` will be eliminated
+and `~/Documents/cv for applying as reddit mod.md` will be saved.
+
+### Unmarking manpages and commands.
+
+This might not work all the time. No fixes for this.
+
+### Preserving `$ENV_VAR` notations and not expanding it.
+
+We normalize the mark paths so this not possible. But, if there's enough demand then I will
+add it.
 
 ## Credits
 

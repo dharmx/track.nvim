@@ -206,7 +206,6 @@ function Root:insert_history(bundle, force)
   log.trace("Root.insert_history(): bundle " .. bundle.label .. " has been recorded into history")
 end
 
--- TODO: Implement force = true i.e. overwrite a bundle
 function Root:rename_bundle(bundle, new_label)
   local bundle_type = type(bundle)
   assert(
