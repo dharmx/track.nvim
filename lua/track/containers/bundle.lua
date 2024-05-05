@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field
 ---A virtual mark-map. Allows one to create different versions of marks that
 ---is better suitted to a part of a project that you might be working on.
 ---
@@ -22,23 +23,25 @@ setmetatable(Bundle, {
 })
 
 local Mark = require("track.containers.mark")
-local Log = require("track.log")
+local log = require("track.log")
+local if_nil = vim.F.if_nil
 
 ---Create a new `Bundle` object.
----@param fields BundleFields Available bundle attributes/fields.
+---@param opts BundleFields Available bundle attributes/fields.
 ---@return Bundle
-function Bundle:_new(fields)
-  local fieldstype = type(fields)
-  assert(fieldstype ~= "table" or fieldstype ~= "string", "expected: fields: string|table found: " .. fieldstype)
-  if fieldstype == "string" then fields = { label = fields } end
-  assert(fields.label and type(fields.label) == "string", "fields.label: string cannot be nil")
+function Bundle:_new(opts)
+  local types = type(opts)
+  assert(types ~= "table" or types ~= "string", "expected: fields: string|table found: " .. types)
+  if types == "string" then opts = { label = opts } end
+  assert(opts.label and type(opts.label) == "string", "fields.label: string cannot be nil")
 
-  self.label = fields.label
+  self.label = opts.label
   self.marks = {}
   self.views = {}
-  self.disable_history = vim.F.if_nil(fields.disable_history, true)
-  self.maximum_history = vim.F.if_nil(fields.maximum_history, 10)
-  self.history = vim.F.if_nil(fields.history, {})
+  self.disable_history = if_nil(opts.disable_history, true)
+  self.maximum_history = if_nil(opts.maximum_history, 10)
+  self.history = if_nil(opts.history, {})
+  ---@diagnostic disable-next-line: missing-return
   self._NAME = "bundle"
 end
 
@@ -77,15 +80,15 @@ end
 function Bundle:add_mark(mark, label)
   if type(mark) == "table" and mark._NAME == "mark" then
     self.marks[mark.path] = mark
-    table.insert(self.views, mark.path)
-    Log.trace("Bundle.add_mark(): new mark " .. mark.path .. " has been added")
+    if #vim.tbl_keys(self.marks) ~= #self.views then table.insert(self.views, mark.path) end
+    log.trace("Bundle.add_mark(): new mark " .. mark.path .. " has been added")
     return self.marks[mark.path]
   end
   -- if it does not exist then create it
   self.marks[mark] = Mark({ path = mark, label = label })
   -- adding a mark will add its path to the views table
-  table.insert(self.views, mark)
-  Log.trace("Bundle.add_mark(): new mark " .. mark .. " has been added")
+  if #vim.tbl_keys(self.marks) ~= #self.views then table.insert(self.views, mark) end
+  log.trace("Bundle.add_mark(): new mark " .. mark .. " has been added")
   return self.marks[mark]
 end
 
@@ -111,7 +114,7 @@ function Bundle:remove_mark(mark)
   self:_callize_views()
   -- record history: removed marks will be inserted into the self.history table (by your will)
   self:insert_history(removed_mark)
-  Log.trace("Bundle.remove_mark(): mark " .. removed_mark.path .. " has been removed")
+  log.trace("Bundle.remove_mark(): mark " .. removed_mark.path .. " has been removed")
   return removed_mark
 end
 
@@ -125,7 +128,7 @@ function Bundle:clear()
   -- re-attach __call.
   self:_callize_views()
   self:_callize_marks()
-  Log.trace("Bundle.clear(): Bundle.marks and Bundle.views has been emptied")
+  log.trace("Bundle.clear(): Bundle.marks and Bundle.views has been emptied")
 end
 
 ---Insert mark into the history list.
@@ -137,7 +140,7 @@ function Bundle:insert_history(mark, force)
   if self.disable_history and not force then return end
   table.insert(self.history, 1, mark)
   if #self.history > self.maximum_history then table.remove(self.history, #self.history) end
-  Log.trace("Bundle.insert_history(): mark " .. mark.path .. " has been recorded into history")
+  log.trace("Bundle.insert_history(): mark " .. mark.path .. " has been recorded into history")
 end
 
 ---Swap marks.

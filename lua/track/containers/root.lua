@@ -13,7 +13,8 @@ setmetatable(Root, {
   end,
 })
 
-local Log = require("track.log")
+local log = require("track.log")
+local if_nil = vim.F.if_nil
 
 ---@module "track.containers.bundle"
 local Bundle = require("track.containers.bundle")
@@ -22,29 +23,31 @@ local Bundle = require("track.containers.bundle")
 -- TODO: Implement a way to distinguish projects. Like if cwd has .git then mark it as a git directory.
 
 ---Create a new `Root` instance.
----@param fields RootFields Available root attributes/fields.
+---@param opts RootFields Available root attributes/fields.
 ---@return Root
-function Root:_new(fields)
-  local fieldstype = type(fields)
-  assert(fieldstype ~= "table" or fieldstype ~= "string", "expected: fields: string|table found: " .. fieldstype)
-  if fieldstype == "string" then fields = { path = fields } end
-  assert(fields.path and type(fields.path) == "string", "fields.path: string cannot be nil")
+function Root:_new(opts)
+  local types = type(opts)
+  assert(types ~= "table" or types ~= "string", "expected: fields: string|table found: " .. types)
+  if types == "string" then opts = { path = opts } end
+  assert(opts.path and type(opts.path) == "string", "fields.path: string cannot be nil")
 
-  self.path = fields.path
-  self.label = fields.label
-  self.links = fields.links
+  self.path = opts.path
+  self.label = opts.label
+  self.links = opts.links
 
-  self.disable_history = vim.F.if_nil(fields.disable_history, true)
-  self.maximum_history = vim.F.if_nil(fields.maximum_history, 10)
+  self.disable_history = if_nil(opts.disable_history, true)
+  self.maximum_history = if_nil(opts.maximum_history, 10)
   self.history = {}
 
   self.bundles = {}
   self.stashed = nil -- currently stashed bundle (if any)
   self.previous = nil -- previous bundle (alternate)
   self._NAME = "root"
-  self.main = vim.F.if_nil(fields.main, "main")
+  ---@diagnostic disable-next-line: missing-return
+  self.main = if_nil(opts.main, "main")
 end
 
+-- Metatable Setters {{{
 ---@private
 ---Helper for re-registering the `__call` metatable to `Root.bundles` field.
 function Root:_callize_bundles()
@@ -55,6 +58,7 @@ function Root:_callize_bundles()
     end,
   })
 end
+-- }}}
 
 ---Create a new `Bundle` inside the `Root`. No collision handling implemented. If an existing bundle name
 ---is supplied then it will get erased with an empty one.
@@ -63,10 +67,10 @@ end
 ---@param marks? Mark[]|table<string, Mark> Optional List of marks.
 function Root:new_bundle(bundle_label, main, marks)
   assert(bundle_label and type(bundle_label) == "string", "bundle_label needs to be a string and not nil.")
-  main = vim.F.if_nil(main, false)
-  marks = vim.F.if_nil(marks, {})
+  main = if_nil(main, false)
+  marks = if_nil(marks, {})
   self.bundles[bundle_label] = Bundle(bundle_label)
-  Log.trace("Root.new_bundle(): bundle " .. bundle_label .. " has been created")
+  log.trace("Root.new_bundle(): bundle " .. bundle_label .. " has been created")
 
   if vim.tbl_islist(marks) then
     for _, mark in ipairs(marks) do
@@ -84,12 +88,12 @@ function Root:change_main_bundle(new_main)
   assert(new_main and type(new_main) == "string", "new_main needs to be a string|nil.")
   if not new_main then return end
   if not vim.tbl_contains(vim.tbl_keys(self.bundles), new_main) then
-    Log.warn("Root.change_main_bundle(): tried changing main to a bundle " .. new_main .. " which does not exist")
+    log.warn("Root.change_main_bundle(): tried changing main to a bundle " .. new_main .. " which does not exist")
     return
   end
   self.previous = self.main
   self.main = new_main
-  Log.trace("Root.change_main_bundle(): main bundle has been changed")
+  log.trace("Root.change_main_bundle(): main bundle has been changed")
 end
 
 ---Check if a bundle exists or, not. `true` if it does `false`, otherwise.
@@ -102,9 +106,7 @@ end
 
 ---Get the main `Bundle` instance. This is not a copy but a reference.
 ---@return Bundle
-function Root:get_main_bundle()
-  return self.bundles[self.main]
-end
+function Root:get_main_bundle() return self.bundles[self.main] end
 
 ---Generate a random bundle name using current time (in milliseconds).
 ---@return string
@@ -117,8 +119,8 @@ local function return_true() return true end
 ---@param on_collision fun(): boolean
 ---@param create_label fun(): string
 function Root:stash_bundle(on_collision, create_label)
-  create_label = vim.F.if_nil(create_label, date_label)
-  on_collision = vim.F.if_nil(on_collision, return_true)
+  create_label = if_nil(create_label, date_label)
+  on_collision = if_nil(on_collision, return_true)
   assert(type(create_label) == "function", "create_label must be a fun(): string")
   assert(type(on_collision) == "function", "will_wipe must be a fun(): boolean")
 
@@ -126,7 +128,7 @@ function Root:stash_bundle(on_collision, create_label)
   assert(type(new_name) == "string", "create_label should return string")
   local wipe = on_collision()
   assert(type(wipe) == "boolean", "on_collision should return boolean")
-  Log.trace("Root.stash_bundle(): main bundle has been stashed")
+  log.trace("Root.stash_bundle(): main bundle has been stashed")
 
   if self.bundles[new_name] and not wipe then return end
   self.stashed = self.main
@@ -137,19 +139,19 @@ function Root:restore_bundle()
   if not self.stashed then return end
   if self.bundles[self.stashed] then self:change_main_bundle(self.stashed) end
   self.stashed = nil
-  Log.trace("Root.restore_bundle(): stashed bundle has been restored")
+  log.trace("Root.restore_bundle(): stashed bundle has been restored")
 end
 
 function Root:alternate_bundle()
   if not self.previous or not self.bundles[self.previous] then return end
   self:change_main_bundle(self.previous)
-  Log.trace("Root.alternate_bundle(): main bundle is now previous bundle")
+  log.trace("Root.alternate_bundle(): main bundle is now previous bundle")
 end
 
 function Root:delete_main_bundle()
   local bundle_labels = vim.tbl_keys(self.bundles)
   if #bundle_labels == 1 then
-    Log.warn("Root.delete_bundle(): tried deleting last bundle " .. self.main)
+    log.warn("Root.delete_bundle(): tried deleting last bundle " .. self.main)
     return
   end
 
@@ -168,7 +170,7 @@ end
 
 function Root:delete_bundle(bundle_label)
   if not self:bundle_exists(bundle_label) then
-    Log.warn("Root.delete_bundle(): tried deleting a bundle " .. bundle_label .. " that does not exist")
+    log.warn("Root.delete_bundle(): tried deleting a bundle " .. bundle_label .. " that does not exist")
     return
   end
   if self.main == bundle_label then
@@ -183,16 +185,16 @@ end
 
 function Root:link(root_path)
   assert(root_path and type(root_path) == "string", "root_path needs to be a string and not nil.")
-  self.links = vim.F.if_nil(self.links, {})
+  self.links = if_nil(self.links, {})
   table.insert(self.links, root_path)
-  Log.trace("Root.link(): linked root " .. root_path .. " to current root")
+  log.trace("Root.link(): linked root " .. root_path .. " to current root")
 end
 
 function Root:unlink(root_path)
   assert(root_path and type(root_path) == "string", "root_path needs to be a string and not nil.")
   if not self.links then return end
   self.links = vim.tbl_filter(function(_item) return _item ~= root_path end, self.links)
-  Log.trace("Root.unlink(): unlinked root " .. root_path .. " from current root")
+  log.trace("Root.unlink(): unlinked root " .. root_path .. " from current root")
 end
 
 function Root:insert_history(bundle, force)
@@ -201,13 +203,15 @@ function Root:insert_history(bundle, force)
   if self.disable_history and not force then return end
   table.insert(self.history, 1, bundle)
   if #self.history > self.maximum_history then table.remove(self.history, #self.history) end
-  Log.trace("Root.insert_history(): bundle " .. bundle.label .. " has been recorded into history")
+  log.trace("Root.insert_history(): bundle " .. bundle.label .. " has been recorded into history")
 end
 
--- TODO: Implement force = true i.e. overwrite a bundle
 function Root:rename_bundle(bundle, new_label)
   local bundle_type = type(bundle)
-  assert(bundle_type == "string" or (bundle_type == "table" and bundle._NAME == "bundle"), "bundle: bundle needs to be Bundle|string")
+  assert(
+    bundle_type == "string" or (bundle_type == "table" and bundle._NAME == "bundle"),
+    "bundle: bundle needs to be Bundle|string"
+  )
   local label = type(bundle) == "string" and bundle or bundle.label
   if self:bundle_exists(new_label) then return end
   local old_bundle = self.bundles[label]

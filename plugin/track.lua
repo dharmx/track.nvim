@@ -8,20 +8,11 @@ vim.g.loaded_track = 1
 
 local V = vim.fn
 local cmd = vim.api.nvim_create_user_command
-local HI = vim.api.nvim_set_hl
+local function HI(...) vim.api.nvim_set_hl(0, ...) end
 
 -- TODO: Implement bang, range, repeat, motions and bar.
 
 cmd("Track", function(...)
-  local function get_opts()
-    local cwd = require("track.core").root_path
-    local root = require("track.state")._roots[cwd]
-    return {
-      root_path = cwd,
-      bundle_label = root and root.main or "main",
-    }
-  end
-
   local args = (...).fargs
   if args[1] == "save" then
     require("track.state").save()
@@ -37,11 +28,11 @@ cmd("Track", function(...)
   elseif args[1] == "remove" then
     require("track.state").remove()
   elseif args[1] == "bundles" then
-    require("telescope").extensions.track.bundles(get_opts())
+    require("telescope").extensions.track.bundles()
   elseif args[1] == "views" then
-    require("telescope").extensions.track.views(get_opts())
+    require("telescope").extensions.track.views()
   else
-    require("telescope").extensions.track.views(get_opts())
+    require("track.core").pad:toggle()
   end
 end, {
   desc = "State operations like: save, load, loadsave, reload, wipe and remove. marks for showing current mark list.",
@@ -55,33 +46,36 @@ end, {
       "wipe",
       "remove",
       "menu",
+      "views",
+      "pad",
       "bundles",
     }
   end,
 })
 
 cmd("Mark", function(...)
-  local files = (...).fargs
-  if vim.tbl_isempty(files) then table.insert(files, V.expand("%")) end
-  local Config = require("track.config").get()
-  local Core = require("track.core")
-  for _, file in ipairs(files) do
-    Core:mark(file):history(Config.disable_history, Config.maximum_history)
-  end
+  local uri = (...).args
+  if vim.trim(uri) == "" then uri = V.expand("%") end
+  local config = require("track.config").get()
+  local core = require("track.core")
+  local uri_type = require("track.util").filetype(uri)
+  local P = require("plenary.path")
+  if uri_type == "file" or uri_type == "directory" then uri = P:new(uri):make_relative(core.root_path) end
+  core:mark(uri):history(config.disable_history, config.maximum_history)
 end, {
   complete = "file",
   desc = "Mark current file.",
-  nargs = "*",
+  nargs = "?",
 })
 
 cmd("MarkOpened", function()
-  local Config = require("track.config").get()
-  local Core = require("track.core")
+  local config = require("track.config").get()
+  local core = require("track.core")
   local listed_buffers = V.getbufinfo({ listed = 1 })
   for _, info in ipairs(listed_buffers) do
     local name = V.bufname(info.bufnr)
     if name ~= "" and not name:match("^term://") then
-      Core:mark(name):history(Config.disable_history, Config.maximum_history)
+      core:mark(name):history(config.disable_history, config.maximum_history)
     end
   end
 end, {
@@ -92,9 +86,9 @@ end, {
 cmd("Unmark", function(...)
   local files = (...).fargs
   if vim.tbl_isempty(files) then table.insert(files, V.expand("%")) end
-  local Core = require("track.core")
+  local core = require("track.core")
   for _, file in ipairs(files) do
-    Core:unmark(file)
+    core:unmark(file)
   end
 end, {
   complete = function()
@@ -151,31 +145,33 @@ cmd("AlternateBundle", function() require("track.core"):alternate() end, {
 })
 
 -- Highlights {{{
-HI(0, "TrackPadTitle", { link = "TelescopeResultsTitle" })
+HI("TrackPadTitle", { link = "TelescopeResultsTitle" })
+HI("TrackPadEntryFocused", { foreground = "#7AB0DF" })
 
-HI(0, "TrackViewsAccessible", { foreground = "#79DCAA" })
-HI(0, "TrackViewsInaccessible", { foreground = "#F87070" })
-HI(0, "TrackViewsFocusedDisplay", { foreground = "#7AB0DF" })
-HI(0, "TrackViewsFocused", { foreground = "#7AB0DF" })
-HI(0, "TrackViewsIndex", { foreground = "#54CED6" })
-HI(0, "TrackViewsMarkListed", { foreground = "#4B5259" })
-HI(0, "TrackViewsMarkUnlisted", { foreground = "#C397D8" })
-HI(0, "TrackViewsMissing", { foreground = "#FFE59E" })
-HI(0, "TrackViewsFile", { foreground = "#FFE59E" })
-HI(0, "TrackViewsDirectory", { foreground = "#FFE59E" })
-HI(0, "TrackViewsSite", { foreground = "#66B3FF" })
-HI(0, "TrackViewsTerminal", { foreground = "#36C692" })
-HI(0, "TrackViewsManual", { foreground = "#5FB0FC" })
-HI(0, "TrackViewsDivide", { foreground = "#4B5259" })
-HI(0, "TrackViewsLocked", { foreground = "#E37070" })
+HI("TrackViewsAccessible", { foreground = "#79DCAA" })
+HI("TrackViewsInaccessible", { foreground = "#F87070" })
+HI("TrackViewsFocusedDisplay", { foreground = "#7AB0DF" })
+HI("TrackViewsFocused", { foreground = "#7AB0DF" })
+HI("TrackViewsIndex", { foreground = "#54CED6" })
+HI("TrackViewsMarkListed", { foreground = "#4B5259" })
+HI("TrackViewsMarkUnlisted", { foreground = "#C397D8" })
+HI("TrackViewsMissing", { foreground = "#FFE59E" })
+HI("TrackViewsFile", { foreground = "#FFE59E" })
+HI("TrackViewsDirectory", { foreground = "#FFE59E" })
+HI("TrackViewsSite", { foreground = "#66B3FF" })
+HI("TrackViewsTerminal", { foreground = "#36C692" })
+HI("TrackViewsManual", { foreground = "#5FB0FC" })
+HI("TrackViewsDivide", { foreground = "#4B5259" })
+HI("TrackViewsLocked", { foreground = "#E37070" })
 
-HI(0, "TrackBundlesInactive", { foreground = "#4B5259" })
-HI(0, "TrackBundlesDisplayInactive", { foreground = "#4B5259" })
-HI(0, "TrackBundlesMain", { foreground = "#7AB0DF" })
-HI(0, "TrackBundlesDisplayMain", { foreground = "#7AB0DF" })
-HI(0, "TrackBundlesAlternate", { foreground = "#36C692" })
-HI(0, "TrackBundlesDisplayAlternate", { foreground = "#79DCAA" })
-HI(0, "TrackBundlesMark", { foreground = "#FFE59E" })
-HI(0, "TrackBundlesHistory", { foreground = "#F87070" })
-HI(0, "TrackBundlesDivide", { foreground = "#151A1F" })
+HI("TrackBundlesInactive", { foreground = "#4B5259" })
+HI("TrackBundlesDisplayInactive", { foreground = "#4B5259" })
+HI("TrackBundlesMain", { foreground = "#7AB0DF" })
+HI("TrackBundlesDisplayMain", { foreground = "#7AB0DF" })
+HI("TrackBundlesAlternate", { foreground = "#36C692" })
+HI("TrackBundlesDisplayAlternate", { foreground = "#79DCAA" })
+HI("TrackBundlesMark", { foreground = "#FFE59E" })
+HI("TrackBundlesHistory", { foreground = "#F87070" })
+HI("TrackBundlesDivide", { foreground = "#151A1F" })
+HI("TrackBundlesIndex", { foreground = "#54CED6" })
 -- }}}

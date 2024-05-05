@@ -1,37 +1,43 @@
 local M = {}
 
-local Config = require("track.config")
-local Log = require("track.log")
+local config = require("track.config")
+local util = require("track.util")
+local log = require("track.log")
 
-local State = require("track.state")
-local EntryMakers = require("telescope._extensions.track.entry_makers")
+local state = require("track.state")
+local entry_makers = require("telescope._extensions.track.entry_makers")
 
 local actions = require("telescope.actions")
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
-local config = require("telescope.config")
-local state = require("telescope.state")
+local mappings = require("telescope.mappings")
+
+local tele_config = require("telescope.config")
+local tele_state = require("telescope.state")
 
 function M.resulter(opts)
-  local root = State._roots[opts.root_path]
-  if root then return root.bundles() end
-  return {}
+  opts = vim.F.if_nil(opts, {})
+  opts = config.extend_pickers({ bundles = opts }).bundles
+  local root, _ = util.root_and_bundle()
+  return root and root.bundles() or {}
 end
 
 -- this can be passed into picker:refresh(<finder>)
 function M.finder(opts, results)
+  opts = vim.F.if_nil(opts, {})
+  opts = config.extend_pickers({ bundles = opts }).bundles
   if vim.tbl_isempty(results) then vim.notify("No root found! Create one first.") end
   return finders.new_table({
     results = results,
-    entry_maker = EntryMakers.gen_from_bundle(opts),
+    entry_maker = entry_makers.gen_from_bundle(opts),
   })
 end
 
 function M.picker(opts)
   opts = vim.F.if_nil(opts, {})
-  opts = Config.extend_pickers({ bundles = opts }).bundles
+  opts = config.extend_pickers({ bundles = opts }).bundles
   local hooks = opts.hooks
-  State.load()
+  state.load()
 
   local finder = M.finder(opts, M.resulter(opts))
   if vim.tbl_isempty(finder.results) then
@@ -42,22 +48,32 @@ function M.picker(opts)
   local picker = pickers.new(opts, {
     prompt_title = "Bundles",
     finder = finder,
-    sorter = config.values.generic_sorter(opts),
+    sorter = tele_config.values.generic_sorter(opts),
+    on_complete = {
+      function(self)
+        if not opts.hooks.on_serial then return end
+        for entry in self.manager:iter() do
+          vim.keymap.set("n", tostring(entry.index), function()
+            actions.close(self.layout.prompt.bufnr)
+            opts.hooks.on_serial(entry)
+          end, { buffer = self.layout.prompt.bufnr })
+        end
+      end,
+    },
     attach_mappings = function(buffer, _)
-      local status = state.get_status(buffer)
-      status.picker._current_opts = opts
+      local self = tele_state.get_status(buffer).picker
       actions.close:enhance({
         post = function(_)
           if opts.save_on_close then
-            State.save()
-            Log.info("Telescope.Bundles.picker(): closed telescope.track.bundles and saved state")
+            state.save()
+            log.info("Telescope.Bundles.picker(): closed telescope.track.bundles and saved state")
           end
-          hooks.on_close(status, opts)
+          hooks.on_close(self)
         end,
       })
       actions.select_default:replace(function(...)
         actions.close(...)
-        hooks.on_choose(status, opts)
+        hooks.on_choose(self)
       end)
       -- dynamic keymaps
       return true
