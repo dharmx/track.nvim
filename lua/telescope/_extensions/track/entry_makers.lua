@@ -44,7 +44,7 @@ function M.gen_from_view(opts)
     end
 
     -- file must be currently being edited - priority: 3
-    local display, display_hl = mark.absolute, ""
+    local display, display_hl = mark:absolute(), ""
     if not allowed then
       display = utils.transform_path(opts, mark.path)
     elseif mark.type == "term" then
@@ -55,7 +55,7 @@ function M.gen_from_view(opts)
       display = util.transform_site_uri(mark.path)
     end
 
-    if opts._focused == mark.absolute then
+    if opts._focused == mark:absolute() then
       display_hl = "TrackViewsFocusedDisplay"
       marker, marker_hl = icons.focused, "TrackViewsFocused"
     end
@@ -66,7 +66,7 @@ function M.gen_from_view(opts)
     -- is the buffer listed (is it opened in nvim currently)
     local listed, listed_hl = icons.unlisted, "TrackViewsMarkUnlisted"
     for _, info in ipairs(V.getbufinfo({ loaded = 1 })) do
-      if info.name == mark.absolute and info.listed == 1 then
+      if info.name == mark:absolute() and info.listed == 1 then
         listed, listed_hl = icons.listed, "TrackViewsMarkListed"
         break
       end
@@ -84,7 +84,7 @@ function M.gen_from_view(opts)
   return function(entry)
     return make_entry.set_default_entry_mt({
       value = entry,
-      ordinal = entry.absolute,
+      ordinal = entry:absolute(),
       display = make_display,
     }, opts)
   end

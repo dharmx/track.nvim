@@ -119,7 +119,7 @@ M._defaults = {
         manual = " ",
         site = " ",
       },
-      switch_directory = true,
+      switch_directory = false,
       save_on_close = true, -- save when the view telescope picker is closed
       selection_caret = "   ",
       path_display = {
@@ -176,7 +176,6 @@ M._defaults = {
     level = "warn",
   },
   exclude = {
-    "lua/track/pad%.lua",
     ["^%.git/.*$"] = true,
     ["^%.git$"] = true,
     ["^LICENSE$"] = true,

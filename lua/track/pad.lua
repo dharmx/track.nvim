@@ -104,6 +104,7 @@ end
 -- BUG: The first item before a space in file/directory paths are recognised as an icon.
 -- FIX: Need to write a parser for this. And only take in alphanumerics if prefixed with %.
 -- FIX: Or, we could use a prompt to ask the user if there is an icon or, not.
+-- FIX: Or, we could use a prefix character or, leading spaces as a placeholder icon.
 function Pad.line2mark(line, disable_devicons)
   local trimmed = vim.trim(line)
   if trimmed ~= "" then
@@ -150,31 +151,31 @@ function Pad:_extmark(line, start, finish)
   })
 end
 
+function Pad:conceal_uri(line, offset, path)
+  local start, finish = path:find("^%w+://")
+  if start and finish then
+    start = offset
+    finish = finish + start
+    self:_extmark(line, start, finish)
+  end
+end
+
 function Pad:conceal_term(line, offset, path)
-  local start, finish = string.find(path, "^(term://.+//)%d+?:.*$")
+  local start, finish = path:find("^(term://.+//)%d+?:.*$")
   if start and finish then
     self:_extmark(line, start + offset - 1, finish + offset)
   else
-    start, finish = string.find(path, "^(term://.+//)")
+    start, finish = path:find("^(term://.+//)")
     if start and finish then self:_extmark(line, start + offset - 1, finish + offset) end
   end
 
   local count = 1
   start, finish = nil, nil
   while true do
-    start, finish = string.find(path, "\\|", count)
+    start, finish = path:find("\\|", count)
     if start == nil then break end
     self:_extmark(line, start + offset - 1, finish + offset - 1)
     count = finish + 1
-  end
-end
-
-function Pad:conceal_uri(line, offset, path)
-  local start, finish = string.find(path, "^%w+://")
-  if start and finish then
-    start = offset
-    finish = finish + start
-    self:_extmark(line, start, finish)
   end
 end
 
@@ -211,7 +212,7 @@ function Pad:render()
     local mark = entry.value
     local line = index - 1
     local range = entry.range
-    if entry.value.absolute == self._focused then range[2] = range[2] .. "Focused" end
+    if entry.value:absolute() == self._focused then range[2] = range[2] .. "Focused" end
     table.insert(self.entries, index, entry)
 
     A.nvim_buf_set_lines(self.buffer, line, line, true, { entry.display })

@@ -22,13 +22,20 @@ function Mark:_new(opts)
   self.path = opts.path
   self.label = opts.label
   self.type = vim.F.if_nil(opts.type, "file")
-  self.absolute = V.fnamemodify(self.path, ":p")
   ---@diagnostic disable-next-line: missing-return
   self._NAME = "mark"
 end
 
+function Mark:absolute()
+  if self.type ~= "file" or self.type ~= "directory" then return self.path end
+  return V.fnamemodify(self.path, ":p")
+end
+
 ---Check if the mark path exists. True if it does, false otherwise.
 ---@return boolean
-function Mark:exists() return not not U.fs_realpath(self.absolute) end
+function Mark:exists()
+  if self.type ~= "file" or self.type ~= "directory" then return true end
+  return not not U.fs_realpath(self:absolute())
+end
 
 return Mark
