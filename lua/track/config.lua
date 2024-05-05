@@ -5,55 +5,67 @@ local util = require("track.util")
 
 -- TODO: Implement validation (vim.validate) and config fallback.
 -- TODO: Defaults (M.defaults) will be used if config values are invalid.
+-- TODO: Implement intersection(before_lines, after_lines) > 0 function for saving mark history.
 
 ---Default **track.nvim** opts.
 ---@type TrackOpts
 M._defaults = {
-  save_path = vim.fn.stdpath("state") .. "/track.json",
-  root_path = true,
-  bundle_label = true,
-  disable_history = true,
-  maximum_history = 10,
-  pad = {
+  save_path = vim.fn.stdpath("state") .. "/track.json", -- db
+  root_path = true, -- string or, true for automatically fetching root_path
+  bundle_label = true, --  string or, true for automatically fetching bundle_label
+  disable_history = true, -- save deleted marks
+  maximum_history = 10, -- limit history
+  pad = { -- built-in UI for viewing marks
     icons = {
-      save_done = "",
-      save = "",
+      save_done = "", -- not in use
+      save = "", -- not in use
       directory = "",
       terminal = "",
       manual = "",
       site = "",
+      locked = " ", -- existence cannot be checked (not a path i.e. a command/link/man)
+      missing = " ", -- path has been moved/deleted/renamed
+      accessible = " ", -- path still exists
+      inaccessible = " ", -- N/A / invalid perms
+      focused = " ", -- active buffer path (visible)
+      listed = "", -- loaded into a listed buffer (invisible)
+      unlisted = "≖", -- loaded into an unlisted buffer
     },
-    spacing = 1,
-    serial_maps = true,
-    save_on_close = true,
-    path_display = {
+    spacing = 1, -- not implemented
+    disable_status = true,
+    disable_devicons = true, -- recommended
+    save_on_close = true, -- save state automatically when pad window is closed
+    serial_map = false, -- run hooks.on_serial when an entry's line number is pressed
+    switch_directory = false, -- if selected entry is a Root object then chdir to it
+    path_display = { -- see :help telescope.defaults.path_display
       absolute = false,
       shorten = 1,
     },
     hooks = {
-      on_choose = util.open_entry,
-      on_serial = util.open_entry,
-      on_close = util.mute,
+      on_choose = util.open_entry, -- when an item is selected <CR>
+      on_serial = util.open_entry, -- when a number co-responding to an entry's line number is pressed
+      on_close = util.mute, -- run after the pad window closes
     },
-    mappings = {
+    mappings = { -- similar to :help telescope.mappings
       n = {
         q = function(self) self:close() end,
-        ["<C-s>"] = function(self) self:sync(true) end,
+        ["<C-s>"] = function(self) self:sync(true) end, -- manual save state
       },
     },
-    disable_devicons = true,
-    config = {
+    config = { -- see :help api-win_config
       style = "minimal",
       border = "solid",
       focusable = true,
       relative = "editor",
       width = 60,
       height = 10,
+      -- row and col will be overridden
       title_pos = "left",
     },
   },
   pickers = {
     bundles = {
+      serial_map = false,
       icons = {
         separator = " │ ",
         main = " ",
@@ -82,7 +94,7 @@ M._defaults = {
           local root, _ = util.root_and_bundle()
           root:change_main_bundle(entry.value.label)
         end,
-        on_choose = function(self)
+        on_choose = function(self) -- mappings WRT to line numbers
           local entry = self:get_selection()
           if not entry then return end
           local root, _ = util.root_and_bundle()
@@ -106,20 +118,20 @@ M._defaults = {
     views = {
       icons = {
         separator = " ",
-        locked = " ",
-        missing = " ",
-        accessible = " ",
-        inaccessible = " ",
-        focused = " ",
-        listed = "",
-        unlisted = "≖",
-        file = "",
-        directory = " ",
-        terminal = "",
-        manual = " ",
-        site = " ",
+        locked = " ", -- existence cannot be checked (not a path i.e. a command/link/man)
+        missing = " ", -- path has been moved/deleted/renamed
+        accessible = " ", -- path still exists
+        inaccessible = " ", -- N/A / invalid perms
+        focused = " ", -- active buffer path (visible)
+        listed = "", -- loaded into a listed buffer (invisible)
+        unlisted = "≖", -- loaded into an unlisted buffer
+        file = "", -- default icon
+        directory = " ", -- directory icon
+        terminal = "", -- terminal URI icon
+        manual = " ", -- manpage URI type icon i.e. :Man find(1) or, :edit man://find(1)
+        site = " ", -- website link https://www.google.com
       },
-      switch_directory = false,
+      switch_directory = true, -- switch when a directory i.e. marked is a Root object
       save_on_close = true, -- save when the view telescope picker is closed
       selection_caret = "   ",
       path_display = {
@@ -128,6 +140,7 @@ M._defaults = {
       },
       prompt_prefix = "   ",
       previewer = false,
+      serial_map = false,
       initial_mode = "normal", -- alternatively: "insert"
       results_title = false,
       sorting_strategy = "ascending",
@@ -171,14 +184,16 @@ M._defaults = {
       disable_devicons = false,
     },
   },
-  log = {
-    plugin = "track",
-    level = "warn",
-  },
+  -- do not mark files that contain these patterns
   exclude = {
     ["^%.git/.*$"] = true,
     ["^%.git$"] = true,
     ["^LICENSE$"] = true,
+  },
+  -- dev / debugging
+  log = {
+    plugin = "track",
+    level = "warn",
   },
 }
 

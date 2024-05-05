@@ -26,13 +26,13 @@ function M.gen_from_view(opts)
 
   -- indicators (pretty colors, symbols and shiny things) @derhans would be displeased
   local function make_display(entry)
-    ---@type Mark
     local mark = entry.value
+    local absolute = mark:absolute()
     local allowed = vim.tbl_contains({ "term", "man", "http", "https" }, mark.type)
 
     -- we may/may not have read permissions on that file - priority: 1
     local marker, marker_hl = icons.accessible, "TrackViewsAccessible"
-    if not vim.loop.fs_access(mark.path, "R") then
+    if not mark:readable() then
       marker, marker_hl = icons.inaccessible, "TrackViewsInaccessible"
     end
 
@@ -44,7 +44,7 @@ function M.gen_from_view(opts)
     end
 
     -- file must be currently being edited - priority: 3
-    local display, display_hl = mark:absolute(), ""
+    local display, display_hl = absolute, ""
     if not allowed then
       display = utils.transform_path(opts, mark.path)
     elseif mark.type == "term" then
@@ -55,7 +55,7 @@ function M.gen_from_view(opts)
       display = util.transform_site_uri(mark.path)
     end
 
-    if opts._focused == mark:absolute() then
+    if opts._focused == absolute then
       display_hl = "TrackViewsFocusedDisplay"
       marker, marker_hl = icons.focused, "TrackViewsFocused"
     end
@@ -65,8 +65,9 @@ function M.gen_from_view(opts)
 
     -- is the buffer listed (is it opened in nvim currently)
     local listed, listed_hl = icons.unlisted, "TrackViewsMarkUnlisted"
-    for _, info in ipairs(V.getbufinfo({ loaded = 1 })) do
-      if info.name == mark:absolute() and info.listed == 1 then
+    local buffers = V.getbufinfo({ bufloaded = 1 })
+    for _, info in ipairs(buffers) do
+      if info.name == absolute and info.listed == 1 then
         listed, listed_hl = icons.listed, "TrackViewsMarkListed"
         break
       end

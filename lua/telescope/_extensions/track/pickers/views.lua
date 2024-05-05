@@ -31,19 +31,6 @@ function M.finder(opts, results)
   })
 end
 
-local function apply_root_entry(self, entry, opts)
-  local root_path = entry.value:absolute()
-  if root_path:len() > 1 then root_path = root_path:gsub("/$", "") end
-  if opts.switch_directory and entry.value.type == "directory" and state._roots[root_path] then
-    vim.cmd.doautocmd("DirChangedPre")
-    vim.loop.chdir(root_path)
-    vim.cmd.doautocmd("DirChanged")
-    self:refresh(M.finder(opts, M.resulter(opts)), { reset_prompt = true })
-    return true
-  end
-  return false
-end
-
 function M.picker(opts)
   opts = vim.F.if_nil(opts, {})
   opts = config.extend_pickers({ views = opts }).views
@@ -63,10 +50,13 @@ function M.picker(opts)
     sorter = tele_config.values.file_sorter(opts),
     on_complete = {
       function(self)
-        if not opts.hooks.on_serial then return end
+        if not opts.serial_map then return end
         for entry in self.manager:iter() do
           vim.keymap.set("n", tostring(entry.index), function()
-            if apply_root_entry(self, entry, opts) then return end
+            if util.apply_root_entry(entry, opts) then
+              self:refresh(M.finder(opts, M.resulter(opts)), { reset_prompt = true })
+              return
+            end
             actions.close(self.layout.prompt.bufnr)
             opts.hooks.on_serial(entry)
           end, { buffer = self.layout.prompt.bufnr })
@@ -88,7 +78,10 @@ function M.picker(opts)
         -- add navigation controls for traversing back and forth through other roots
         -- if the exist otherwise open the directory
         local entry = self:get_selection()
-        if apply_root_entry(self, entry, opts) then return end
+        if util.apply_root_entry(entry, opts) then
+          self:refresh(M.finder(opts, M.resulter(opts)), { reset_prompt = true })
+          return
+        end
         actions.close(...)
         hooks.on_choose(self)
       end)

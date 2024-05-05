@@ -20,7 +20,7 @@ function M.delete_view(buffer)
   local _, bundle = util.root_and_bundle()
   if not bundle then return end
   for _, entry in ipairs(entries) do
-    bundle:remove_mark(entry.value.path)
+    bundle:remove_mark(entry.value)
   end
 end
 

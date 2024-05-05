@@ -79,43 +79,42 @@ end
 ---@return Mark
 function Bundle:add_mark(mark, label)
   if type(mark) == "table" and mark._NAME == "mark" then
-    self.marks[mark.path] = mark
-    if #vim.tbl_keys(self.marks) ~= #self.views then table.insert(self.views, mark.path) end
-    log.trace("Bundle.add_mark(): new mark " .. mark.path .. " has been added")
-    return self.marks[mark.path]
+    local absolute = mark:absolute()
+    self.marks[absolute] = mark
+    if #vim.tbl_keys(self.marks) ~= #self.views then table.insert(self.views, absolute) end
+    log.trace("Bundle.add_mark(): new mark " .. absolute .. " has been added")
+    return self.marks[absolute]
   end
   -- if it does not exist then create it
-  self.marks[mark] = Mark({ path = mark, label = label })
-  -- adding a mark will add its path to the views table
-  if #vim.tbl_keys(self.marks) ~= #self.views then table.insert(self.views, mark) end
-  log.trace("Bundle.add_mark(): new mark " .. mark .. " has been added")
-  return self.marks[mark]
+  return self:add_mark(Mark({ path = mark, label = label }))
 end
 
 ---Remove a mark from the Bundle. Returns the removed mark (if available).
 ---@param mark Mark|string `Mark` or, the path that will be removed from the `Bundle.marks` table.
 ---@return Mark
 function Bundle:remove_mark(mark)
-  local removed_mark
+  local rm_mark
   if type(mark) == "table" and mark._NAME == "mark" then
-    removed_mark = self.marks[mark.path]
+    rm_mark = self.marks[mark:absolute()]
   else
-    removed_mark = self.marks[mark]
+    local temp_mark = Mark({ path = mark })
+    rm_mark = self.marks[temp_mark:absolute()]
   end
+  local absolute = rm_mark:absolute()
 
-  self.marks[removed_mark.path] = nil
+  self.marks[absolute] = nil
   -- removing a mark will also remove its path from the views table
   -- how do I make this faster O(N) is not good.
   -- thinking more about this... can the marklist go beyond 100 :thonk:
-  self.views = vim.tbl_filter(function(item) return item ~= removed_mark.path end, self.views)
+  self.views = vim.tbl_filter(function(item) return item ~= absolute end, self.views)
   -- self.views is being overwritten which means any metatable will also be overwritten
   -- we need to re-register the __call metatable so that external parties can call
   -- Bundle.view() again.
   self:_callize_views()
   -- record history: removed marks will be inserted into the self.history table (by your will)
-  self:insert_history(removed_mark)
-  log.trace("Bundle.remove_mark(): mark " .. removed_mark.path .. " has been removed")
-  return removed_mark
+  self:insert_history(rm_mark)
+  log.trace("Bundle.remove_mark(): mark " .. absolute .. " has been removed")
+  return rm_mark
 end
 
 ---Reset the `Bundle`. All marks will be purged.
@@ -140,7 +139,7 @@ function Bundle:insert_history(mark, force)
   if self.disable_history and not force then return end
   table.insert(self.history, 1, mark)
   if #self.history > self.maximum_history then table.remove(self.history, #self.history) end
-  log.trace("Bundle.insert_history(): mark " .. mark.path .. " has been recorded into history")
+  log.trace("Bundle.insert_history(): mark " .. mark:absolute() .. " has been recorded into history")
 end
 
 ---Swap marks.
@@ -158,12 +157,14 @@ end
 ---@param new_path string
 function Bundle:change_mark_path(mark, new_path)
   assert(type(mark) == "table" and mark._NAME == "mark", "mark: restricted type")
+  local abs = mark:absolute()
   local new_mark = Mark({ path = new_path, label = mark.label })
+  local new_abs = new_mark:absolute()
   for index, view in ipairs(self.views) do
-    if view == mark.path then
-      self.views[index] = new_path
+    if view == abs then
+      self.views[index] = new_abs
       self.marks[view] = nil
-      self.marks[new_path] = new_mark
+      self.marks[new_abs] = new_mark
       return new_mark
     end
   end
