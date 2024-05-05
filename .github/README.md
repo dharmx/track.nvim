@@ -125,7 +125,7 @@ See <samp>:help terminal</samp> for more details.
 
 ### Q. How do I mark a command that'll run on a particular directory?
 
-- Open terminal by `:edit term:///home/dharmx//rg --files \|\ awk -F'.' '{print $NF}'`
+- Open terminal by `:edit term:///home/dharmx//rg --files \| awk -F'.' '{print $NF}'`
 - Then `:Mark` that buffer.
 - Open `:Track` and you should see the command being stored there.
 - Run it by pressing enter and it should run that command in that particualar directory.
@@ -166,10 +166,18 @@ require("track").setup({
 Note that, Lua patterns are used for this normal regex expressions will not completely
 work.
 
-### How do I unmark a website?
+### Q. How do I unmark a website?
 
 There's is no way of doing that. You'd need to open an UI and then press `dd`
 on the entry that is a website.
+
+### Q. What are serial mappings?
+
+Open any UI and then press any entry's line number and it'll run the
+`config.{pickers.views,pickers.bundles,pad}.hooks.on_serial` callback on it.
+
+So, by default if you open `:Track pad` and press `3` then it should open the
+entry at that line number.
 
 ## Defaults
 
@@ -376,6 +384,7 @@ Modify these to change colors. This section is mainly geared towards theme plugi
 local function HI(...) vim.api.nvim_set_hl(0, ...) end
 
 HI("TrackPadTitle", { link = "TelescopeResultsTitle" })
+HI("TrackPadEntryFocused", { foreground = "#7AB0DF" })
 
 HI("TrackViewsAccessible", { foreground = "#79DCAA" })
 HI("TrackViewsInaccessible", { foreground = "#F87070" })
@@ -441,7 +450,7 @@ spaces i.e. `~/Documents/cv for applying as reddit mod.md` then the file that wi
 be saved is `for applying as reddit mod.md` only.
 
 A workaround for this is to have a dot or, any placeholder at the very beginning of the path
-i.e., `* ~/Documents/cv for applying as reddit mod.md` this way only `* ` will be eliminated
+i.e., `= ~/Documents/cv for applying as reddit mod.md` this way only `= ` will be eliminated
 and `~/Documents/cv for applying as reddit mod.md` will be saved.
 
 ### Unmarking manpages and commands.
