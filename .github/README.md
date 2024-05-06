@@ -453,14 +453,11 @@ A workaround for this is to have a dot or, any placeholder at the very beginning
 i.e., `= ~/Documents/cv for applying as reddit mod.md` this way only `= ` will be eliminated
 and `~/Documents/cv for applying as reddit mod.md` will be saved.
 
+Be aware that, `config.pad.disable_devicons` is set to `true` by default.
+
 ### Unmarking manpages and commands.
 
 This might not work all the time. No fixes for this.
-
-### Preserving `$ENV_VAR` notations and not expanding it.
-
-We normalize the mark paths so this not possible. But, if there's enough demand then I will
-add it.
 
 ## Credits
 

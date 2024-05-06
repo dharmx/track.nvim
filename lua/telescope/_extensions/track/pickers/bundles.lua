@@ -10,7 +10,6 @@ local entry_makers = require("telescope._extensions.track.entry_makers")
 local actions = require("telescope.actions")
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
-local mappings = require("telescope.mappings")
 
 local tele_config = require("telescope.config")
 local tele_state = require("telescope.state")
@@ -74,6 +73,7 @@ function M.picker(opts)
       actions.select_default:replace(function(...)
         actions.close(...)
         hooks.on_choose(self)
+        require("track.core")(util.cwd())
       end)
       -- dynamic keymaps
       return true

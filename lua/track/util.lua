@@ -1,7 +1,9 @@
 local M = {}
 
 local U = vim.loop
+local V = vim.fn
 local A = vim.api
+local if_nil = vim.F.if_nil
 
 ---Dummy function that does noting.
 function M.mute() end
@@ -42,12 +44,6 @@ function M.transform_man_uri(uri) return uri:match("man://(.+)") end
 
 function M.transform_site_uri(uri) return uri:match("https?://w?w?w?%.?(.+)") end
 
-function M.get_cwd_from_term_uri(uri)
-  local working = uri:match("^term://(.+)//%d+:.+$")
-  working = working or uri:match("^term://(.+)//.+$")
-  return working and vim.fs.normalize(working) or M.cwd()
-end
-
 ---Get cwd. Like really.
 ---@return string
 function M.cwd() return (U.cwd()) or vim.fn.getcwd() or vim.env.PWD end
@@ -86,8 +82,7 @@ function M.clean_term_uri(uri)
   local trimmed = vim.trim(uri)
   local working = trimmed:match("^term://(.+)//%d+:.*$")
   if working then
-    working = vim.fs.normalize(working)
-    trimmed = trimmed:gsub("^(term://)(.+)(//)%d+:(.*)$", "%1" .. working .. "%3%4")
+    trimmed = trimmed:gsub("^(term://)(.+)(//)%d+:(.*)$", "%1" .. vim.fs.normalize(working) .. "%3%4")
   else
     trimmed = trimmed:gsub("^(term://.+//)%d+:(.*)$", "%1%2")
   end
@@ -134,6 +129,17 @@ function M.contains(patterns, item)
     end
   end
   return false
+end
+
+function M.parsed_buf_name(buffer)
+  local name = A.nvim_buf_get_name(if_nil(buffer, 0))
+  local filetype = M.filetype(name)
+  if filetype == "file" then
+    name = V.fnamemodify(vim.fs.normalize(name), ":p")
+  elseif filetype == "term" then
+    name = M.clean_term_uri(name)
+  end
+  return name
 end
 
 return M

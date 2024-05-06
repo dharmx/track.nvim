@@ -9,7 +9,6 @@ setmetatable(Pad, {
 })
 
 local A = vim.api
-local V = vim.fn
 local if_nil = vim.F.if_nil
 
 local Mark = require("track.containers.mark")
@@ -24,7 +23,6 @@ function Pad:_new(opts)
   local types = type(opts)
   assert(types == "table", "expected table")
 
-  self.root_path = opts.root_path
   self.serial_maps = if_nil(opts.serial_maps, false)
   self.path_display = if_nil(opts.path_display, {})
   self.mappings = if_nil(opts.mappings, {})
@@ -66,7 +64,7 @@ function Pad:_new(opts)
   if opts.auto_resize then
     A.nvim_create_autocmd("VimResized", {
       buffer = self.buffer,
-      group = require("track").TRACK_GROUP,
+      group = require("track").GROUP,
       callback = function()
         if not self:hidden() then
           self.config.row = (vim.o.lines - self.config.height - 2) / 2
@@ -110,15 +108,14 @@ function Pad.line2mark(line, disable_devicons)
   if trimmed ~= "" then
     local mark
     if disable_devicons then
-      mark = Mark({ path = trimmed, type = util.filetype(trimmed) })
+      mark = Mark({ path = trimmed })
     else
       local icon, content = line:match("^([^%s]+)%s(.+)$")
       if icon and not utils.is_uri(icon) then
-        mark = Mark({ path = content, type = util.filetype(content) })
+        mark = Mark({ path = content })
       else
-        local filetype = util.filetype(trimmed)
-        if filetype == "term" then trimmed = util.clean_term_uri(trimmed) end
-        mark = Mark({ path = trimmed, type = filetype })
+        mark = Mark({ path = trimmed })
+        if mark.type == "term" then trimmed = util.clean_term_uri(trimmed) end
       end
     end
     return mark
@@ -248,7 +245,7 @@ function Pad:hidden() return not self.window or not A.nvim_win_is_valid(self.win
 
 function Pad:open()
   if not self:hidden() then return end
-  self._focused = V.fnamemodify(V.bufname(), ":p")
+  self._focused = util.parsed_buf_name()
   self.window = A.nvim_open_win(self.buffer, true, self.config)
   A.nvim_win_set_option(self.window, "winhighlight", "FloatTitle:TrackPadTitle,FloatBorder:NormalFloat")
   A.nvim_win_set_option(self.window, "number", true)
