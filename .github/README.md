@@ -229,6 +229,8 @@ entry at that line number.
 
 ## Defaults
 
+<details>
+
 ```lua
 local if_nil = vim.F.if_nil
 local util = require("track.util")
@@ -421,6 +423,8 @@ M._defaults = {
 }
 ```
 
+</details>
+
 ## Integrations
 
 Use track.nvim for marking elements in other plugins.
@@ -438,6 +442,8 @@ vim.g.rnvimr_action = {
 ## Theme
 
 Modify these to change colors. This section is mainly geared towards theme plugin authors.
+
+<details>
 
 ```lua
 HI("TrackPadTitle", { link = "TelescopeResultsTitle" })
@@ -478,6 +484,8 @@ HI("TrackBundlesHistory", { foreground = "#F87070" })
 HI("TrackBundlesDivide", { foreground = "#151A1F" })
 HI("TrackBundlesIndex", { foreground = "#54CED6" })
 ```
+
+</details>
 
 ## Commands
 

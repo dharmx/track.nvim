@@ -48,7 +48,7 @@ function Mark:exists()
   return not not U.fs_realpath(self:absolute())
 end
 
-function Mark:synbolic()
+function Mark:symbolic()
   if self.type ~= "file" and self.type ~= "directory" then return false end
   return if_nil(U.fs_lstat(self:absolute()), {}).type == "link"
 end
