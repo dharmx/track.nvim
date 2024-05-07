@@ -1,6 +1,6 @@
 ---@diagnostic disable: undefined-field
 ---A virtual mark-map. Allows one to create different versions of marks that
----is better suitted to a part of a project that you might be working on.
+---is better suited to a part of a project that you might be working on.
 ---
 ---For instance:
 ---Working at part `A` of a project will require you to frequent
@@ -32,6 +32,7 @@ local if_nil = vim.F.if_nil
 function Bundle:_new(opts)
   local types = type(opts)
   assert(types ~= "table" or types ~= "string", "expected: fields: string|table found: " .. types)
+  ---@diagnostic disable-next-line: missing-fields
   if types == "string" then opts = { label = opts } end
   assert(opts.label and type(opts.label) == "string", "fields.label: string cannot be nil")
 

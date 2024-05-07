@@ -13,9 +13,10 @@ local finders = require("telescope.finders")
 
 local tele_config = require("telescope.config")
 local tele_state = require("telescope.state")
+local if_nil = vim.F.if_nil
 
 function M.resulter(opts)
-  opts = vim.F.if_nil(opts, {})
+  opts = if_nil(opts, {})
   opts = config.extend_pickers({ bundles = opts }).bundles
   local root, _ = util.root_and_bundle()
   return root and root.bundles() or {}
@@ -23,7 +24,7 @@ end
 
 -- this can be passed into picker:refresh(<finder>)
 function M.finder(opts, results)
-  opts = vim.F.if_nil(opts, {})
+  opts = if_nil(opts, {})
   opts = config.extend_pickers({ bundles = opts }).bundles
   if vim.tbl_isempty(results) then vim.notify("No root found! Create one first.") end
   return finders.new_table({
@@ -33,7 +34,7 @@ function M.finder(opts, results)
 end
 
 function M.picker(opts)
-  opts = vim.F.if_nil(opts, {})
+  opts = if_nil(opts, {})
   opts = config.extend_pickers({ bundles = opts }).bundles
   local hooks = opts.hooks
   state.load()

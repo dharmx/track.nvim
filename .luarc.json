@@ -1,0 +1,27 @@
+{
+  "Lua": {
+    "runtime": {
+      "path": [ "?.lua", "?/init.lua" ],
+      "pathStrict": true,
+      "version": "LuaJIT"
+    },
+    "workspace": {
+      "checkThirdParty": false,
+      "ignoreDir": [
+        "types/nightly",
+        "lua"
+      ],
+      "library": [
+        "$XDG_DATA_HOME/nvim/plugins/neodev.nvim/types/stable",
+        "$XDG_DATA_HOME/nvim/plugins/telescope.nvim/lua",
+        "$XDG_DATA_HOME/nvim/plugins/plenary.nvim/lua",
+        "$HOME/Projects/neovim/track.nvim/lua",
+        "/usr/share/nvim/runtime/lua"
+      ]
+    }
+  },
+    "diagnostics.disable": [
+        "undefined-field",
+        "missing-fields"
+    ]
+}

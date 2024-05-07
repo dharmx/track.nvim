@@ -40,5 +40,4 @@ luac.out
 *.hex
 
 # lua_ls files
-.luarc.json
 lua/track/scratch.lua

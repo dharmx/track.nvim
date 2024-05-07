@@ -13,9 +13,10 @@ local finders = require("telescope.finders")
 
 local tele_config = require("telescope.config")
 local tele_state = require("telescope.state")
+local if_nil = vim.F.if_nil
 
 function M.resulter(opts)
-  opts = vim.F.if_nil(opts, {})
+  opts = if_nil(opts, {})
   opts = config.extend_pickers({ views = opts }).views
   local _, bundle = util.root_and_bundle()
   return bundle and not bundle:empty() and bundle.views() or {}
@@ -23,7 +24,7 @@ end
 
 -- this can be passed into picker:refresh(<finder>)
 function M.finder(opts, results)
-  opts = vim.F.if_nil(opts, {})
+  opts = if_nil(opts, {})
   opts = config.extend_pickers({ views = opts }).views
   return finders.new_table({
     results = results,
@@ -37,6 +38,7 @@ function M.picker(opts)
   local hooks = opts.hooks
   state.load()
 
+  ---@diagnostic disable-next-line: inject-field
   opts._focused = vim.fn.fnamemodify(vim.fn.bufname(), ":p")
   local finder = M.finder(opts, M.resulter(opts))
   if vim.tbl_isempty(finder.results) then

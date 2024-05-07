@@ -1,3 +1,4 @@
+---@diagnostic disable: cast-local-type
 local M = {}
 
 local U = vim.loop
@@ -18,7 +19,7 @@ end
 
 ---@return string
 function M.filetype(uri)
-  local uri_type = vim.F.if_nil(uri:match("^(%w+)://"), "file")
+  local uri_type = if_nil(uri:match("^(%w+)://"), "file")
   if uri_type == "file" then
     uri = vim.fs.normalize(uri)
     local stat, _, e = U.fs_stat(uri)
@@ -33,11 +34,9 @@ function M.filetype(uri)
   return vim.trim(uri_type) == "" and "default" or uri_type
 end
 
+-- stylua: ignore
 function M.transform_term_uri(uri)
-  return (uri:match("^term://.+//%d+:(.+)$") or uri:match("^term://.+//(.+)$") or uri:match("term://(.+)")):gsub(
-    "\\|",
-    "|"
-  )
+  return (uri:match("^term://.+//%d+:(.+)$") or uri:match("^term://.+//(.+)$") or uri:match("term://(.+)")):gsub( "\\|", "|")
 end
 
 function M.transform_man_uri(uri) return uri:match("man://(.+)") end
@@ -92,7 +91,7 @@ end
 
 -- TODO: Allow opts.root_path and opts.bundle_label to be a function.
 function M.root_and_bundle(opts, force)
-  opts = vim.F.if_nil(opts, {})
+  opts = if_nil(opts, {})
   opts = require("track.config").extend(opts)
   local bundle_label = opts.bundle_label
   local root_path = opts.root_path ~= true and opts.root_path or M.cwd()

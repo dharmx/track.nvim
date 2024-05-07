@@ -5,7 +5,7 @@ local config = require("track.config").get()
 local Root = require("track.containers.root")
 local Mark = require("track.containers.mark")
 local Bundle = require("track.containers.bundle")
-local Path = require("plenary.path")
+local P = require("plenary.path")
 
 local log = require("track.log")
 
@@ -37,7 +37,7 @@ M.loaded = false
 ---@private
 
 ---@type Path
-local save_path = Path:new(config.save_path)
+local save_path = P:new(config.save_path)
 
 ---Clear all recorded roots. This will clear histories as well.
 function M.wipe()
@@ -89,7 +89,8 @@ function M.load_save(action, loadpath, on_load)
     return
   end
 
-  loadpath = Path:new(loadpath)
+  ---@diagnostic disable-next-line: cast-local-type
+  loadpath = P:new(loadpath)
   local data = vim.trim(loadpath:read()) -- strip leading and trailing whitespaces
   if data == "" then
     log.warn("State.load_save(): " .. save_path.filename .. " is empty")
@@ -103,6 +104,7 @@ function M.load_save(action, loadpath, on_load)
   if action == "wipe" then M.wipe() end
   assert(action == "extend" or action == "wipe", "action: string[extend|wipe]")
 
+  ---@diagnostic disable-next-line: param-type-mismatch
   for path, root in pairs(roots) do
     M._roots[path] = Root({
       path = root.path,

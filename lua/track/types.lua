@@ -22,7 +22,6 @@
 ---@field switch_directory boolean Change directory and refresh picker if a marked directory is in state.
 ---@field icons TrackPickersViewsIcons File-indicators, state-indicators, separators and default icons.
 
--- TODO: START {{{
 ---Other config opts that are not documented here can be found at |telecope.nvim| help page.
 ---@class TrackPickersBundles
 ---@field hooks TrackPickersBundlesHooks Callbacks related to the views picker.
@@ -36,7 +35,6 @@
 ---@field on_serial function(entry: table, picker: Picker)|nil|false Map a callback numerical keys with respect to entry index.
 
 ---@class TrackPickersBundlesIcons
--- TODO: END }}}
 
 ---@class TrackPickers
 ---@field views TrackPickersViews Configuration opts relating to the `views` telescope picker.
@@ -46,12 +44,10 @@
 ---@field level "error"|"warn"|"info"|"trace"|"debug"|"off" Log level. The higher the level is, lesser the STDOUT messages will be shown.
 ---@field plugin string Name of the plugin.
 
--- TODO: {{{
 ---@class TrackPad
 ---@field config table
 ---@field root_path? string Function that must return the path to the current working directory.
 ---@field save_on_close boolean Save state when the views pad buffer is closed.
--- }}}
 
 ---@class TrackOpts
 ---@field save_path string JSON file where the current state will be saved.
@@ -62,6 +58,7 @@
 ---@field pickers TrackPickers Sub-configuration for telescope pickers.
 ---@field log TrackLog Sub-configuration for logging and debugging.
 ---@field pad TrackPad Sub-configuration for pad UI.
+---@field exclude string[] Patterns that won't be allowed to be added into the marks list.
 
 ---@class Root
 ---@field path string Path to root.

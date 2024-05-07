@@ -1,3 +1,4 @@
+---@diagnostic disable: param-type-mismatch
 ---Root represents a directory in track.nvim. This is synonymous to cwd/project.
 ---A root will contain a map of bundles and the bundles will contain marks. A root will
 ---also contain a `main` key which (just like GIT) will be the default bundle of the root.

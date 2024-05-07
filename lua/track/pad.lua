@@ -293,15 +293,12 @@ end
 
 function Pad:hidden() return not self.window or not A.nvim_win_is_valid(self.window) end
 
+-- stylua: ignore
 function Pad:open()
   if not self:hidden() then return end
   self._focused = util.parsed_buf_name()
   self.window = A.nvim_open_win(self.buffer, true, self.config)
-  A.nvim_win_set_option(
-    self.window,
-    "winhighlight",
-    "SignColumn:NormalFloat,CursorLineSign:NormalFloat,FloatTitle:TrackPadTitle,FloatBorder:NormalFloat"
-  )
+  A.nvim_win_set_option(self.window, "winhighlight", "SignColumn:NormalFloat,CursorLineSign:NormalFloat,FloatTitle:TrackPadTitle,FloatBorder:NormalFloat")
   A.nvim_win_set_option(self.window, "number", true)
   A.nvim_win_set_option(self.window, "cursorline", true)
   if not self.disable_status then A.nvim_win_set_option(self.window, "numberwidth", 3) end

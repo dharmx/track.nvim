@@ -4,7 +4,6 @@ local M = setmetatable({}, {
 
 -- TODO: Document this BRUH.
 
-local A = vim.api
 local if_nil = vim.F.if_nil
 local util = require("track.util")
 

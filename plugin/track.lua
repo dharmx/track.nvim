@@ -131,7 +131,7 @@ end, {
 cmd("DeleteBundle", function(...)
   local label = (...).args
   local core = require("track.core")
-  core:delete(label ~= "" and label)
+  core:delete(label ~= "" and label or nil)
   core(require("track.util").cwd())
 end, {
   desc = "Delete bundle.",

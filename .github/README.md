@@ -3,17 +3,9 @@
 Most over-engineered marking system. Harpoon-like file tracking.
 Supercharged by [telescope.nvim](https:/github.com/nvim-telescope/telescope.nvim).
 
-<details>
-
-![bundles](https://github.com/dharmx/track.nvim/assets/80379926/2bcd3c4a-108e-4be1-8da0-20a6cc0f3b65)
-
-![views](https://github.com/dharmx/track.nvim/assets/80379926/b88bfa1f-d16a-4dd3-a498-28c35fd00783)
-
 https://github.com/dharmx/track.nvim/assets/80379926/3d928ebc-7829-4e84-a81b-9c87a631d5d7
 
-https://github.com/dharmx/track.nvim/assets/80379926/571b4b5c-6519-4833-8b30-6dcdc0bf88f6
-
-</details>
+[Read WIKI.](https://github.com/dharmx/track.nvim/wiki)
 
 ## Installation
 
@@ -30,6 +22,7 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim).
   "dharmx/track.nvim",
   config = function()
     local set = vim.keymap.set -- tweak to suit your own
+    local silent = { silent = true }
     set("n", "<leader><leader>", "<cmd>Track<cr>", silent)
     set("n", "<leader>ee", "<cmd>Track bundles<cr>", silent)
     set("n", "<leader>aa", "<cmd>Mark<cr>", silent)
@@ -83,150 +76,6 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim).
 
 </details>
 
-## Quickstart
-
-Feature walkthrough.
-
-### Q. How does tracking files work?
-
-- Create a mark by `:Mark`. You can map a key to it.
-- Now, open the telescope window by `:Track views`.
-- You can move the entries up and down by pressing `i_<C-n>` and `i_<C-p>`.
-- You can select all entries by pressing `v`. And, `<cr>` to open.
-- Or, press `<tab>` to select multiple entries.
-- You can delete an entry by `i_<C-d>`.
-- You can change the view name in telescope by pressing `i_<C-e>` on the entry.
-- Close the telescope window then do `:Unmark`.
-- Open `:Track views` again. And, you should see the mark being erased.
-
-Note that, you can also track commands, man-pages and help-docs.
-
-### Q. How does bundles work?
-
-- Open `:Track bundles`.
-- If the picker is empty then the current directory is not being tracked.
-- Then start by marking a file in that directory `:Mark some/path/to/file` or,
-  just `:Mark`.
-- Now, open `:Track bundles` again. You will see a `main` branch being created.
-- You can change the bundle name in telescope by pressing `i_<C-e>` on the entry.
-- `:StashBundle` will create another bundle with an auto-generated label and
-  replace the place of the **main** bundle.
-- Try `Track bundles` again.
-- `:AlternateBundle` will swap the current **main** bundle with the **alternate**
-  bundle. This functions the same way as Vim's default `^` mapping.
-
-Note that, there can only be one `main` bundle and one **alternate** bundle. And,
-a bundle will always have a main bundle. It is not recommended to remove it.
-
-### Q. How do I mark a terminal command?
-
-- Open terminal by `:terminal ls /sys/class`
-- Alternatively, you can also do `:edit term://ls /sys/class`
-- Then `:Mark` that buffer.
-- Open `:Track` and you should see the command being stored there.
-
-See <samp>:help terminal</samp> for more details.
-
-### Q. How do I mark a command that'll run on a particular directory?
-
-- Open terminal by `:edit term:///home/dharmx//rg --files \| awk -F'.' '{print $NF}'`
-- Then `:Mark` that buffer.
-- Open `:Track` and you should see the command being stored there.
-- Run it by pressing enter and it should run that command in that particualar directory.
-
-Note that, if you mark with `:edit` then you would only need to escape pipes i.e. `| -> \|`.
-
-### Q. What else can we mark?
-
-- You can mark websites i.e. `:Mark https://www.google.com/search?q=gnu+rule34`.
-- You can mark manpages i.e. `:Mark man://find(1)`.
-- You can mark a directory as well.
-
-Note that, selecting a directory i.e. tracked will `:chdir` into that directory and
-refresh the UI for viewing that directory's marks. This behavior is off by default.
-
-Additionally, while you can mark virtually anything, it is not recommended to do so.
-This is because only a few filetypes are actually handled. For instance, marking a
-PDF file and opening it won't open it in a PDF reader but in Neovim albeit you can
-use `on_choose` for each UI to override that.
-
-### Q. How do I exclude files that should not be marked?
-
-Just pass an `exclude` list into the setup function.
-
-```lua
--- we use lua regexp for this
-require("track").setup({
-  exclude = {
-    vim.env.XDG_CONFIG_HOME .. "/nvim/.*", -- always skip
-    "lua/track/pad%.lua", -- does not allow marking
-    ["^%.git/.*$"] = true, -- does not allow marking
-    ["^%.git$"] = false, -- allow marking
-    ["^LICENSE$"] = true, -- does not allow marking
-  },
-})
-```
-
-Note that, Lua patterns are used for this normal regex expressions will not completely
-work.
-
-### Q. How do I unmark a website?
-
-There's is no way of doing that. You'd need to open an UI and then press `dd`
-on the entry that is a website.
-
-### Q. What are serial mappings?
-
-Open any UI and then press any entry's line number and it'll run the
-`config.{pickers.views,pickers.bundles,pad}.hooks.on_serial` callback on it.
-
-So, if you open `:Track pad` and press `3` then it should open the
-entry at that line number.
-
-Note that, this feature is disabled by default. Pass `serial_map = true`
-for `pickers.views`, `pickers.bundles` and `pad`.
-
-```lua
-require("track").setup({
-  pad = { serial_map = true },
-  pickers = {
-    bundles = { serial_map = true },
-    views = { serial_map = true },
-  },
-})
-```
-
-### How do I link another Root into my bundle?
-
-Firstly, make sure you enable `switch_directory` option for `pad` and
-`pickers.views`.
-
-```lua
-require("track").setup({
-  pad = { switch_directory = true },
-  pickers = {
-    views = { switch_directory = true },
-  },
-})
-```
-
-Run `mkdir -p ~/Projects/{X,Y} && cd ~/Projects/X && nvim`. Then
-run the following commands in Neovim.
-
-```vim
-:Mark ~/Projects/Y " currently on project X
-:chdir ~/Projects/Y
-:Mark ~/Projects/X " currently on project Y
-:Track views
-```
-
-And, now select the `~/Project/X` entry and it'll switch to that root.
-Now, note that you cannot go back to the previous if you haven't made a
-link to it manually before.
-
-So, by default if you open `:Track pad` and press `3` then it should open the
-entry at that line number.
-
 ## Defaults
 
 <details>
@@ -258,6 +107,8 @@ M._defaults = {
       unlisted = "≖", -- loaded into an unlisted buffer
     },
     spacing = 1, -- not implemented
+    disable_status = true,
+    disable_devicons = true, -- recommended
     save_on_close = true, -- save state automatically when pad window is closed
     serial_map = false, -- run hooks.on_serial when an entry's line number is pressed
     switch_directory = false, -- if selected entry is a Root object then chdir to it
@@ -276,7 +127,6 @@ M._defaults = {
         ["<C-s>"] = function(self) self:sync(true) end, -- manual save state
       },
     },
-    disable_devicons = true, -- recommended
     config = { -- see :help api-win_config
       style = "minimal",
       border = "solid",
@@ -425,20 +275,6 @@ M._defaults = {
 
 </details>
 
-## Integrations
-
-Use track.nvim for marking elements in other plugins.
-
-### rnvimr
-
-Mark current selected file.
-
-```lua
-vim.g.rnvimr_action = {
-  ["<C-t>"] = "NvimEdit Mark true",
-}
-```
-
 ## Theme
 
 Modify these to change colors. This section is mainly geared towards theme plugin authors.
@@ -510,57 +346,6 @@ HI("TrackBundlesIndex", { foreground = "#54CED6" })
 :Track wipe             " clear caches
 :Track remove           " rm save file
 ```
-
-## Caveats
-
-Some features need special attention when using. Workarounds are always being on the way.
-But, for the time being be careful.
-
-### Marking when pad icons are enabled.
-
-If `Pad` UI has `disable_devicons` set to `false` then, file paths (not URIs) that contains
-spaces i.e. `~/Documents/cv for applying as reddit mod.md` then the file that will actually
-be saved is `for applying as reddit mod.md` only.
-
-A workaround for this is to have a dot or, any placeholder at the very beginning of the path
-i.e., `= ~/Documents/cv for applying as reddit mod.md` this way only `= ` will be eliminated
-and `~/Documents/cv for applying as reddit mod.md` will be saved.
-
-Be aware that, `config.pad.disable_devicons` is set to `true` by default.
-
-### Unmarking manpages and commands.
-
-This might not work all the time. No fixes for this.
-
-### Marking `$ENV`.
-
-This will work perfectly if you manually paste `$XDG_CONFIG_HOME/.config/mimeapps.list`
-(say) into the `pad` and then save it. But, to preserve `$ENV_VARS` when marking from
-`:Mark` you'd need to escape the `\$` or, Neovim will expand it automatically.
-
-So, `:Mark \$XDG_CONFIG_HOME/.config/mimeapps.list` will  work as expected.
-
-### Conflicts between commands.
-
-Say we mark two commands like the following (=ﾟ▽ﾟ)/
-
-- <samp>Mark term://eza\ --tree</samp>
-- <samp>Mark term:///home/dharmx/.config//eza\ --tree</samp>
-
-Essentially, these are the same commands _only_ when your current
-working directory is in `/home/dharmx/.config`. But, when you change
-your working directory to something else, the former runs the command
-in the current `cwd` that was switched from `/home/dharmx/.config/` to
-say, `/home/dharmx` and the latter is run at the `/home/dharmx/.config/`
-only.
-
-Now, the thing is track.nvim can identify the latter one as the matching
-pattern is designed that way. So, if you mark both and then run both then
-only the second one can be highlighted/unmarked. You will have to manually
-remove the first one from the UI or, `:Unmark term://eza\ --tree`.
-
-Just running the first command and then running `:Unmark` on it (may it be
-through a keymap) will likely not work(╥_╥).
 
 ## Credits
 
