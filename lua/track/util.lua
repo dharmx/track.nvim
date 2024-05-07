@@ -10,7 +10,7 @@ function M.mute() end
 
 function M.open_entry(entry)
   if entry.value.type == "https" or entry.value.type == "http" then
-    vim.fn.jobstart({ "xdg-open", entry.value.path }, { detach = true })
+    vim.fn.jobstart({ "xdg-open", entry.value:absolute() }, { detach = true })
     return
   end
   vim.cmd("confirm edit " .. entry.value.path)
@@ -135,11 +135,24 @@ function M.parsed_buf_name(buffer)
   local name = A.nvim_buf_get_name(if_nil(buffer, 0))
   local filetype = M.filetype(name)
   if filetype == "file" then
-    name = V.fnamemodify(vim.fs.normalize(name), ":p")
+    name = U.fs_realpath(vim.fs.normalize(name))
+    name = if_nil(name, V.fnamemodify(name, ":p"))
   elseif filetype == "term" then
     name = M.clean_term_uri(name)
   end
   return name
+end
+
+function M.apply_root_entry(entry, opts)
+  local root_path = entry.value:absolute()
+  if root_path:len() > 1 then root_path = root_path:gsub("/$", "") end
+  if opts.switch_directory and entry.value.type == "directory" and require("track.state")._roots[root_path] then
+    vim.cmd.doautocmd("DirChangedPre")
+    U.chdir(root_path)
+    vim.cmd.doautocmd("DirChanged")
+    return true
+  end
+  return false
 end
 
 return M

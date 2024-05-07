@@ -50,7 +50,7 @@ function M.picker(opts)
     sorter = tele_config.values.generic_sorter(opts),
     on_complete = {
       function(self)
-        if not opts.hooks.on_serial then return end
+        if not opts.serial_map then return end
         for entry in self.manager:iter() do
           vim.keymap.set("n", tostring(entry.index), function()
             actions.close(self.layout.prompt.bufnr)

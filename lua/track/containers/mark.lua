@@ -14,6 +14,7 @@ setmetatable(Mark, {
 local util = require("track.util")
 local V = vim.fn
 local U = vim.loop
+local if_nil = vim.F.if_nil
 
 ---Create a new `Mark` object.
 ---@param opts MarkFields Available mark attributes/fields.
@@ -25,14 +26,14 @@ function Mark:_new(opts)
 
   self.path = opts.path
   self.label = opts.label
-  self.type = vim.F.if_nil(opts.type, util.filetype(opts.path))
+  self.type = if_nil(opts.type, util.filetype(opts.path))
   ---@diagnostic disable-next-line: missing-return
   self._NAME = "mark"
 end
 
 function Mark:absolute()
   if self.type ~= "file" and self.type ~= "directory" then return self.path end
-  return V.fnamemodify(vim.fs.normalize(self.path), ":p")
+  return U.fs_realpath(vim.fs.normalize(self.path))
 end
 
 function Mark:readable()
@@ -45,6 +46,11 @@ end
 function Mark:exists()
   if self.type ~= "file" and self.type ~= "directory" then return true end
   return not not U.fs_realpath(self:absolute())
+end
+
+function Mark:synbolic()
+  if self.type ~= "file" and self.type ~= "directory" then return false end
+  return if_nil(U.fs_lstat(self:absolute()), {}).type == "link"
 end
 
 return Mark

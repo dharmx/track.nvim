@@ -23,12 +23,14 @@ function Pad:_new(opts)
   local types = type(opts)
   assert(types == "table", "expected table")
 
-  self.serial_maps = if_nil(opts.serial_maps, false)
+  self.switch_directory = if_nil(opts.switch_directory, false)
+  self.serial_map = if_nil(opts.serial_map, false)
   self.path_display = if_nil(opts.path_display, {})
   self.mappings = if_nil(opts.mappings, {})
   self.entries = if_nil(opts, {})
   self.icons = opts.icons
   self.disable_devicons = if_nil(opts.disable_devicons, true)
+  self.disable_status = if_nil(opts.disable_status, true)
   self.color_devicons = opts.color_devicons
 
   self.bundle = if_nil(opts.bundle, select(2, util.root_and_bundle({}, true)))
@@ -37,12 +39,12 @@ function Pad:_new(opts)
   self.hooks = opts.hooks
   self.window = nil
 
-  -- TODO: Apply root entry as pickers.views.
   self.mappings.n["<cr>"] = function()
     if self:hidden() then return end
     local parsed_line = Pad.line2mark(A.nvim_get_current_line(), self.disable_devicons)
     if not parsed_line then return end
     self:close()
+    if util.apply_root_entry({ value = parsed_line }, self) then return end
     self.hooks.on_choose({ value = parsed_line })
   end
 
@@ -52,7 +54,6 @@ function Pad:_new(opts)
   self.config.col = (vim.o.columns - self.config.width) / 2
 
   A.nvim_buf_set_option(self.buffer, "filetype", "track")
-  A.nvim_buf_set_option(self.buffer, "indentexpr", "2")
   A.nvim_buf_set_name(self.buffer, self.bundle.label)
 
   for mode, maps in pairs(self.mappings) do
@@ -77,8 +78,7 @@ function Pad:_new(opts)
 
   A.nvim_buf_attach(self.buffer, false, {
     on_lines = function()
-      -- TODO: self:clean() + self:theme()
-      if self.serial_maps then self:apply_serial() end
+      if self.serial_map then self:apply_serial() end
     end,
   })
 
@@ -122,6 +122,53 @@ function Pad.line2mark(line, disable_devicons)
   end
 end
 
+function Pad:apply_status()
+  local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, true)
+  for index, line in ipairs(lines) do
+    local row = index - 1
+    local mark = Pad.line2mark(line, self.disable_devicons)
+    if mark then
+      local absolute = mark:absolute()
+      local allowed = vim.tbl_contains({ "term", "man", "http", "https" }, mark.type)
+
+      local marker, marker_hl = self.icons.accessible, "TrackPadAccessible"
+      if not mark:readable() then
+        marker, marker_hl = self.icons.inaccessible, "TrackPadInaccessible"
+      end
+
+      if allowed then
+        marker, marker_hl = self.icons.locked, "TrackPadLocked"
+      elseif not mark:exists() then
+        marker, marker_hl = self.icons.missing, "TrackPadMissing"
+      end
+
+      if self._focused == absolute then
+        marker, marker_hl = self.icons.focused, "TrackPadFocused"
+      end
+
+      local listed, listed_hl = self.icons.unlisted, "TrackPadMarkUnlisted"
+      local buffers = V.getbufinfo({ bufloaded = 1 })
+      for _, info in ipairs(buffers) do
+        if info.name == absolute and info.listed == 1 then
+          listed, listed_hl = self.icons.listed, "TrackPadMarkListed"
+          break
+        end
+      end
+
+      A.nvim_buf_set_extmark(self.buffer, self.namespace, row, 0, {
+        sign_text = marker,
+        sign_hl_group = marker_hl,
+        number_hl_group = marker_hl,
+      })
+
+      A.nvim_buf_set_extmark(self.buffer, self.namespace, row, 0, {
+        virt_text = { { listed, listed_hl } },
+        virt_text_pos = "right_align",
+      })
+    end
+  end
+end
+
 function Pad:apply_serial()
   local maps = A.nvim_buf_get_keymap(self.buffer, "n")
   for _, map in ipairs(maps) do
@@ -158,6 +205,7 @@ function Pad:conceal_uri(line, offset, path)
 end
 
 function Pad:conceal_term(line, offset, path)
+  self:conceal_uri(line, offset, path)
   local start, finish = path:find("^(term://.+//)%d+?:.*$")
   if start and finish then
     self:_extmark(line, start + offset - 1, finish + offset)
@@ -227,7 +275,8 @@ function Pad:render()
       self:conceal_uri(line, start, mark.path)
     end
   end
-  if self.serial_maps then self:apply_serial() end
+  if not self.disable_status then self:apply_status() end
+  if self.serial_map then self:apply_serial() end
 end
 
 function Pad:sync(save)
@@ -247,9 +296,14 @@ function Pad:open()
   if not self:hidden() then return end
   self._focused = util.parsed_buf_name()
   self.window = A.nvim_open_win(self.buffer, true, self.config)
-  A.nvim_win_set_option(self.window, "winhighlight", "FloatTitle:TrackPadTitle,FloatBorder:NormalFloat")
+  A.nvim_win_set_option(
+    self.window,
+    "winhighlight",
+    "SignColumn:NormalFloat,CursorLineSign:NormalFloat,FloatTitle:TrackPadTitle,FloatBorder:NormalFloat"
+  )
   A.nvim_win_set_option(self.window, "number", true)
   A.nvim_win_set_option(self.window, "cursorline", true)
+  if not self.disable_status then A.nvim_win_set_option(self.window, "numberwidth", 3) end
   self:render()
 end
 

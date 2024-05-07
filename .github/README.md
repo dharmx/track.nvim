@@ -1,13 +1,17 @@
 # track.nvim
 
-Most over-engineered marking system. Harpoon like file tracking.
+Most over-engineered marking system. Harpoon-like file tracking.
 Supercharged by [telescope.nvim](https:/github.com/nvim-telescope/telescope.nvim).
 
 <details>
 
-![views](./views.png) 
+![bundles](https://github.com/dharmx/track.nvim/assets/80379926/2bcd3c4a-108e-4be1-8da0-20a6cc0f3b65)
 
-![bundles](./bundles.png) 
+![views](https://github.com/dharmx/track.nvim/assets/80379926/b88bfa1f-d16a-4dd3-a498-28c35fd00783)
+
+https://github.com/dharmx/track.nvim/assets/80379926/3d928ebc-7829-4e84-a81b-9c87a631d5d7
+
+https://github.com/dharmx/track.nvim/assets/80379926/571b4b5c-6519-4833-8b30-6dcdc0bf88f6
 
 </details>
 
@@ -176,6 +180,50 @@ on the entry that is a website.
 Open any UI and then press any entry's line number and it'll run the
 `config.{pickers.views,pickers.bundles,pad}.hooks.on_serial` callback on it.
 
+So, if you open `:Track pad` and press `3` then it should open the
+entry at that line number.
+
+Note that, this feature is disabled by default. Pass `serial_map = true`
+for `pickers.views`, `pickers.bundles` and `pad`.
+
+```lua
+require("track").setup({
+  pad = { serial_map = true },
+  pickers = {
+    bundles = { serial_map = true },
+    views = { serial_map = true },
+  },
+})
+```
+
+### How do I link another Root into my bundle?
+
+Firstly, make sure you enable `switch_directory` option for `pad` and
+`pickers.views`.
+
+```lua
+require("track").setup({
+  pad = { switch_directory = true },
+  pickers = {
+    views = { switch_directory = true },
+  },
+})
+```
+
+Run `mkdir -p ~/Projects/{X,Y} && cd ~/Projects/X && nvim`. Then
+run the following commands in Neovim.
+
+```vim
+:Mark ~/Projects/Y " currently on project X
+:chdir ~/Projects/Y
+:Mark ~/Projects/X " currently on project Y
+:Track views
+```
+
+And, now select the `~/Project/X` entry and it'll switch to that root.
+Now, note that you cannot go back to the previous if you haven't made a
+link to it manually before.
+
 So, by default if you open `:Track pad` and press `3` then it should open the
 entry at that line number.
 
@@ -186,48 +234,61 @@ local if_nil = vim.F.if_nil
 local util = require("track.util")
 
 M._defaults = {
-  save_path = vim.fn.stdpath("state") .. "/track.json",
-  root_path = true, -- true for auto fetching the root_path, string otherwise
-  bundle_label = true, -- same as root_path
-  pad = {
+  save_path = vim.fn.stdpath("state") .. "/track.json", -- db
+  root_path = true, -- string or, true for automatically fetching root_path
+  bundle_label = true, --  string or, true for automatically fetching bundle_label
+  disable_history = true, -- save deleted marks
+  maximum_history = 10, -- limit history
+  pad = { -- built-in UI for viewing marks
     icons = {
-      save_done = "",
-      save = "",
+      save_done = "", -- not in use
+      save = "", -- not in use
       directory = "",
       terminal = "",
       manual = "",
       site = "",
+      locked = " ", -- existence cannot be checked (not a path i.e. a command/link/man)
+      missing = " ", -- path has been moved/deleted/renamed
+      accessible = " ", -- path still exists
+      inaccessible = " ", -- N/A / invalid perms
+      focused = " ", -- active buffer path (visible)
+      listed = "", -- loaded into a listed buffer (invisible)
+      unlisted = "≖", -- loaded into an unlisted buffer
     },
-    serial_maps = true,
-    save_on_close = true,
-    path_display = {
+    spacing = 1, -- not implemented
+    save_on_close = true, -- save state automatically when pad window is closed
+    serial_map = false, -- run hooks.on_serial when an entry's line number is pressed
+    switch_directory = false, -- if selected entry is a Root object then chdir to it
+    path_display = { -- see :help telescope.defaults.path_display
       absolute = false,
       shorten = 1,
     },
     hooks = {
-      on_choose = util.open_entry,
-      on_serial = util.open_entry,
-      on_close = util.mute,
+      on_choose = util.open_entry, -- when an item is selected <CR>
+      on_serial = util.open_entry, -- when a number co-responding to an entry's line number is pressed
+      on_close = util.mute, -- run after the pad window closes
     },
-    mappings = {
+    mappings = { -- similar to :help telescope.mappings
       n = {
         q = function(self) self:close() end,
-        ["<C-s>"] = function(self) self:sync(true) end,
+        ["<C-s>"] = function(self) self:sync(true) end, -- manual save state
       },
     },
-    disable_devicons = true,
-    config = {
+    disable_devicons = true, -- recommended
+    config = { -- see :help api-win_config
       style = "minimal",
       border = "solid",
       focusable = true,
       relative = "editor",
       width = 60,
       height = 10,
+      -- row and col will be overridden
       title_pos = "left",
     },
   },
   pickers = {
     bundles = {
+      serial_map = false,
       icons = {
         separator = " │ ",
         main = " ",
@@ -252,11 +313,11 @@ M._defaults = {
       hooks = {
         on_close = util.mute,
         on_open = util.mute,
-        on_serial = function(entry) -- mappings WRT to line numbers
+        on_serial = function(entry)
           local root, _ = util.root_and_bundle()
           root:change_main_bundle(entry.value.label)
         end,
-        on_choose = function(self)
+        on_choose = function(self) -- mappings WRT to line numbers
           local entry = self:get_selection()
           if not entry then return end
           local root, _ = util.root_and_bundle()
@@ -293,7 +354,7 @@ M._defaults = {
         manual = " ", -- manpage URI type icon i.e. :Man find(1) or, :edit man://find(1)
         site = " ", -- website link https://www.google.com
       },
-      switch_directory = true, -- switch when a directory i.e. marked is a root object
+      switch_directory = true, -- switch when a directory i.e. marked is a Root object
       save_on_close = true, -- save when the view telescope picker is closed
       selection_caret = "   ",
       path_display = {
@@ -302,6 +363,7 @@ M._defaults = {
       },
       prompt_prefix = "   ",
       previewer = false,
+      serial_map = false,
       initial_mode = "normal", -- alternatively: "insert"
       results_title = false,
       sorting_strategy = "ascending",
@@ -347,18 +409,15 @@ M._defaults = {
   },
   -- do not mark files that contain these patterns
   exclude = {
-    ["^%.git/.*$"] = true, -- or, false
+    ["^%.git/.*$"] = true,
     ["^%.git$"] = true,
     ["^LICENSE$"] = true,
   },
-  -- debugging
+  -- dev / debugging
   log = {
     plugin = "track",
     level = "warn",
   },
-  -- dev features / not implemented
-  maximum_history = 10,
-  disable_history = true, -- do not recycle deleted marks
 }
 ```
 
@@ -381,10 +440,16 @@ vim.g.rnvimr_action = {
 Modify these to change colors. This section is mainly geared towards theme plugin authors.
 
 ```lua
-local function HI(...) vim.api.nvim_set_hl(0, ...) end
-
 HI("TrackPadTitle", { link = "TelescopeResultsTitle" })
 HI("TrackPadEntryFocused", { foreground = "#7AB0DF" })
+HI("TrackPadAccessible", { foreground = "#79DCAA" })
+HI("TrackPadInaccessible", { foreground = "#F87070" })
+HI("TrackPadFocused", { foreground = "#7AB0DF" })
+HI("TrackPadMarkListed", { foreground = "#4B5259" })
+HI("TrackPadMarkUnlisted", { foreground = "#C397D8" })
+HI("TrackPadMissing", { foreground = "#FFE59E" })
+HI("TrackPadLocked", { foreground = "#E37070" })
+HI("TrackPadDivide", { foreground = "#4B5259" })
 
 HI("TrackViewsAccessible", { foreground = "#79DCAA" })
 HI("TrackViewsInaccessible", { foreground = "#F87070" })
@@ -458,6 +523,36 @@ Be aware that, `config.pad.disable_devicons` is set to `true` by default.
 ### Unmarking manpages and commands.
 
 This might not work all the time. No fixes for this.
+
+### Marking `$ENV`.
+
+This will work perfectly if you manually paste `$XDG_CONFIG_HOME/.config/mimeapps.list`
+(say) into the `pad` and then save it. But, to preserve `$ENV_VARS` when marking from
+`:Mark` you'd need to escape the `\$` or, Neovim will expand it automatically.
+
+So, `:Mark \$XDG_CONFIG_HOME/.config/mimeapps.list` will  work as expected.
+
+### Conflicts between commands.
+
+Say we mark two commands like the following (=ﾟ▽ﾟ)/
+
+- <samp>Mark term://eza\ --tree</samp>
+- <samp>Mark term:///home/dharmx/.config//eza\ --tree</samp>
+
+Essentially, these are the same commands _only_ when your current
+working directory is in `/home/dharmx/.config`. But, when you change
+your working directory to something else, the former runs the command
+in the current `cwd` that was switched from `/home/dharmx/.config/` to
+say, `/home/dharmx` and the latter is run at the `/home/dharmx/.config/`
+only.
+
+Now, the thing is track.nvim can identify the latter one as the matching
+pattern is designed that way. So, if you mark both and then run both then
+only the second one can be highlighted/unmarked. You will have to manually
+remove the first one from the UI or, `:Unmark term://eza\ --tree`.
+
+Just running the first command and then running `:Unmark` on it (may it be
+through a keymap) will likely not work(╥_╥).
 
 ## Credits
 

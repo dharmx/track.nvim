@@ -157,6 +157,14 @@ end, {
 -- Highlights {{{
 HI("TrackPadTitle", { link = "TelescopeResultsTitle" })
 HI("TrackPadEntryFocused", { foreground = "#7AB0DF" })
+HI("TrackPadAccessible", { foreground = "#79DCAA" })
+HI("TrackPadInaccessible", { foreground = "#F87070" })
+HI("TrackPadFocused", { foreground = "#7AB0DF" })
+HI("TrackPadMarkListed", { foreground = "#4B5259" })
+HI("TrackPadMarkUnlisted", { foreground = "#C397D8" })
+HI("TrackPadMissing", { foreground = "#FFE59E" })
+HI("TrackPadLocked", { foreground = "#E37070" })
+HI("TrackPadDivide", { foreground = "#4B5259" })
 
 HI("TrackViewsAccessible", { foreground = "#79DCAA" })
 HI("TrackViewsInaccessible", { foreground = "#F87070" })
