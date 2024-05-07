@@ -224,6 +224,9 @@ And, now select the `~/Project/X` entry and it'll switch to that root.
 Now, note that you cannot go back to the previous if you haven't made a
 link to it manually before.
 
+So, by default if you open `:Track pad` and press `3` then it should open the
+entry at that line number.
+
 ## Defaults
 
 ```lua

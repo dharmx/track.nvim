@@ -9,7 +9,6 @@ setmetatable(Pad, {
 })
 
 local A = vim.api
-local V = vim.fn
 local if_nil = vim.F.if_nil
 
 local Mark = require("track.containers.mark")

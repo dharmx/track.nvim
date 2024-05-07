@@ -143,7 +143,6 @@ function M.parsed_buf_name(buffer)
   return name
 end
 
-
 function M.apply_root_entry(entry, opts)
   local root_path = entry.value:absolute()
   if root_path:len() > 1 then root_path = root_path:gsub("/$", "") end
@@ -155,6 +154,5 @@ function M.apply_root_entry(entry, opts)
   end
   return false
 end
-
 
 return M
