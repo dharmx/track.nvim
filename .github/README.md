@@ -5,9 +5,13 @@ Supercharged by [telescope.nvim](https:/github.com/nvim-telescope/telescope.nvim
 
 <details>
 
-![views](./views.png) 
+![bundles](https://github.com/dharmx/track.nvim/assets/80379926/2bcd3c4a-108e-4be1-8da0-20a6cc0f3b65)
 
-![bundles](./bundles.png) 
+![views](https://github.com/dharmx/track.nvim/assets/80379926/b88bfa1f-d16a-4dd3-a498-28c35fd00783)
+
+https://github.com/dharmx/track.nvim/assets/80379926/3d928ebc-7829-4e84-a81b-9c87a631d5d7
+
+https://github.com/dharmx/track.nvim/assets/80379926/571b4b5c-6519-4833-8b30-6dcdc0bf88f6
 
 </details>
 
