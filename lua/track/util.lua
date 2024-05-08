@@ -9,12 +9,12 @@ local if_nil = vim.F.if_nil
 ---Dummy function that does noting.
 function M.mute() end
 
-function M.open_entry(entry)
-  if entry.value.type == "https" or entry.value.type == "http" then
-    vim.fn.jobstart({ "xdg-open", entry.value:absolute() }, { detach = true })
+function M.open_entry(mark)
+  if mark.type == "https" or mark.type == "http" then
+    vim.fn.jobstart({ "xdg-open", mark:absolute() }, { detach = true })
     return
   end
-  vim.cmd("confirm edit " .. entry.value.path)
+  vim.cmd("confirm edit " .. mark:absolute())
 end
 
 ---@return string
@@ -98,6 +98,7 @@ function M.root_and_bundle(opts, force)
   assert(type(root_path) == "string", "Config.root_path needs to be string")
 
   local state = require("track.state")
+  state.load()
   local bundle = nil
   local root = state._roots[root_path]
   if root and bundle_label == true then
@@ -142,10 +143,10 @@ function M.parsed_buf_name(buffer)
   return name
 end
 
-function M.apply_root_entry(entry, opts)
-  local root_path = entry.value:absolute()
-  if root_path:len() > 1 then root_path = root_path:gsub("/$", "") end
-  if opts.switch_directory and entry.value.type == "directory" and require("track.state")._roots[root_path] then
+function M.apply_root_entry(mark, opts)
+  local root_path = mark:absolute()
+  if #root_path > 1 then root_path = root_path:gsub("/$", "") end
+  if opts.switch_directory and mark.type == "directory" and require("track.state")._roots[root_path] then
     vim.cmd.doautocmd("DirChangedPre")
     U.chdir(root_path)
     vim.cmd.doautocmd("DirChanged")

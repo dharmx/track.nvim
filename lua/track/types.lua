@@ -117,3 +117,5 @@
 ---@field type? MarkType Optional type for the mark.
 
 ---@alias Core table
+
+---@alias TrackHooks table

@@ -154,6 +154,21 @@ end, {
   nargs = 0,
 })
 
+cmd("SelectMark", function(...)
+  local args = vim.trim((...).args)
+  ---@diagnostic disable-next-line: cast-local-type
+  args = vim.F.if_nil(tonumber(args), args)
+  require("track.core"):select(args, require("track.config").get_hooks().on_select)
+end, {
+  desc = "Select a mark (view)",
+  nargs = 1,
+  complete = function()
+    local cwd = require("track.util").cwd()
+    local root = require("track.state")._roots[cwd]
+    return root:get_main_bundle().views or {}
+  end,
+})
+
 -- Highlights {{{
 HI("TrackPadTitle", { link = "TelescopeResultsTitle" })
 HI("TrackPadEntryFocused", { foreground = "#7AB0DF" })

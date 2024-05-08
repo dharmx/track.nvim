@@ -55,7 +55,7 @@ function M.picker(opts)
         for entry in self.manager:iter() do
           vim.keymap.set("n", tostring(entry.index), function()
             actions.close(self.layout.prompt.bufnr)
-            opts.hooks.on_serial(entry)
+            opts.hooks.on_serial(entry.value)
           end, { buffer = self.layout.prompt.bufnr })
         end
       end,
