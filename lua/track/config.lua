@@ -15,6 +15,10 @@ M._defaults = {
   bundle_label = true, --  string or, true for automatically fetching bundle_label
   disable_history = true, -- save deleted marks
   maximum_history = 10, -- limit history
+  hooks = { -- main hooks used by Core.select and Core.cycle
+    on_select = util.open_entry,
+    on_cycle = util.open_entry,
+  },
   pad = { -- built-in UI for viewing marks
     icons = {
       save_done = "", -- not in use
@@ -131,7 +135,7 @@ M._defaults = {
         manual = " ", -- manpage URI type icon i.e. :Man find(1) or, :edit man://find(1)
         site = " ", -- website link https://www.google.com
       },
-      switch_directory = true, -- switch when a directory i.e. marked is a Root object
+      switch_directory = false, -- switch when a directory i.e. marked is a Root object
       save_on_close = true, -- save when the view telescope picker is closed
       selection_caret = "   ",
       path_display = {
@@ -158,7 +162,7 @@ M._defaults = {
           local entries = if_nil(self:get_multi_selection(), {})
           if #entries == 0 then table.insert(entries, self:get_selection()) end
           for _, entry in ipairs(entries) do
-            util.open_entry(entry)
+            util.open_entry(entry.value)
           end
         end,
       },
@@ -248,5 +252,8 @@ function M.get_pickers() return M._current.pickers end
 
 ---@return TrackPad
 function M.get_pad() return M._current.pad end
+
+---@return TrackHooks
+function M.get_hooks() return M._current.hooks end
 
 return M

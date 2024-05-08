@@ -90,6 +90,10 @@ M._defaults = {
   bundle_label = true, --  string or, true for automatically fetching bundle_label
   disable_history = true, -- save deleted marks
   maximum_history = 10, -- limit history
+  hooks = { -- main hooks used by Core.select and Core.cycle
+    on_select = util.open_entry,
+    on_cycle = util.open_entry,
+  },
   pad = { -- built-in UI for viewing marks
     icons = {
       save_done = "", -- not in use
@@ -233,7 +237,7 @@ M._defaults = {
           local entries = if_nil(self:get_multi_selection(), {})
           if #entries == 0 then table.insert(entries, self:get_selection()) end
           for _, entry in ipairs(entries) do
-            util.open_entry(entry)
+            util.open_entry(entry.value)
           end
         end,
       },
@@ -326,25 +330,26 @@ HI("TrackBundlesIndex", { foreground = "#54CED6" })
 ## Commands
 
 ```vim
-:Mark                   " add current buffer as mark
-:Mark <URI>             " add passed <URI> as mark
-:Unmark                 " rm current mark (if exists)
-:Unmark <URI>           " rm <URI> mark (if exists)
-:MarkOpened             " mark all opened buffers
-:StashBundle            " stash current main bundle and make new bundle as main 
-:RestoreBundle          " restore previous bundle
-:DeleteBundle           " rm main bundle
-:AlternateBundle        " swap stashed and main bundles
-:Track                  " open default pad UI (view)
-:Track pad              " open default pad UI (view)
-:Track views            " open views telescope picker
-:Track bundles          " open bundles telescope picker
-:Track save             " save current state to file
-:Track load             " load saved state for the first time
-:Track loadsave         " load saved state from a file
-:Track reload           " load last saved state to cache
-:Track wipe             " clear caches
-:Track remove           " rm save file
+:Mark                               " add current file to marks
+:Mark <URI/PATH>                    " add passed <URI> as mark
+:Unmark                             " rm current file from marks (if exists)
+:Unmark <URI/PATH>                  " rm <URI> mark (if exists)
+:MarkOpened                         " mark all opened buffers
+:SelectMark <URI/PATH/INDEX>        " open a mark from the views list of the main bundle
+:StashBundle                        " stash current main bundle and make new bundle as main 
+:RestoreBundle                      " restore previous bundle
+:DeleteBundle                       " rm main bundle
+:AlternateBundle                    " swap stashed and main bundles
+:Track                              " open default pad UI (view)
+:Track pad                          " open default pad UI (view)
+:Track views                        " open views telescope picker
+:Track bundles                      " open bundles telescope picker
+:Track save                         " save current state to file
+:Track load                         " load saved state for the first time
+:Track loadsave                     " load saved state from a file
+:Track reload                       " load last saved state to cache
+:Track wipe                         " clear caches
+:Track remove                       " rm save file
 ```
 
 ## Credits

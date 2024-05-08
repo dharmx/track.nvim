@@ -42,11 +42,11 @@ function Pad:_new(opts)
 
   self.mappings.n["<cr>"] = function()
     if self:hidden() then return end
-    local parsed_line = Pad.line2mark(A.nvim_get_current_line(), self.disable_devicons)
-    if not parsed_line then return end
+    local mark = Pad.line2mark(A.nvim_get_current_line(), self.disable_devicons)
+    if not mark then return end
     self:close()
-    if util.apply_root_entry({ value = parsed_line }, self) then return end
-    self.hooks.on_choose({ value = parsed_line })
+    if util.apply_root_entry(mark, self) then return end
+    self.hooks.on_choose(mark)
   end
 
   self.config = opts.config
@@ -182,7 +182,7 @@ function Pad:apply_serial()
     if mark then
       vim.keymap.set("n", tostring(serial), function()
         self:close()
-        self.hooks.on_serial({ value = mark }, serial, self)
+        self.hooks.on_serial(mark, serial, self)
       end, { buffer = self.buffer })
     end
   end

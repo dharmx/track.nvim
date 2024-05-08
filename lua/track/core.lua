@@ -178,9 +178,25 @@ function M:history(...)
   log.warn("Core.history(): cannot insert into history as the root " .. self.root_path .. " does not exist")
 end
 
--- TODO: function M:select(index, bubdle_label, save) end
+function M:select(index, callback, bundle_label)
+  local root = state._roots[self.root_path]
+  if not root then return end
+  if not bundle_label then bundle_label = root.main end
 
--- TODO: function M:cycle(size, bundle_label, save) end
+  local bundle = root.bundles[bundle_label]
+  if not bundle then return end
+
+  local view_mark
+  local index_type = type(index)
+  if index_type == "number" then
+    view_mark = bundle.views()[index]
+  elseif index_type == "string" then
+    view_mark = bundle.marks[index]
+  end
+
+  if not view_mark then return end
+  callback(view_mark)
+end
 
 return setmetatable(M, {
   ---@overload fun(self, root_path: string)
