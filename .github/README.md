@@ -27,14 +27,14 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim).
     local set = vim.keymap.set -- tweak to suit your own
     local silent = { silent = true }
     set("n", "<leader><leader>", "<cmd>Track<cr>", silent)
-    set("n", "<leader>ee", "<cmd>Track bundles<cr>", silent)
+    set("n", "<leader>ee", "<cmd>Track branches<cr>", silent)
     set("n", "<leader>aa", "<cmd>Mark<cr>", silent)
     set("n", "<leader>dd", "<cmd>Unmark<cr>", silent)
 
     -- alternatively require("track").setup()
     require("track").setup({ -- non-nerdfonts icons
       pickers = {
-        bundles = {
+        branches = {
           prompt_prefix = " > ",
           selection_caret = " > ",
           icons = {
@@ -69,9 +69,9 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim).
   cmd = {
     "Mark",
     "MarkOpened",
-    "StashBundle",
-    "RestoreBundle",
-    "AlternateBundle",
+    "StashBranch",
+    "RestoreBranch",
+    "AlternateBranch",
     "Unmark"
   },
 },
@@ -90,7 +90,7 @@ local util = require("track.util")
 M._defaults = {
   save_path = vim.fn.stdpath("state") .. "/track.json", -- db
   root_path = true, -- string or, true for automatically fetching root_path
-  bundle_label = true, --  string or, true for automatically fetching bundle_label
+  branch_label = true, --  string or, true for automatically fetching branch_label
   disable_history = true, -- save deleted marks
   maximum_history = 10, -- limit history
   hooks = { -- main hooks used by Core.select and other Core functions
@@ -145,7 +145,7 @@ M._defaults = {
     },
   },
   pickers = {
-    bundles = {
+    branches = {
       serial_map = false,
       icons = {
         separator = " │ ",
@@ -172,14 +172,14 @@ M._defaults = {
         on_close = util.mute,
         on_open = util.mute,
         on_serial = function(entry)
-          local root, _ = util.root_and_bundle()
-          root:change_main_bundle(entry.value.label)
+          local root, _ = util.root_and_branch()
+          root:change_main_branch(entry.value.label)
         end,
         on_choose = function(self) -- mappings WRT to line numbers
           local entry = self:get_selection()
           if not entry then return end
-          local root, _ = util.root_and_bundle()
-          root:change_main_bundle(entry.value.label)
+          local root, _ = util.root_and_branch()
+          root:change_main_branch(entry.value.label)
         end,
       },
       attach_mappings = function(_, map)
@@ -188,11 +188,11 @@ M._defaults = {
         map("n", "v", actions.select_all)
 
         local track_actions = require("telescope._extensions.track.actions")
-        map("n", "D", actions.select_all + track_actions.delete_bundle)
-        map("n", "dd", track_actions.delete_bundle)
-        map("i", "<C-D>", track_actions.delete_bundle)
-        map("i", "<C-E>", track_actions.change_bundle_label)
-        map("n", "s", track_actions.change_bundle_label)
+        map("n", "D", actions.select_all + track_actions.delete_branch)
+        map("n", "dd", track_actions.delete_branch)
+        map("i", "<C-D>", track_actions.delete_branch)
+        map("i", "<C-E>", track_actions.change_branch_label)
+        map("n", "s", track_actions.change_branch_label)
         return true -- compulsory
       end,
     },
@@ -315,16 +315,16 @@ HI("TrackViewsManual", { foreground = "#5FB0FC" })
 HI("TrackViewsDivide", { foreground = "#4B5259" })
 HI("TrackViewsLocked", { foreground = "#E37070" })
 
-HI("TrackBundlesInactive", { foreground = "#4B5259" })
-HI("TrackBundlesDisplayInactive", { foreground = "#4B5259" })
-HI("TrackBundlesMain", { foreground = "#7AB0DF" })
-HI("TrackBundlesDisplayMain", { foreground = "#7AB0DF" })
-HI("TrackBundlesAlternate", { foreground = "#36C692" })
-HI("TrackBundlesDisplayAlternate", { foreground = "#79DCAA" })
-HI("TrackBundlesMark", { foreground = "#FFE59E" })
-HI("TrackBundlesHistory", { foreground = "#F87070" })
-HI("TrackBundlesDivide", { foreground = "#151A1F" })
-HI("TrackBundlesIndex", { foreground = "#54CED6" })
+HI("TrackBranchesInactive", { foreground = "#4B5259" })
+HI("TrackBranchesDisplayInactive", { foreground = "#4B5259" })
+HI("TrackBranchesMain", { foreground = "#7AB0DF" })
+HI("TrackBranchesDisplayMain", { foreground = "#7AB0DF" })
+HI("TrackBranchesAlternate", { foreground = "#36C692" })
+HI("TrackBranchesDisplayAlternate", { foreground = "#79DCAA" })
+HI("TrackBranchesMark", { foreground = "#FFE59E" })
+HI("TrackBranchesHistory", { foreground = "#F87070" })
+HI("TrackBranchesDivide", { foreground = "#151A1F" })
+HI("TrackBranchesIndex", { foreground = "#54CED6" })
 ```
 
 </details>
@@ -340,15 +340,15 @@ Builtin commands provided by track.nvim. See how to hack and create more command
 :Unmark                             " rm current file from marks (if exists)
 :Unmark <URI/PATH>                  " rm <URI> mark (if exists)
 :MarkOpened                         " mark all opened buffers
-:SelectMark <URI/PATH/INDEX>        " open a mark from the views list of the main bundle
-:StashBundle                        " stash current main bundle and make new bundle as main 
-:RestoreBundle                      " restore previous bundle
-:DeleteBundle                       " rm main bundle
-:AlternateBundle                    " swap stashed and main bundles
+:SelectMark <URI/PATH/INDEX>        " open a mark from the views list of the main branch
+:StashBranch                        " stash current main branch and make new branch as main 
+:RestoreBranch                      " restore previous branch
+:DeleteBranch                       " rm main branch
+:AlternateBranch                    " swap stashed and main branches
 :Track                              " open default pad UI (view)
 :Track pad                          " open default pad UI (view)
 :Track views                        " open views telescope picker
-:Track bundles                      " open bundles telescope picker
+:Track branches                     " open branches telescope picker
 :Track save                         " save current state to file
 :Track load                         " load saved state for the first time
 :Track savefile                     " load saved state from a file

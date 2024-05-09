@@ -28,8 +28,8 @@ cmd("Track", function(data)
     require("track.state").wipe()
   elseif args[1] == "remove" then
     require("track.state").remove()
-  elseif args[1] == "bundles" then
-    require("telescope").extensions.track.bundles()
+  elseif args[1] == "branches" then
+    require("telescope").extensions.track.branches()
   elseif args[1] == "views" then
     require("telescope").extensions.track.views()
   else
@@ -49,7 +49,7 @@ end, {
       "menu",
       "views",
       "pad",
-      "bundles",
+      "branches",
     }
   end,
 })
@@ -78,8 +78,8 @@ cmd("Unmark", function(data)
   core:unmark(uri)
 end, {
   complete = function()
-    local _, bundle = require("track.util").root_and_bundle()
-    return bundle and bundle.views or {}
+    local _, branch = require("track.util").root_and_branch()
+    return branch and branch.views or {}
   end,
   desc = "Unmark current file.",
   range = true,
@@ -97,48 +97,48 @@ end, {
   nargs = 0,
 })
 
-cmd("StashBundle", function()
+cmd("StashBranch", function()
   local core = require("track.core")
   core:stash()
   core(require("track.util").cwd())
 end, {
   complete = function()
-    local root, _ = require("track.util").root_and_bundle()
-    return root and root.bundles("string") or {}
+    local root, _ = require("track.util").root_and_branch()
+    return root and root.branches("string") or {}
   end,
-  desc = "Stash current bundle.",
+  desc = "Stash current branch.",
   nargs = "?",
 })
 
-cmd("RestoreBundle", function()
+cmd("RestoreBranch", function()
   local core = require("track.core")
   core:restore()
   core(require("track.util").cwd())
 end, {
-  desc = "Restore stashed bundle.",
+  desc = "Restore stashed branch.",
   nargs = 0,
 })
 
-cmd("DeleteBundle", function(data)
+cmd("DeleteBranch", function(data)
   local label = data.args
   local core = require("track.core")
   core:delete(label ~= "" and label or nil)
   core(require("track.util").cwd())
 end, {
-  desc = "Delete bundle.",
+  desc = "Delete branch.",
   nargs = "?",
   complete = function()
-    local root, _ = require("track.util").root_and_bundle()
-    return root and root.bundles("string") or {}
+    local root, _ = require("track.util").root_and_branch()
+    return root and root.branches("string") or {}
   end,
 })
 
-cmd("AlternateBundle", function()
+cmd("AlternateBranch", function()
   local core = require("track.core")
   core:alternate()
   core(require("track.util").cwd())
 end, {
-  desc = "Restore stashed bundle.",
+  desc = "Restore stashed branch.",
   nargs = 0,
 })
 
@@ -151,8 +151,8 @@ end, {
   desc = "Select a mark (view)",
   nargs = 1,
   complete = function()
-    local _, bundle = require("track.util").root_and_bundle()
-    return bundle and bundle.views or {}
+    local _, branch = require("track.util").root_and_branch()
+    return branch and branch.views or {}
   end,
 })
 
@@ -184,14 +184,14 @@ HI("TrackViewsManual", { foreground = "#5FB0FC" })
 HI("TrackViewsDivide", { foreground = "#4B5259" })
 HI("TrackViewsLocked", { foreground = "#E37070" })
 
-HI("TrackBundlesInactive", { foreground = "#4B5259" })
-HI("TrackBundlesDisplayInactive", { foreground = "#4B5259" })
-HI("TrackBundlesMain", { foreground = "#7AB0DF" })
-HI("TrackBundlesDisplayMain", { foreground = "#7AB0DF" })
-HI("TrackBundlesAlternate", { foreground = "#36C692" })
-HI("TrackBundlesDisplayAlternate", { foreground = "#79DCAA" })
-HI("TrackBundlesMark", { foreground = "#FFE59E" })
-HI("TrackBundlesHistory", { foreground = "#F87070" })
-HI("TrackBundlesDivide", { foreground = "#151A1F" })
-HI("TrackBundlesIndex", { foreground = "#54CED6" })
+HI("TrackBranchesInactive", { foreground = "#4B5259" })
+HI("TrackBranchesDisplayInactive", { foreground = "#4B5259" })
+HI("TrackBranchesMain", { foreground = "#7AB0DF" })
+HI("TrackBranchesDisplayMain", { foreground = "#7AB0DF" })
+HI("TrackBranchesAlternate", { foreground = "#36C692" })
+HI("TrackBranchesDisplayAlternate", { foreground = "#79DCAA" })
+HI("TrackBranchesMark", { foreground = "#FFE59E" })
+HI("TrackBranchesHistory", { foreground = "#F87070" })
+HI("TrackBranchesDivide", { foreground = "#151A1F" })
+HI("TrackBranchesIndex", { foreground = "#54CED6" })
 -- }}}

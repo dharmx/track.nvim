@@ -14,6 +14,6 @@ return telescope.register_extension({
   end,
   exports = {
     views = require("telescope._extensions.track.pickers.views").picker,
-    bundles = require("telescope._extensions.track.pickers.bundles").picker,
+    branches = require("telescope._extensions.track.pickers.branches").picker,
   },
 })

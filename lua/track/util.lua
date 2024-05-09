@@ -65,7 +65,7 @@ function M.get_icon(mark, extra_icons, opts)
       icon, group = extra_icons.file, "TrackViewsFile"
     else
       if not devicons.has_loaded() then devicons.setup() end
-      icon, group = devicons.get_icon(vim.fs.basename(mark.path))
+      icon, group = devicons.get_icon(vim.fs.basename(mark.uri))
       if not icon or not group then
         icon, group = devicons.get_default_icon().icon, "DevIconDefault"
       end
@@ -89,22 +89,22 @@ function M.clean_term_uri(uri)
   return trimmed
 end
 
--- TODO: Allow opts.root_path and opts.bundle_label to be a function.
-function M.root_and_bundle(opts, force)
+-- TODO: Allow opts.root_path and opts.branch_label to be a function.
+function M.root_and_branch(opts, force)
   opts = if_nil(opts, {})
   opts = require("track.config").extend(opts)
-  local bundle_label = opts.bundle_label
+  local branch_label = opts.branch_label
   local root_path = opts.root_path ~= true and opts.root_path or M.cwd()
   assert(type(root_path) == "string", "Config.root_path needs to be string")
 
   local state = require("track.state")
   state.load()
-  local bundle = nil
+  local branch = nil
   local root = state._roots[root_path]
-  if root and bundle_label == true then
-    bundle = root:get_main_bundle()
-  elseif type(bundle_label) == "string" then
-    bundle = root.bundles[bundle_label]
+  if root and branch_label == true then
+    branch = root:get_main_branch()
+  elseif type(branch_label) == "string" then
+    branch = root.branches[branch_label]
   elseif force then
     if not root then
       local Root = require("track.containers.root")
@@ -112,9 +112,9 @@ function M.root_and_bundle(opts, force)
       state._roots[root_path] = new_root
       root = new_root
     end
-    bundle = root:get_main_bundle()
+    branch = root:get_main_branch()
   end
-  return root, bundle
+  return root, branch
 end
 
 function M.contains(patterns, item)

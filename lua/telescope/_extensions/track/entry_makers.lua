@@ -46,13 +46,13 @@ function M.gen_from_view(opts)
     -- file must be currently being edited - priority: 3
     local display, display_hl = absolute, ""
     if not allowed then
-      display = utils.transform_path(opts, mark.path)
+      display = utils.transform_path(opts, mark.uri)
     elseif mark.type == "term" then
-      display = util.transform_term_uri(mark.path)
+      display = util.transform_term_uri(mark.uri)
     elseif mark.type == "man" then
-      display = util.transform_man_uri(mark.path)
+      display = util.transform_man_uri(mark.uri)
     elseif mark.type == "https" then
-      display = util.transform_site_uri(mark.path)
+      display = util.transform_site_uri(mark.uri)
     end
 
     if opts._focused == absolute then
@@ -91,13 +91,13 @@ function M.gen_from_view(opts)
   end
 end
 
-function M.gen_from_bundle(opts)
+function M.gen_from_branch(opts)
   ---@type Root
-  local root, _ = util.root_and_bundle()
+  local root, _ = util.root_and_branch()
   local icons = opts.icons
   local displayer = entry_display.create({
     separator = icons.separator,
-    separator_hl = "TrackBundlesDivide",
+    separator_hl = "TrackBranchesDivide",
     items = {
       { width = 2 }, -- hardcoded
       {}, -- views-marks
@@ -108,22 +108,22 @@ function M.gen_from_bundle(opts)
   })
 
   local function make_display(entry)
-    ---@type Bundle
-    local bundle = entry.value
-    local display, display_hl = bundle.label, "TrackBundlesInactive"
-    local state, state_hl = icons.inactive, "TrackBundlesDisplayInactive"
-    if root.main == bundle.label then
-      state, state_hl = icons.main, "TrackBundlesMain"
-      display, display_hl = bundle.label, "TrackBundlesDisplayMain"
-    elseif root.previous == bundle.label then
-      state, state_hl = icons.alternate, "TrackBundlesAlternate"
-      display, display_hl = bundle.label, "TrackBundlesDisplayAlternate"
+    ---@type Branch
+    local branch = entry.value
+    local display, display_hl = branch.label, "TrackBranchesInactive"
+    local state, state_hl = icons.inactive, "TrackBranchesDisplayInactive"
+    if root.main == branch.label then
+      state, state_hl = icons.main, "TrackBranchesMain"
+      display, display_hl = branch.label, "TrackBranchesDisplayMain"
+    elseif root.previous == branch.label then
+      state, state_hl = icons.alternate, "TrackBranchesAlternate"
+      display, display_hl = branch.label, "TrackBranchesDisplayAlternate"
     end
 
-    local mark, mark_hl = string.format("%s %s", icons.mark, #bundle.views), "TrackBundlesMark"
-    local history, history_hl = string.format("%s %s", icons.history, #bundle.history), "TrackBundlesHistory"
+    local mark, mark_hl = string.format("%s %s", icons.mark, #branch.views), "TrackBranchesMark"
+    local history, history_hl = string.format("%s %s", icons.history, #branch.history), "TrackBranchesHistory"
     return displayer({
-      { entry.index, "TrackBundlesIndex" },
+      { entry.index, "TrackBranchesIndex" },
       { mark, mark_hl },
       { history, history_hl },
       { state, state_hl },
