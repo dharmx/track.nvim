@@ -42,7 +42,7 @@ function Pad:_new(opts)
 
   self.mappings.n["<cr>"] = function()
     if self:hidden() then return end
-    local mark = Pad.line2mark(A.nvim_get_current_line(), self.disable_devicons)
+    local mark = Pad.line2mark(A.nvim_get_current_line(), self.icons, self.disable_devicons)
     if not mark then return end
     self:close()
     if util.apply_root_entry(mark, self) then return end
@@ -100,11 +100,7 @@ function Pad.make_entry(index, view_mark, icons, disable_devicons, color_devicon
   return entry
 end
 
--- BUG: The first item before a space in file/directory paths are recognised as an icon.
--- FIX: Need to write a parser for this. And only take in alphanumerics if prefixed with %.
--- FIX: Or, we could use a prompt to ask the user if there is an icon or, not.
--- FIX: Or, we could use a prefix character or, leading spaces as a placeholder icon.
-function Pad.line2mark(line, disable_devicons)
+function Pad.line2mark(line, icons, disable_devicons)
   local trimmed = vim.trim(line)
   if trimmed ~= "" then
     local mark
@@ -114,9 +110,9 @@ function Pad.line2mark(line, disable_devicons)
       local icon, content = line:match("^([^%s]+)%s(.+)$")
       if icon and not utils.is_uri(icon) then
         mark = Mark({ path = content })
+        if util.get_icon(mark, icons, { disable_devicons = disable_devicons }) ~= icon then mark.path = trimmed end
       else
         mark = Mark({ path = trimmed })
-        if mark.type == "term" then trimmed = util.clean_term_uri(trimmed) end
       end
     end
     return mark
@@ -127,7 +123,7 @@ function Pad:apply_status()
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, true)
   for index, line in ipairs(lines) do
     local row = index - 1
-    local mark = Pad.line2mark(line, self.disable_devicons)
+    local mark = Pad.line2mark(line, self.icons, self.disable_devicons)
     if mark then
       local absolute = mark:absolute()
       local allowed = vim.tbl_contains({ "term", "man", "http", "https" }, mark.type)
@@ -178,7 +174,7 @@ function Pad:apply_serial()
 
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, false)
   for serial, line in ipairs(lines) do
-    local mark = Pad.line2mark(line, self.disable_devicons)
+    local mark = Pad.line2mark(line, self.icons, self.disable_devicons)
     if mark then
       vim.keymap.set("n", tostring(serial), function()
         self:close()
@@ -284,7 +280,7 @@ function Pad:sync(save)
   self.bundle:clear()
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, true)
   for _, line in ipairs(lines) do
-    local parsed_mark = Pad.line2mark(line, self.disable_devicons)
+    local parsed_mark = Pad.line2mark(line, self.icons, self.disable_devicons)
     if parsed_mark then self.bundle:add_mark(parsed_mark) end
   end
   self:render()
