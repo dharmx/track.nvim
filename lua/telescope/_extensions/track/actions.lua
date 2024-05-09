@@ -88,6 +88,7 @@ function M.change_bundle_label(buffer)
     input = vim.trim(if_nil(input, ""))
     if input == "" then return end
     root:rename_bundle(bundle, input)
+    require("track.core")(require("track.util").cwd())
     refresh("bundles", pack, -1)
   end)
 end

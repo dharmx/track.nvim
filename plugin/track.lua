@@ -8,14 +8,13 @@ vim.g.loaded_track = 1
 
 local V = vim.fn
 local A = vim.api
+local if_nil = vim.F.if_nil
 
 local cmd = A.nvim_create_user_command
 local function HI(...) A.nvim_set_hl(0, ...) end
 
--- TODO: Implement bang, range, repeat, motions and bar.
-
-cmd("Track", function(...)
-  local args = (...).fargs
+cmd("Track", function(data)
+  local args = data.fargs
   if args[1] == "save" then
     require("track.state").save()
   elseif args[1] == "load" then
@@ -55,8 +54,8 @@ end, {
   end,
 })
 
-cmd("Mark", function(...)
-  local uri = vim.trim((...).args)
+cmd("Mark", function(data)
+  local uri = vim.trim(data.args)
   uri = uri ~= "" and uri or A.nvim_buf_get_name(0)
   local uri_type = require("track.util").filetype(uri)
   local core = require("track.core")
@@ -69,8 +68,8 @@ end, {
   nargs = "?",
 })
 
-cmd("Unmark", function(...)
-  local uri = vim.trim((...).args)
+cmd("Unmark", function(data)
+  local uri = vim.trim(data.args)
   uri = uri ~= "" and uri or A.nvim_buf_get_name(0)
   local uri_type = require("track.util").filetype(uri)
   local core = require("track.core")
@@ -79,16 +78,11 @@ cmd("Unmark", function(...)
   core:unmark(uri)
 end, {
   complete = function()
-    local cwd = require("track.util").cwd()
-    local root = require("track.state")._roots[cwd]
-    if root then
-      local bundle = root:get_main_bundle()
-      if bundle then return bundle.marks("string") end
-      return {}
-    end
-    return {}
+    local _, bundle = require("track.util").root_and_bundle()
+    return bundle and bundle.views or {}
   end,
   desc = "Unmark current file.",
+  range = true,
   nargs = "?",
 })
 
@@ -109,16 +103,13 @@ cmd("StashBundle", function()
   core(require("track.util").cwd())
 end, {
   complete = function()
-    local cwd = require("track.util").cwd()
-    local root = require("track.state")._roots[cwd]
-    if root then return root.bundles("string") end
-    return {}
+    local root, _ = require("track.util").root_and_bundle()
+    return root and root.bundles("string") or {}
   end,
   desc = "Stash current bundle.",
   nargs = "?",
 })
 
----@todo
 cmd("RestoreBundle", function()
   local core = require("track.core")
   core:restore()
@@ -128,8 +119,8 @@ end, {
   nargs = 0,
 })
 
-cmd("DeleteBundle", function(...)
-  local label = (...).args
+cmd("DeleteBundle", function(data)
+  local label = data.args
   local core = require("track.core")
   core:delete(label ~= "" and label or nil)
   core(require("track.util").cwd())
@@ -137,14 +128,11 @@ end, {
   desc = "Delete bundle.",
   nargs = "?",
   complete = function()
-    local cwd = require("track.util").cwd()
-    local root = require("track.state")._roots[cwd]
-    if root then return root.bundles("string") end
-    return {}
+    local root, _ = require("track.util").root_and_bundle()
+    return root and root.bundles("string") or {}
   end,
 })
 
----@todo
 cmd("AlternateBundle", function()
   local core = require("track.core")
   core:alternate()
@@ -154,18 +142,17 @@ end, {
   nargs = 0,
 })
 
-cmd("SelectMark", function(...)
-  local args = vim.trim((...).args)
+cmd("SelectMark", function(data)
+  local args = vim.trim(data.args)
   ---@diagnostic disable-next-line: cast-local-type
-  args = vim.F.if_nil(tonumber(args), args)
+  args = if_nil(tonumber(args), args)
   require("track.core"):select(args, require("track.config").get_hooks().on_select)
 end, {
   desc = "Select a mark (view)",
   nargs = 1,
   complete = function()
-    local cwd = require("track.util").cwd()
-    local root = require("track.state")._roots[cwd]
-    return root:get_main_bundle().views or {}
+    local _, bundle = require("track.util").root_and_bundle()
+    return bundle and bundle.views or {}
   end,
 })
 
