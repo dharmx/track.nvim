@@ -17,7 +17,6 @@ M._defaults = {
   maximum_history = 10, -- limit history
   hooks = { -- main hooks used by Core.select and Core.cycle
     on_select = util.open_entry,
-    on_cycle = util.open_entry,
   },
   pad = { -- built-in UI for viewing marks
     icons = {

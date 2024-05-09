@@ -5,7 +5,10 @@ Supercharged by [telescope.nvim](https:/github.com/nvim-telescope/telescope.nvim
 
 https://github.com/dharmx/track.nvim/assets/80379926/3d928ebc-7829-4e84-a81b-9c87a631d5d7
 
-[Read WIKI.](https://github.com/dharmx/track.nvim/wiki)
+
+> [!IMPORTANT]
+>
+> Read the [WIKI](https://github.com/dharmx/track.nvim/wiki)!
 
 ## Installation
 
@@ -90,9 +93,8 @@ M._defaults = {
   bundle_label = true, --  string or, true for automatically fetching bundle_label
   disable_history = true, -- save deleted marks
   maximum_history = 10, -- limit history
-  hooks = { -- main hooks used by Core.select and Core.cycle
+  hooks = { -- main hooks used by Core.select and other Core functions
     on_select = util.open_entry,
-    on_cycle = util.open_entry,
   },
   pad = { -- built-in UI for viewing marks
     icons = {
@@ -329,6 +331,9 @@ HI("TrackBundlesIndex", { foreground = "#54CED6" })
 
 ## Commands
 
+Builtin commands provided by track.nvim. See how to hack and create more commands in the
+[recipes](https://github.com/dharmx/track.nvim/wiki/Recipes) section of the [wiki](https://github.com/dharmx/track.nvim/wiki).
+
 ```vim
 :Mark                               " add current file to marks
 :Mark <URI/PATH>                    " add passed <URI> as mark
@@ -346,7 +351,7 @@ HI("TrackBundlesIndex", { foreground = "#54CED6" })
 :Track bundles                      " open bundles telescope picker
 :Track save                         " save current state to file
 :Track load                         " load saved state for the first time
-:Track loadsave                     " load saved state from a file
+:Track savefile                     " load saved state from a file
 :Track reload                       " load last saved state to cache
 :Track wipe                         " clear caches
 :Track remove                       " rm save file
