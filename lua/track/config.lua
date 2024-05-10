@@ -3,21 +3,15 @@ local M = {}
 local if_nil = vim.F.if_nil
 local util = require("track.util")
 
--- TODO: Implement validation (vim.validate) and config fallback.
--- TODO: Defaults (M.defaults) will be used if config values are invalid.
--- TODO: Implement intersection(before_lines, after_lines) > 0 function for saving mark history.
-
 ---Default **track.nvim** opts.
 ---@type TrackOpts
 M._defaults = {
   save_path = vim.fn.stdpath("state") .. "/track.json", -- db
   root_path = true, -- string or, true for automatically fetching root_path
-  bundle_label = true, --  string or, true for automatically fetching bundle_label
+  branch_name = true, -- string or, true for automatically fetching branch_name
   disable_history = true, -- save deleted marks
   maximum_history = 10, -- limit history
-  hooks = { -- main hooks used by Core.select and Core.cycle
-    on_select = util.open_entry,
-  },
+  on_open = util.open_entry, -- used by :OpenMark
   pad = { -- built-in UI for viewing marks
     icons = {
       save_done = "", -- not in use
@@ -67,7 +61,7 @@ M._defaults = {
     },
   },
   pickers = {
-    bundles = {
+    branches = {
       serial_map = false,
       icons = {
         separator = " │ ",
@@ -94,14 +88,14 @@ M._defaults = {
         on_close = util.mute,
         on_open = util.mute,
         on_serial = function(entry)
-          local root, _ = util.root_and_bundle()
-          root:change_main_bundle(entry.value.label)
+          local root, _ = util.root_and_branch()
+          root:change_main_branch(entry.value.name)
         end,
         on_choose = function(self) -- mappings WRT to line numbers
           local entry = self:get_selection()
           if not entry then return end
-          local root, _ = util.root_and_bundle()
-          root:change_main_bundle(entry.value.label)
+          local root, _ = util.root_and_branch()
+          root:change_main_branch(entry.value.name)
         end,
       },
       attach_mappings = function(_, map)
@@ -110,11 +104,11 @@ M._defaults = {
         map("n", "v", actions.select_all)
 
         local track_actions = require("telescope._extensions.track.actions")
-        map("n", "D", actions.select_all + track_actions.delete_bundle)
-        map("n", "dd", track_actions.delete_bundle)
-        map("i", "<C-D>", track_actions.delete_bundle)
-        map("i", "<C-E>", track_actions.change_bundle_label)
-        map("n", "s", track_actions.change_bundle_label)
+        map("n", "D", actions.select_all + track_actions.delete_branch)
+        map("n", "dd", track_actions.delete_branch)
+        map("i", "<C-D>", track_actions.delete_branch)
+        map("i", "<C-E>", track_actions.rename_branch)
+        map("n", "s", track_actions.rename_branch)
         return true -- compulsory
       end,
     },

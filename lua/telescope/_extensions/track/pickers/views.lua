@@ -18,8 +18,8 @@ local if_nil = vim.F.if_nil
 function M.resulter(opts)
   opts = if_nil(opts, {})
   opts = config.extend_pickers({ views = opts }).views
-  local _, bundle = util.root_and_bundle()
-  return bundle and not bundle:empty() and bundle.views() or {}
+  local _, branch = util.root_and_branch()
+  return branch and not branch:empty() and branch.views() or {}
 end
 
 -- this can be passed into picker:refresh(<finder>)
@@ -42,7 +42,7 @@ function M.picker(opts)
   opts._focused = vim.fn.fnamemodify(vim.fn.bufname(), ":p")
   local finder = M.finder(opts, M.resulter(opts))
   if vim.tbl_isempty(finder.results) then
-    vim.notify("Bundle is empty. No marks found.")
+    vim.notify("Branch is empty. No marks found.")
     return
   end
 

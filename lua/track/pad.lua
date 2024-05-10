@@ -34,7 +34,7 @@ function Pad:_new(opts)
   self.disable_status = if_nil(opts.disable_status, true)
   self.color_devicons = opts.color_devicons
 
-  self.bundle = if_nil(opts.bundle, select(2, util.root_and_bundle({}, true)))
+  self.branch = if_nil(opts.branch, select(2, util.root_and_branch({}, true)))
   self.buffer = A.nvim_create_buf(false, false)
   self.namespace = A.nvim_create_namespace("TrackPad")
   self.hooks = opts.hooks
@@ -50,12 +50,12 @@ function Pad:_new(opts)
   end
 
   self.config = opts.config
-  self.config.title = string.format(" %s ", strings.truncate(self.bundle.label, math.floor(self.config.width / 2)))
+  self.config.title = string.format(" %s ", strings.truncate(self.branch.name, math.floor(self.config.width / 2)))
   self.config.row = (vim.o.lines - self.config.height - 2) / 2
   self.config.col = (vim.o.columns - self.config.width) / 2
 
   A.nvim_buf_set_option(self.buffer, "filetype", "track")
-  A.nvim_buf_set_name(self.buffer, self.bundle.label)
+  A.nvim_buf_set_name(self.buffer, self.branch.name)
 
   for mode, maps in pairs(self.mappings) do
     for key, action in pairs(maps) do
@@ -95,7 +95,7 @@ function Pad.make_entry(index, view_mark, icons, disable_devicons, color_devicon
   entry.icon = icon
   entry.group = group
 
-  entry.display = (disable_devicons and "" or icon .. " ") .. entry.value.path
+  entry.display = (disable_devicons and "" or icon .. " ") .. entry.value.uri
   entry.range = { { { 0, #icon }, entry.group }, "TrackPadEntry" }
   return entry
 end
@@ -105,14 +105,14 @@ function Pad.line2mark(line, icons, disable_devicons)
   if trimmed ~= "" then
     local mark
     if disable_devicons then
-      mark = Mark({ path = trimmed })
+      mark = Mark({ uri = trimmed })
     else
       local icon, content = line:match("^([^%s]+)%s(.+)$")
       if icon and not utils.is_uri(icon) then
-        mark = Mark({ path = content })
-        if util.get_icon(mark, icons, { disable_devicons = disable_devicons }) ~= icon then mark.path = trimmed end
+        mark = Mark({ uri = content })
+        if util.get_icon(mark, icons, { disable_devicons = disable_devicons }) ~= icon then mark.uri = trimmed end
       else
-        mark = Mark({ path = trimmed })
+        mark = Mark({ uri = trimmed })
       end
     end
     return mark
@@ -248,7 +248,7 @@ function Pad:theme() end
 function Pad:render()
   self:clean()
   self:clear()
-  local view_marks = self.bundle.views()
+  local view_marks = self.branch.views()
   for index, view_mark in ipairs(view_marks) do
     local entry = Pad.make_entry(index, view_mark, self.icons, self.disable_devicons, self.color_devicons)
     local mark = entry.value
@@ -263,13 +263,13 @@ function Pad:render()
     end
 
     local start = range[1][1][2] + (self.disable_devicons and 0 or 1)
-    A.nvim_buf_add_highlight(self.buffer, self.namespace, range[2], line, start, start + #mark.path)
-    if mark.type == "file" or mark.type == "directory" then
-      self:conceal_path(line, start, mark.path)
+    A.nvim_buf_add_highlight(self.buffer, self.namespace, range[2], line, start, start + #mark.uri)
+    if mark.type == "file" or mark.type == "directory" or mark.type == "no_exists" then
+      self:conceal_path(line, start, mark.uri)
     elseif mark.type == "term" then
-      self:conceal_term(line, start, mark.path)
+      self:conceal_term(line, start, mark.uri)
     elseif mark.type ~= "file" then
-      self:conceal_uri(line, start, mark.path)
+      self:conceal_uri(line, start, mark.uri)
     end
   end
   if not self.disable_status then self:apply_status() end
@@ -277,11 +277,11 @@ function Pad:render()
 end
 
 function Pad:sync(save)
-  self.bundle:clear()
+  self.branch:clear()
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, true)
   for _, line in ipairs(lines) do
     local parsed_mark = Pad.line2mark(line, self.icons, self.disable_devicons)
-    if parsed_mark then self.bundle:add_mark(parsed_mark) end
+    if parsed_mark then self.branch:add_mark(parsed_mark) end
   end
   self:render()
   if save then state.save() end

@@ -5,14 +5,14 @@
 ---For instance:
 ---Working at part `A` of a project will require you to frequent
 ---`A1`, `A2` and `A3` files and working part `B` would require `B1`, `B2`, `B3`.
----Normally, without bundles one may put all project files (`A1-3` and `B1-3`) in
+---Normally, without branches one may put all project files (`A1-3` and `B1-3`) in
 ---the mark-list or, remove all `A1-3` files and add `B1-3` files and vice-versa.
 ---This adds overhead.
----Now, with bundles you just need to **stash** the current bundle which contains A1-3
----(say) and add `B1-3` to the new bundle. (Yes, this is just like GIT.)
-local Bundle = {}
-Bundle.__index = Bundle
-setmetatable(Bundle, {
+---Now, with branches you just need to **stash** the current branch which contains A1-3
+---(say) and add `B1-3` to the new branch. (Yes, this is just like GIT.)
+local Branch = {}
+Branch.__index = Branch
+setmetatable(Branch, {
   __call = function(class, ...)
     local self = setmetatable({}, class)
     self:_new(...)
@@ -26,30 +26,30 @@ local Mark = require("track.containers.mark")
 local log = require("track.log")
 local if_nil = vim.F.if_nil
 
----Create a new `Bundle` object.
----@param opts BundleFields Available bundle attributes/fields.
----@return Bundle
-function Bundle:_new(opts)
+---Create a new `Branch` object.
+---@param opts BranchFields Available branch attributes/fields.
+---@return Branch
+function Branch:_new(opts)
   local types = type(opts)
   assert(types ~= "table" or types ~= "string", "expected: fields: string|table found: " .. types)
   ---@diagnostic disable-next-line: missing-fields
-  if types == "string" then opts = { label = opts } end
-  assert(opts.label and type(opts.label) == "string", "fields.label: string cannot be nil")
+  if types == "string" then opts = { name = opts } end
+  assert(opts.name and type(opts.name) == "string", "fields.name: string cannot be nil")
 
-  self.label = opts.label
+  self.name = opts.name
   self.marks = {}
   self.views = {}
   self.disable_history = if_nil(opts.disable_history, true)
   self.maximum_history = if_nil(opts.maximum_history, 10)
   self.history = if_nil(opts.history, {})
   ---@diagnostic disable-next-line: missing-return
-  self._NAME = "bundle"
+  self._NAME = "branch"
 end
 
 -- Metatable Setters {{{
 ---@private
----Helper for re-registering the `__call` metatable to `Bundle.views` field.
-function Bundle:_callize_views()
+---Helper for re-registering the `__call` metatable to `Branch.views` field.
+function Branch:_callize_views()
   setmetatable(self.views, {
     ---@return Mark[]?
     __call = function(views, _)
@@ -63,8 +63,8 @@ function Bundle:_callize_views()
 end
 
 ---@private
----Helper for re-registering the `__call` metatable to `Bundle.marks` field.
-function Bundle:_callize_marks()
+---Helper for re-registering the `__call` metatable to `Branch.marks` field.
+function Branch:_callize_marks()
   setmetatable(self.marks, {
     __call = function(marks, action)
       if action == "string" then return vim.tbl_keys(marks) end
@@ -74,31 +74,31 @@ function Bundle:_callize_marks()
 end
 -- }}}
 
----Add a mark into the `Bundle`.
+---Add a mark into the `Branch`.
 ---@param mark Mark|string `Mark` or, the path that will be turned into a `Mark`.
 ---@param label? string Title of the mark.
 ---@return Mark
-function Bundle:add_mark(mark, label)
+function Branch:add_mark(mark, label)
   if type(mark) == "table" and mark._NAME == "mark" then
     local absolute = mark:absolute()
     self.marks[absolute] = mark
     if #vim.tbl_keys(self.marks) ~= #self.views then table.insert(self.views, absolute) end
-    log.trace("Bundle.add_mark(): new mark " .. absolute .. " has been added")
+    log.trace("Branch.add_mark(): new mark " .. absolute .. " has been added")
     return self.marks[absolute]
   end
   -- if it does not exist then create it
-  return self:add_mark(Mark({ path = mark, label = label }))
+  return self:add_mark(Mark({ uri = mark, label = label }))
 end
 
----Remove a mark from the Bundle. Returns the removed mark (if available).
----@param mark Mark|string `Mark` or, the path that will be removed from the `Bundle.marks` table.
+---Remove a mark from the Branch. Returns the removed mark (if available).
+---@param mark Mark|string `Mark` or, the path that will be removed from the `Branch.marks` table.
 ---@return Mark
-function Bundle:remove_mark(mark)
+function Branch:remove_mark(mark)
   local rm_mark
   if type(mark) == "table" and mark._NAME == "mark" then
     rm_mark = self.marks[mark:absolute()]
   else
-    local temp_mark = Mark({ path = mark })
+    local temp_mark = Mark({ uri = mark })
     rm_mark = self.marks[temp_mark:absolute()]
   end
   local absolute = rm_mark:absolute()
@@ -110,16 +110,16 @@ function Bundle:remove_mark(mark)
   self.views = vim.tbl_filter(function(item) return item ~= absolute end, self.views)
   -- self.views is being overwritten which means any metatable will also be overwritten
   -- we need to re-register the __call metatable so that external parties can call
-  -- Bundle.view() again.
+  -- Branch.view() again.
   self:_callize_views()
   -- record history: removed marks will be inserted into the self.history table (by your will)
   self:insert_history(rm_mark)
-  log.trace("Bundle.remove_mark(): mark " .. absolute .. " has been removed")
+  log.trace("Branch.remove_mark(): mark " .. absolute .. " has been removed")
   return rm_mark
 end
 
----Reset the `Bundle`. All marks will be purged.
-function Bundle:clear()
+---Reset the `Branch`. All marks will be purged.
+function Branch:clear()
   for _, mark in pairs(self.marks) do
     self:insert_history(mark)
   end
@@ -128,25 +128,25 @@ function Bundle:clear()
   -- re-attach __call.
   self:_callize_views()
   self:_callize_marks()
-  log.trace("Bundle.clear(): Bundle.marks and Bundle.views has been emptied")
+  log.trace("Branch.clear(): Branch.marks and Branch.views has been emptied")
 end
 
 ---Insert mark into the history list.
 ---@param mark Mark The `Mark` object that needs to be inserted into the history list.
----@param force? boolean overrides `Bundle.disable_history`.
-function Bundle:insert_history(mark, force)
+---@param force? boolean overrides `Branch.disable_history`.
+function Branch:insert_history(mark, force)
   local mark_type = type(mark)
   assert(mark_type == "table" and mark._NAME == "mark", "mark: Mark cannot be nil.")
   if self.disable_history and not force then return end
   table.insert(self.history, 1, mark)
   if #self.history > self.maximum_history then table.remove(self.history, #self.history) end
-  log.trace("Bundle.insert_history(): mark " .. mark:absolute() .. " has been recorded into history")
+  log.trace("Branch.insert_history(): mark " .. mark:absolute() .. " has been recorded into history")
 end
 
 ---Swap marks.
 ---@param a number
 ---@param b number
-function Bundle:swap_marks(a, b)
+function Branch:swap_marks(a, b)
   if not self.views[a] or not self.views[b] then return end
   local temp = self.views[a]
   self.views[a] = self.views[b]
@@ -155,11 +155,11 @@ end
 
 ---Change a mark's path.
 ---@param mark Mark
----@param new_path string
-function Bundle:change_mark_path(mark, new_path)
+---@param uri string
+function Branch:change_mark_uri(mark, uri)
   assert(type(mark) == "table" and mark._NAME == "mark", "mark: restricted type")
   local abs = mark:absolute()
-  local new_mark = Mark({ path = new_path, label = mark.label })
+  local new_mark = Mark({ uri = uri, label = mark.label })
   local new_abs = new_mark:absolute()
   for index, view in ipairs(self.views) do
     if view == abs then
@@ -171,8 +171,8 @@ function Bundle:change_mark_path(mark, new_path)
   end
 end
 
----Check if the `Bundle` has any marks.
+---Check if the `Branch` has any marks.
 ---@return boolean
-function Bundle:empty() return vim.tbl_isempty(self.marks) end
+function Branch:empty() return vim.tbl_isempty(self.marks) end
 
-return Bundle
+return Branch

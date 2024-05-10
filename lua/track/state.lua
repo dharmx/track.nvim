@@ -4,7 +4,7 @@ local config = require("track.config").get()
 
 local Root = require("track.containers.root")
 local Mark = require("track.containers.mark")
-local Bundle = require("track.containers.bundle")
+local Branch = require("track.containers.branch")
 local P = require("plenary.path")
 
 local log = require("track.log")
@@ -52,28 +52,28 @@ end
 local function parse_marks(marks)
   local store = {}
   for path, mark in pairs(marks) do
-    store[path] = Mark({ path = mark.path, label = mark.label, type = mark.type })
+    store[path] = Mark({ uri = mark.uri, label = mark.label, type = mark.type })
   end
   return store
 end
 
----Helper that parsers bundles and wraps raw bundle into a `Bundle` instance.
----@param bundles {label: string, disable_history?: boolean, maximum_history: number, marks: table<string, Mark>, views: Mark[]}[]
----@return Bundle[]
-local function parse_bundles(bundles)
+---Helper that parsers branches and wraps raw branch into a `Branch` instance.
+---@param branches {name: string, disable_history?: boolean, maximum_history: number, marks: table<string, Mark>, views: Mark[]}[]
+---@return Branch[]
+local function parse_branches(branches)
   local store = {}
-  for label, bundle in pairs(bundles) do
-    store[label] = Bundle({
-      label = bundle.label,
-      disable_history = bundle.disable_history,
-      maximum_history = bundle.maximum_history,
+  for name, branch in pairs(branches) do
+    store[name] = Branch({
+      name = branch.name,
+      disable_history = branch.disable_history,
+      maximum_history = branch.maximum_history,
     })
 
-    store[label].marks = parse_marks(bundle.marks)
-    store[label].views = bundle.views
+    store[name].marks = parse_marks(branch.marks)
+    store[name].views = branch.views
 
-    store[label]:_callize_views()
-    store[label]:_callize_marks()
+    store[name]:_callize_views()
+    store[name]:_callize_marks()
   end
   return store
 end
@@ -114,8 +114,8 @@ function M.load_save(action, loadpath, on_load)
       disable_history = root.disable_history,
       maximum_history = root.maximum_history,
     })
-    M._roots[path].bundles = parse_bundles(root.bundles) -- delegate to helper
-    M._roots[path]:_callize_bundles()
+    M._roots[path].branches = parse_branches(root.branches) -- delegate to helper
+    M._roots[path]:_callize_branches()
 
     -- private
     M._roots[path].stashed = root.stashed

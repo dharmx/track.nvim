@@ -17,25 +17,25 @@ local if_nil = vim.F.if_nil
 
 function M.resulter(opts)
   opts = if_nil(opts, {})
-  opts = config.extend_pickers({ bundles = opts }).bundles
-  local root, _ = util.root_and_bundle()
-  return root and root.bundles() or {}
+  opts = config.extend_pickers({ branches = opts }).branches
+  local root, _ = util.root_and_branch()
+  return root and root.branches() or {}
 end
 
 -- this can be passed into picker:refresh(<finder>)
 function M.finder(opts, results)
   opts = if_nil(opts, {})
-  opts = config.extend_pickers({ bundles = opts }).bundles
+  opts = config.extend_pickers({ branches = opts }).branches
   if vim.tbl_isempty(results) then vim.notify("No root found! Create one first.") end
   return finders.new_table({
     results = results,
-    entry_maker = entry_makers.gen_from_bundle(opts),
+    entry_maker = entry_makers.gen_from_branch(opts),
   })
 end
 
 function M.picker(opts)
   opts = if_nil(opts, {})
-  opts = config.extend_pickers({ bundles = opts }).bundles
+  opts = config.extend_pickers({ branches = opts }).branches
   local hooks = opts.hooks
   state.load()
 
@@ -46,7 +46,7 @@ function M.picker(opts)
   end
 
   local picker = pickers.new(opts, {
-    prompt_title = "Bundles",
+    prompt_title = "Branches",
     finder = finder,
     sorter = tele_config.values.generic_sorter(opts),
     on_complete = {
@@ -66,7 +66,7 @@ function M.picker(opts)
         post = function(_)
           if opts.save_on_close then
             state.save()
-            log.info("Telescope.Bundles.picker(): closed telescope.track.bundles and saved state")
+            log.info("Telescope.Branches.picker(): closed telescope.track.branches and saved state")
           end
           hooks.on_close(self)
         end,

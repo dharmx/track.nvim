@@ -3,9 +3,6 @@ local M = {}
 local A = vim.api
 M.GROUP = vim.api.nvim_create_augroup("TrackGroup", { clear = false })
 
--- TODO: Implement focused for commands and manpages as well.
--- NOTE: Use something like util.parse_current_buf_name()
-
 function M.setup(opts)
   require("track.config").merge(opts)
   require("track.log").info("setup(): plugin configured")
