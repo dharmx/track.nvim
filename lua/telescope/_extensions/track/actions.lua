@@ -2,8 +2,6 @@ local M = setmetatable({}, {
   __index = function(_, key) error("Key does not exist for actions: " .. tostring(key)) end,
 })
 
--- TODO: Document this BRUH.
-
 local if_nil = vim.F.if_nil
 local util = require("track.util")
 
@@ -73,7 +71,7 @@ function M.delete_branch(buffer)
 
   local root, _ = util.root_and_branch()
   for _, entry in ipairs(entries) do
-    if root and root:branch_exists(entry.value.label) then root:delete_branch(entry.value.label) end
+    if root and root:branch_exists(entry.value.name) then root:delete_branch(entry.value.name) end
   end
 end
 

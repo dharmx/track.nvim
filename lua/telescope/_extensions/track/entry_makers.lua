@@ -7,8 +7,6 @@ local utils = require("telescope.utils")
 local util = require("track.util")
 local make_entry = require("telescope.make_entry")
 
--- TODO: Add a way to match if the current focused_path is a command or, a manpage
-
 function M.gen_from_view(opts)
   local icons = opts.icons
   local displayer = entry_display.create({
@@ -110,14 +108,14 @@ function M.gen_from_branch(opts)
   local function make_display(entry)
     ---@type Branch
     local branch = entry.value
-    local display, display_hl = branch.label, "TrackBranchesInactive"
+    local display, display_hl = branch.name, "TrackBranchesInactive"
     local state, state_hl = icons.inactive, "TrackBranchesDisplayInactive"
-    if root.main == branch.label then
+    if root.main == branch.name then
       state, state_hl = icons.main, "TrackBranchesMain"
-      display, display_hl = branch.label, "TrackBranchesDisplayMain"
-    elseif root.previous == branch.label then
+      display, display_hl = branch.name, "TrackBranchesDisplayMain"
+    elseif root.previous == branch.name then
       state, state_hl = icons.alternate, "TrackBranchesAlternate"
-      display, display_hl = branch.label, "TrackBranchesDisplayAlternate"
+      display, display_hl = branch.name, "TrackBranchesDisplayAlternate"
     end
 
     local mark, mark_hl = string.format("%s %s", icons.mark, #branch.views), "TrackBranchesMark"
@@ -134,7 +132,7 @@ function M.gen_from_branch(opts)
   return function(entry)
     return make_entry.set_default_entry_mt({
       value = entry,
-      ordinal = entry.label,
+      ordinal = entry.name,
       display = make_display,
     }, opts)
   end

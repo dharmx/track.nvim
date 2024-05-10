@@ -33,10 +33,10 @@ function Branch:_new(opts)
   local types = type(opts)
   assert(types ~= "table" or types ~= "string", "expected: fields: string|table found: " .. types)
   ---@diagnostic disable-next-line: missing-fields
-  if types == "string" then opts = { label = opts } end
-  assert(opts.label and type(opts.label) == "string", "fields.label: string cannot be nil")
+  if types == "string" then opts = { name = opts } end
+  assert(opts.name and type(opts.name) == "string", "fields.name: string cannot be nil")
 
-  self.label = opts.label
+  self.name = opts.name
   self.marks = {}
   self.views = {}
   self.disable_history = if_nil(opts.disable_history, true)

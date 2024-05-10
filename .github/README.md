@@ -90,12 +90,10 @@ local util = require("track.util")
 M._defaults = {
   save_path = vim.fn.stdpath("state") .. "/track.json", -- db
   root_path = true, -- string or, true for automatically fetching root_path
-  branch_label = true, --  string or, true for automatically fetching branch_label
+  branch_name = true, -- string or, true for automatically fetching branch_name
   disable_history = true, -- save deleted marks
   maximum_history = 10, -- limit history
-  hooks = { -- main hooks used by Core.select and other Core functions
-    on_select = util.open_entry,
-  },
+  on_open = util.open_entry, -- used by :OpenMark
   pad = { -- built-in UI for viewing marks
     icons = {
       save_done = "", -- not in use
@@ -173,13 +171,13 @@ M._defaults = {
         on_open = util.mute,
         on_serial = function(entry)
           local root, _ = util.root_and_branch()
-          root:change_main_branch(entry.value.label)
+          root:change_main_branch(entry.value.name)
         end,
         on_choose = function(self) -- mappings WRT to line numbers
           local entry = self:get_selection()
           if not entry then return end
           local root, _ = util.root_and_branch()
-          root:change_main_branch(entry.value.label)
+          root:change_main_branch(entry.value.name)
         end,
       },
       attach_mappings = function(_, map)
@@ -191,8 +189,8 @@ M._defaults = {
         map("n", "D", actions.select_all + track_actions.delete_branch)
         map("n", "dd", track_actions.delete_branch)
         map("i", "<C-D>", track_actions.delete_branch)
-        map("i", "<C-E>", track_actions.change_branch_label)
-        map("n", "s", track_actions.change_branch_label)
+        map("i", "<C-E>", track_actions.rename_branch)
+        map("n", "s", track_actions.rename_branch)
         return true -- compulsory
       end,
     },
@@ -212,7 +210,7 @@ M._defaults = {
         manual = " ", -- manpage URI type icon i.e. :Man find(1) or, :edit man://find(1)
         site = " ", -- website link https://www.google.com
       },
-      switch_directory = true, -- switch when a directory i.e. marked is a Root object
+      switch_directory = false, -- switch when a directory i.e. marked is a Root object
       save_on_close = true, -- save when the view telescope picker is closed
       selection_caret = "   ",
       path_display = {
@@ -335,17 +333,15 @@ Builtin commands provided by track.nvim. See how to hack and create more command
 [recipes](https://github.com/dharmx/track.nvim/wiki/Recipes) section of the [wiki](https://github.com/dharmx/track.nvim/wiki).
 
 ```vim
-:Mark                               " add current file to marks
 :Mark <URI/PATH>                    " add passed <URI> as mark
-:Unmark                             " rm current file from marks (if exists)
 :Unmark <URI/PATH>                  " rm <URI> mark (if exists)
-:MarkOpened                         " mark all opened buffers
-:SelectMark <URI/PATH/INDEX>        " open a mark from the views list of the main branch
-:StashBranch                        " stash current main branch and make new branch as main 
-:RestoreBranch                      " restore previous branch
-:DeleteBranch                       " rm main branch
-:AlternateBranch                    " swap stashed and main branches
+:OpenMark <URI/PATH/INDEX>          " open a mark from the views list of the main branch
+:NewBranch                          " stash current main branch and make new branch as main 
+:RMBranch                           " rm main branch
+:SwapBranch                         " swap stashed and main branches
+:SwapBranch!                        " restore branch
 :Track                              " open default pad UI (view)
+:Track!                             " mark all opened buffers
 :Track pad                          " open default pad UI (view)
 :Track views                        " open views telescope picker
 :Track branches                     " open branches telescope picker

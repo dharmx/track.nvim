@@ -52,7 +52,7 @@
 ---@class TrackOpts
 ---@field save_path string JSON file where the current state will be saved.
 ---@field root_path string|true Default `root_path`. Setting to to true fetches automatically.
----@field branch_label string|true Default `branch_label` to open based on `root_path`.
+---@field branch_name string|true Default `branch_name` to open based on `root_path`.
 ---@field disable_history boolean Change state of all branch histories.
 ---@field maximum_history number Change the maximum number of marks to be stored in all branch history tables.
 ---@field pickers TrackPickers Sub-configuration for telescope pickers.
@@ -77,7 +77,7 @@
 ---@field path string Path to root.
 ---@field label? string Small description/title about the root.
 ---@field links? string[] Shortcuts to other roots.
----@field branches? Branch[] Branch map. Key is the same as `Branch.label` and value is a `Branch` instance.
+---@field branches? Branch[] Branch map. Key is the same as `Branch.name` and value is a `Branch` instance.
 ---@field main? string Master branch. This is similar to the `main` branch in GIT.
 ---@field stashed? string Flag variable that will be set if a branch has been stashed.
 ---@field previous? string Flag variable that will be set if the `main` branch has an alternate branch.
@@ -86,7 +86,7 @@
 ---@field history Branch[] Deleted/Uneeded branch are sent here. This acts as a recycle bin for branches.
 
 ---@class Branch
----@field label string Name of the branch. Similar to setting a GIT branch name.
+---@field name string Name of the branch. Similar to setting a GIT branch name.
 ---@field disable_history? boolean Deleting marks will not store said marks in the `history` table.
 ---@field maximum_history? number Maximum number of marks that are allowed to be in `history` table.
 ---@field history Mark[] Deleted/Uneeded marks are sent here. This acts as a recycle bin for marks.
@@ -95,7 +95,7 @@
 ---@field _NAME string Type.
 
 ---@class BranchFields
----@field label string Name of the branch. Similar to setting a GIT branch name.
+---@field name string Name of the branch. Similar to setting a GIT branch name.
 ---@field disable_history? boolean Deleting marks will not store marks in the `history` table.
 ---@field maximum_history? number Maximum number of marks that are allowed to be in `history` table.
 ---@field history Mark[] Deleted/Uneeded marks are sent here. This acts as a recycle bin for marks.

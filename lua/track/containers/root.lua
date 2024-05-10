@@ -65,24 +65,24 @@ end
 
 ---Create a new `Branch` inside the `Root`. No collision handling implemented. If an existing branch name
 ---is supplied then it will get erased with an empty one.
----@param branch_label string The name/label of the `Branch`.
+---@param name string The name/label of the `Branch`.
 ---@param main? boolean Make this the default `Branch`.
 ---@param marks? Mark[]|table<string, Mark> Optional List of marks.
-function Root:new_branch(branch_label, main, marks)
-  assert(branch_label and type(branch_label) == "string", "branch_label needs to be a string and not nil.")
+function Root:new_branch(name, main, marks)
+  assert(name and type(name) == "string", "name needs to be a string and not nil.")
   main = if_nil(main, false)
   marks = if_nil(marks, {})
-  self.branches[branch_label] = Branch(branch_label)
-  log.trace("Root.new_branch(): branch " .. branch_label .. " has been created")
+  self.branches[name] = Branch(name)
+  log.trace("Root.new_branch(): branch " .. name .. " has been created")
 
   if vim.tbl_islist(marks) then
     for _, mark in ipairs(marks) do
-      self.branches[branch_label]:add_mark(mark)
+      self.branches[name]:add_mark(mark)
     end
   else
-    self.branches[branch_label].marks = marks
+    self.branches[name].marks = marks
   end
-  if main then self:change_main_branch(branch_label) end
+  if main then self:change_main_branch(name) end
 end
 
 ---Change the default branch. Current branch will be saved into `Root.previous` variable.
@@ -100,11 +100,11 @@ function Root:change_main_branch(new_main)
 end
 
 ---Check if a branch exists or, not. `true` if it does `false`, otherwise.
----@param branch_label string Label of the `Branch` that needs to be seached for.
+---@param name string Label of the `Branch` that needs to be seached for.
 ---@return boolean
-function Root:branch_exists(branch_label)
-  assert(branch_label and type(branch_label) == "string", "branch_label needs to be a string and not nil.")
-  return not not self.branches[branch_label]
+function Root:branch_exists(name)
+  assert(name and type(name) == "string", "name needs to be a string and not nil.")
+  return not not self.branches[name]
 end
 
 ---Get the main `Branch` instance. This is not a copy but a reference.
@@ -113,22 +113,22 @@ function Root:get_main_branch() return self.branches[self.main] end
 
 ---Generate a random branch name using current time (in milliseconds).
 ---@return string
-local function date_label() return "new-branch-" .. os.date("%s") end
+local function date_name() return "branch_" .. os.date("%s") end
 
 ---Dummy function that always returns `true`.
 ---@return true
 local function return_true() return true end
 
 ---@param on_collision fun(): boolean
----@param create_label fun(): string
-function Root:stash_branch(on_collision, create_label)
-  create_label = if_nil(create_label, date_label)
+---@param create_name fun(): string
+function Root:stash_branch(on_collision, create_name)
+  create_name = if_nil(create_name, date_name)
   on_collision = if_nil(on_collision, return_true)
-  assert(type(create_label) == "function", "create_label must be a fun(): string")
+  assert(type(create_name) == "function", "create_name must be a fun(): string")
   assert(type(on_collision) == "function", "will_wipe must be a fun(): boolean")
 
-  local new_name = create_label()
-  assert(type(new_name) == "string", "create_label should return string")
+  local new_name = create_name()
+  assert(type(new_name) == "string", "create_name should return string")
   local wipe = on_collision()
   assert(type(wipe) == "boolean", "on_collision should return boolean")
   log.trace("Root.stash_branch(): main branch has been stashed")
@@ -152,38 +152,38 @@ function Root:alternate_branch()
 end
 
 function Root:delete_main_branch()
-  local branch_labels = vim.tbl_keys(self.branches)
-  if #branch_labels == 1 then
+  local names = vim.tbl_keys(self.branches)
+  if #names == 1 then
     log.warn("Root.delete_branch(): tried deleting last branch " .. self.main)
     return
   end
 
-  for index, branch_label in ipairs(branch_labels) do
-    if branch_label == self.main then
-      table.remove(branch_labels, index)
-      self:change_main_branch(branch_labels[1]) -- changes self.main
-      self:insert_history(self.branches[branch_label])
-      if self.previous == branch_label then self.previous = nil end
-      if self.stashed == branch_label then self.stashed = nil end
-      self.branches[branch_label] = nil
+  for index, name in ipairs(names) do
+    if name == self.main then
+      table.remove(names, index)
+      self:change_main_branch(names[1]) -- changes self.main
+      self:insert_history(self.branches[name])
+      if self.previous == name then self.previous = nil end
+      if self.stashed == name then self.stashed = nil end
+      self.branches[name] = nil
       return
     end
   end
 end
 
-function Root:delete_branch(branch_label)
-  if not self:branch_exists(branch_label) then
-    log.warn("Root.delete_branch(): tried deleting a branch " .. branch_label .. " that does not exist")
+function Root:delete_branch(name)
+  if not self:branch_exists(name) then
+    log.warn("Root.delete_branch(): tried deleting a branch " .. name .. " that does not exist")
     return
   end
-  if self.main == branch_label then
+  if self.main == name then
     self:delete_main_branch()
     return
   end
-  if self.previous == branch_label then self.previous = nil end
-  if self.stashed == branch_label then self.stashed = nil end
-  self:insert_history(self.branches[branch_label])
-  self.branches[branch_label] = nil
+  if self.previous == name then self.previous = nil end
+  if self.stashed == name then self.stashed = nil end
+  self:insert_history(self.branches[name])
+  self.branches[name] = nil
 end
 
 function Root:link(root_path)
@@ -206,30 +206,30 @@ function Root:insert_history(branch, force)
   if self.disable_history and not force then return end
   table.insert(self.history, 1, branch)
   if #self.history > self.maximum_history then table.remove(self.history, #self.history) end
-  log.trace("Root.insert_history(): branch " .. branch.label .. " has been recorded into history")
+  log.trace("Root.insert_history(): branch " .. branch.name .. " has been recorded into history")
 end
 
-function Root:rename_branch(branch, new_label)
+function Root:rename_branch(branch, new_name)
   local branch_type = type(branch)
   assert(
     branch_type == "string" or (branch_type == "table" and branch._NAME == "branch"),
     "branch: branch needs to be Branch|string"
   )
-  local label = type(branch) == "string" and branch or branch.label
-  if self:branch_exists(new_label) then return end
-  local old_branch = self.branches[label]
+  local name = type(branch) == "string" and branch or branch.name
+  if self:branch_exists(new_name) then return end
+  local old_branch = self.branches[name]
 
-  local main = self:get_main_branch().label == label
-  local stashed = self.stashed == label
-  local previous = self.previous == label
+  local main = self:get_main_branch().name == name
+  local stashed = self.stashed == name
+  local previous = self.previous == name
 
-  old_branch.label = new_label
-  self.branches[label] = nil
-  self.branches[new_label] = old_branch
+  old_branch.name = new_name
+  self.branches[name] = nil
+  self.branches[new_name] = old_branch
 
-  self.main = main and new_label or self.main
-  self.stashed = stashed and new_label or self.stashed
-  self.previous = previous and new_label or self.previous
+  self.main = main and new_name or self.main
+  self.stashed = stashed and new_name or self.stashed
+  self.previous = previous and new_name or self.previous
 end
 
 return Root

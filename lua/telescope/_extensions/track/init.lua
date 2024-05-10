@@ -4,9 +4,6 @@ if not present then
   return
 end
 
--- TODO: Implement copy and paste (mutiple & single). Copy/Paste JSON version of the containers.
--- TODO: Implement a previewer for viewing metadata and file contents.
-
 return telescope.register_extension({
   setup = function(opts)
     require("track.config").merge_pickers(opts)

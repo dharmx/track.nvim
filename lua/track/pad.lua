@@ -50,12 +50,12 @@ function Pad:_new(opts)
   end
 
   self.config = opts.config
-  self.config.title = string.format(" %s ", strings.truncate(self.branch.label, math.floor(self.config.width / 2)))
+  self.config.title = string.format(" %s ", strings.truncate(self.branch.name, math.floor(self.config.width / 2)))
   self.config.row = (vim.o.lines - self.config.height - 2) / 2
   self.config.col = (vim.o.columns - self.config.width) / 2
 
   A.nvim_buf_set_option(self.buffer, "filetype", "track")
-  A.nvim_buf_set_name(self.buffer, self.branch.label)
+  A.nvim_buf_set_name(self.buffer, self.branch.name)
 
   for mode, maps in pairs(self.mappings) do
     for key, action in pairs(maps) do
@@ -264,7 +264,7 @@ function Pad:render()
 
     local start = range[1][1][2] + (self.disable_devicons and 0 or 1)
     A.nvim_buf_add_highlight(self.buffer, self.namespace, range[2], line, start, start + #mark.uri)
-    if mark.type == "file" or mark.type == "directory" then
+    if mark.type == "file" or mark.type == "directory" or mark.type == "no_exists" then
       self:conceal_path(line, start, mark.uri)
     elseif mark.type == "term" then
       self:conceal_term(line, start, mark.uri)

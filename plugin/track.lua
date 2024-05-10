@@ -14,6 +14,15 @@ local cmd = A.nvim_create_user_command
 local function HI(...) A.nvim_set_hl(0, ...) end
 
 cmd("Track", function(data)
+  if data.bang then
+    local buffers = V.getbufinfo({ buflisted = 1 })
+    for _, info in ipairs(buffers) do
+      local name = A.nvim_buf_get_name(info.bufnr)
+      if name ~= "" and not name:match("^term://") then vim.cmd.Mark(name) end
+    end
+    return
+  end
+
   local args = data.fargs
   if args[1] == "save" then
     require("track.state").save()
@@ -38,6 +47,7 @@ cmd("Track", function(data)
 end, {
   desc = "track.nvim state operations.",
   nargs = "*",
+  bang = true,
   complete = function()
     return {
       "save",
@@ -86,18 +96,7 @@ end, {
   nargs = "?",
 })
 
-cmd("MarkOpened", function()
-  local buffers = V.getbufinfo({ buflisted = 1 })
-  for _, info in ipairs(buffers) do
-    local name = A.nvim_buf_get_name(info.bufnr)
-    if name ~= "" and not name:match("^term://") then vim.cmd.Mark(name) end
-  end
-end, {
-  desc = "Mark all opened files.",
-  nargs = 0,
-})
-
-cmd("StashBranch", function()
+cmd("NewBranch", function()
   local core = require("track.core")
   core:stash()
   core(require("track.util").cwd())
@@ -110,19 +109,10 @@ end, {
   nargs = "?",
 })
 
-cmd("RestoreBranch", function()
+cmd("RMBranch", function(data)
+  local name = data.args
   local core = require("track.core")
-  core:restore()
-  core(require("track.util").cwd())
-end, {
-  desc = "Restore stashed branch.",
-  nargs = 0,
-})
-
-cmd("DeleteBranch", function(data)
-  local label = data.args
-  local core = require("track.core")
-  core:delete(label ~= "" and label or nil)
+  core:delete(name ~= "" and name or nil)
   core(require("track.util").cwd())
 end, {
   desc = "Delete branch.",
@@ -133,20 +123,25 @@ end, {
   end,
 })
 
-cmd("AlternateBranch", function()
+cmd("SwapBranch", function(data)
   local core = require("track.core")
-  core:alternate()
+  if data.bang then
+    core:restore()
+  else
+    core:alternate()
+  end
   core(require("track.util").cwd())
 end, {
-  desc = "Restore stashed branch.",
+  desc = "Alternate/Restore stashed branch.",
+  bang = true,
   nargs = 0,
 })
 
-cmd("SelectMark", function(data)
+cmd("OpenMark", function(data)
   local args = vim.trim(data.args)
   ---@diagnostic disable-next-line: cast-local-type
   args = if_nil(tonumber(args), args)
-  require("track.core"):select(args, require("track.config").get_hooks().on_select)
+  require("track.core"):select(args, require("track.config").get().on_open)
 end, {
   desc = "Select a mark (view)",
   nargs = 1,

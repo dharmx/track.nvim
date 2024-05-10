@@ -89,11 +89,10 @@ function M.clean_term_uri(uri)
   return trimmed
 end
 
--- TODO: Allow opts.root_path and opts.branch_label to be a function.
 function M.root_and_branch(opts, force)
   opts = if_nil(opts, {})
   opts = require("track.config").extend(opts)
-  local branch_label = opts.branch_label
+  local branch_name = opts.branch_name
   local root_path = opts.root_path ~= true and opts.root_path or M.cwd()
   assert(type(root_path) == "string", "Config.root_path needs to be string")
 
@@ -101,10 +100,10 @@ function M.root_and_branch(opts, force)
   state.load()
   local branch = nil
   local root = state._roots[root_path]
-  if root and branch_label == true then
+  if root and branch_name == true then
     branch = root:get_main_branch()
-  elseif type(branch_label) == "string" then
-    branch = root.branches[branch_label]
+  elseif type(branch_name) == "string" then
+    branch = root.branches[branch_name]
   elseif force then
     if not root then
       local Root = require("track.containers.root")

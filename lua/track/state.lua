@@ -58,22 +58,22 @@ local function parse_marks(marks)
 end
 
 ---Helper that parsers branches and wraps raw branch into a `Branch` instance.
----@param branches {label: string, disable_history?: boolean, maximum_history: number, marks: table<string, Mark>, views: Mark[]}[]
+---@param branches {name: string, disable_history?: boolean, maximum_history: number, marks: table<string, Mark>, views: Mark[]}[]
 ---@return Branch[]
 local function parse_branches(branches)
   local store = {}
-  for label, branch in pairs(branches) do
-    store[label] = Branch({
-      label = branch.label,
+  for name, branch in pairs(branches) do
+    store[name] = Branch({
+      name = branch.name,
       disable_history = branch.disable_history,
       maximum_history = branch.maximum_history,
     })
 
-    store[label].marks = parse_marks(branch.marks)
-    store[label].views = branch.views
+    store[name].marks = parse_marks(branch.marks)
+    store[name].views = branch.views
 
-    store[label]:_callize_views()
-    store[label]:_callize_marks()
+    store[name]:_callize_views()
+    store[name]:_callize_marks()
   end
   return store
 end
