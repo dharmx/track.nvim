@@ -2,7 +2,7 @@ local M = {}
 
 local config = require("track.config")
 local util = require("track.util")
-local log = require("track.log")
+local log = require("track.dev.log")
 
 local state = require("track.state")
 local entry_makers = require("telescope._extensions.track.entry_makers")

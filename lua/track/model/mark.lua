@@ -16,7 +16,7 @@ local U = vim.loop
 local if_nil = vim.F.if_nil
 
 local util = require("track.util")
-local enum = require("track.enum")
+local enum = require("track.dev.enum")
 local URI = enum.URI
 local CLASS = enum.CLASS
 

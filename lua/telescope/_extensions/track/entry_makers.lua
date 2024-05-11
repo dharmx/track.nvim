@@ -7,7 +7,7 @@ local utils = require("telescope.utils")
 local util = require("track.util")
 local make_entry = require("telescope.make_entry")
 
-local enum = require("track.enum")
+local enum = require("track.dev.enum")
 local URI = enum.URI
 
 function M.gen_from_view(opts)

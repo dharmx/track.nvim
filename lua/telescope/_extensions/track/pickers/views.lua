@@ -2,7 +2,7 @@ local M = {}
 
 local config = require("track.config")
 local util = require("track.util")
-local log = require("track.log")
+local log = require("track.dev.log")
 
 local state = require("track.state")
 local entry_makers = require("telescope._extensions.track.entry_makers")
@@ -55,7 +55,7 @@ function M.picker(opts)
         if not opts.serial_map then return end
         for entry in self.manager:iter() do
           vim.keymap.set("n", tostring(entry.index), function()
-            if util.apply_root_entry(entry.value, opts) then
+            if util.to_root_entry(entry.value, opts) then
               self:refresh(M.finder(opts, M.resulter(opts)), { reset_prompt = true })
               return
             end
@@ -80,7 +80,7 @@ function M.picker(opts)
         -- add navigation controls for traversing back and forth through other roots
         -- if the exist otherwise open the directory
         local entry = self:get_selection()
-        if util.apply_root_entry(entry.value, opts) then
+        if util.to_root_entry(entry.value, opts) then
           self:refresh(M.finder(opts, M.resulter(opts)), { reset_prompt = true })
           return
         end

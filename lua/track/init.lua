@@ -5,7 +5,7 @@ M.GROUP = vim.api.nvim_create_augroup("TrackGroup", { clear = false })
 
 function M.setup(opts)
   require("track.config").merge(opts)
-  require("track.log").info("setup(): plugin configured")
+  require("track.dev.log").info("setup(): plugin configured")
   require("track.core")(require("track.util").cwd())
   A.nvim_create_autocmd("DirChanged", {
     group = M.GROUP,

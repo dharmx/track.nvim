@@ -6,7 +6,7 @@ local V = vim.fn
 local A = vim.api
 local if_nil = vim.F.if_nil
 
-local enum = require("track.enum")
+local enum = require("track.dev.enum")
 local URI = enum.URI
 
 ---Dummy function that does noting.
@@ -22,8 +22,8 @@ end
 
 ---@return string
 function M.filetype(uri)
-  local uri_type = if_nil(uri:match("^(%w+)://"), "file")
-  if uri_type == "file" then
+  local uri_type = if_nil(uri:match("^(%w+)://"), URI.FILE)
+  if uri_type == URI.FILE then
     uri = vim.fs.normalize(uri)
     local stat, _, e = U.fs_stat(uri)
     if e == "EACCES" then
@@ -109,7 +109,7 @@ function M.root_and_branch(opts, force)
     branch = root.branches[branch_name]
   elseif force then
     if not root then
-      local Root = require("track.containers.root")
+      local Root = require("track.model.root")
       local new_root = Root(root_path)
       state._roots[root_path] = new_root
       root = new_root
@@ -136,16 +136,16 @@ end
 function M.parsed_buf_name(buffer)
   local name = A.nvim_buf_get_name(if_nil(buffer, 0))
   local filetype = M.filetype(name)
-  if filetype == "file" then
+  if filetype == URI.FILE then
     name = U.fs_realpath(vim.fs.normalize(name))
     name = if_nil(name, V.fnamemodify(name, ":p"))
-  elseif filetype == "term" then
+  elseif filetype == URI.TERM then
     name = M.clean_term_uri(name)
   end
   return name
 end
 
-function M.apply_root_entry(mark, opts)
+function M.to_root_entry(mark, opts)
   local root_path = mark:absolute()
   if #root_path > 1 then root_path = root_path:gsub("/$", "") end
   if opts.switch_directory and mark.type == URI.DIR and require("track.state")._roots[root_path] then

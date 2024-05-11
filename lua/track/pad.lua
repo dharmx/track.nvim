@@ -8,11 +8,13 @@ setmetatable(Pad, {
   end,
 })
 
+-- TODO: If `Pad` or, `pickers.views` is opened and then if the current branch gets changed, redraw the `Pad/pickers.views` with the new branch's contents.
+
 local A = vim.api
 local V = vim.fn
 local if_nil = vim.F.if_nil
 
-local Mark = require("track.containers.mark")
+local Mark = require("track.model.mark")
 
 local util = require("track.util")
 local state = require("track.state")
@@ -20,7 +22,7 @@ local state = require("track.state")
 local utils = require("telescope.utils")
 local strings = require("plenary.strings")
 
-local enum = require("track.enum")
+local enum = require("track.dev.enum")
 local CLASS = enum.CLASS
 local URI = enum.URI
 
@@ -49,7 +51,7 @@ function Pad:_new(opts)
     local mark = Pad.line2mark(A.nvim_get_current_line(), self.icons, self.disable_devicons)
     if not mark then return end
     self:close()
-    if util.apply_root_entry(mark, self) then return end
+    if util.to_root_entry(mark, self) then return end
     self.hooks.on_choose(mark)
   end
 

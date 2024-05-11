@@ -22,10 +22,10 @@ setmetatable(Branch, {
   end,
 })
 
-local Mark = require("track.containers.mark")
-local log = require("track.log")
+local Mark = require("track.model.mark")
+local log = require("track.dev.log")
 local if_nil = vim.F.if_nil
-local CLASS = require("track.enum").CLASS
+local CLASS = require("track.dev.enum").CLASS
 
 ---Create a new `Branch` object.
 ---@param opts BranchFields Available branch attributes/fields.

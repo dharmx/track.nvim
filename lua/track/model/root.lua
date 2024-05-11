@@ -14,12 +14,12 @@ setmetatable(Root, {
   end,
 })
 
-local CLASS = require("track.enum").CLASS
-local log = require("track.log")
+local CLASS = require("track.dev.enum").CLASS
+local log = require("track.dev.log")
 local if_nil = vim.F.if_nil
 
----@module "track.containers.branch"
-local Branch = require("track.containers.branch")
+---@module "track.model.branch"
+local Branch = require("track.model.branch")
 
 -- TODO: Implement if cwd/block - cwd != "" then branches from cwd will be shown instead of cwd/block.
 -- TODO: Implement a way to distinguish projects i.e., if cwd has .git then mark it as a git directory.

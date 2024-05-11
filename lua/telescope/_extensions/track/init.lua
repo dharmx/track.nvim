@@ -7,7 +7,7 @@ end
 return telescope.register_extension({
   setup = function(opts)
     require("track.config").merge_pickers(opts)
-    require("track.log").info("Telescope.Init.setup(): telescope extension has been configured")
+    require("track.dev.log").info("telescope.setup(): telescope extension has been configured")
   end,
   exports = {
     views = require("telescope._extensions.track.pickers.views").picker,

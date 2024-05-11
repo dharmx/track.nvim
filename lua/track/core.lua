@@ -4,13 +4,13 @@ local state = require("track.state")
 local util = require("track.util")
 local config = require("track.config")
 
-local Root = require("track.containers.root")
-local Mark = require("track.containers.mark")
+local Root = require("track.model.root")
+local Mark = require("track.model.mark")
 local Pad = require("track.pad")
 
-local URI = require("track.enum").URI
+local URI = require("track.dev.enum").URI
 
-local log = require("track.log")
+local log = require("track.dev.log")
 local if_nil = vim.F.if_nil
 state.load() -- load state from savefile if it exists
 
