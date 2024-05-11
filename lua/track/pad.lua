@@ -116,7 +116,12 @@ function Pad.line2mark(line, icons, disable_devicons)
       local icon, content = line:match("^([^%s]+)%s(.+)$")
       if icon and not utils.is_uri(icon) then
         mark = Mark({ uri = content })
-        if util.get_icon(mark, icons, { disable_devicons = disable_devicons }) ~= icon then mark.uri = trimmed end
+        if
+          not util.icon_exists(icon, icons)
+          and util.get_icon(mark, icons, { disable_devicons = disable_devicons }) ~= icon
+        then
+          mark.uri = trimmed
+        end
       else
         mark = Mark({ uri = trimmed })
       end

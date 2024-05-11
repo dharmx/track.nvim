@@ -211,7 +211,7 @@ end
 function Root:rename_branch(branch, new_name)
   local branch_type = type(branch)
   assert(
-    branch_type == "string" or (branch_type == "table" and branch._NAME == CLASS.ROOT),
+    branch_type == "string" or (branch_type == "table" and branch._NAME == CLASS.BRANCH),
     "branch: branch needs to be Branch|string"
   )
   local name = type(branch) == "string" and branch or branch.name
