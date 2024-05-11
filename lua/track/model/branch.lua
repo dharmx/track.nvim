@@ -22,9 +22,10 @@ setmetatable(Branch, {
   end,
 })
 
-local Mark = require("track.containers.mark")
-local log = require("track.log")
+local Mark = require("track.model.mark")
+local log = require("track.dev.log")
 local if_nil = vim.F.if_nil
+local CLASS = require("track.dev.enum").CLASS
 
 ---Create a new `Branch` object.
 ---@param opts BranchFields Available branch attributes/fields.
@@ -43,7 +44,7 @@ function Branch:_new(opts)
   self.maximum_history = if_nil(opts.maximum_history, 10)
   self.history = if_nil(opts.history, {})
   ---@diagnostic disable-next-line: missing-return
-  self._NAME = "branch"
+  self._NAME = CLASS.BRANCH
 end
 
 -- Metatable Setters {{{
@@ -79,7 +80,7 @@ end
 ---@param label? string Title of the mark.
 ---@return Mark
 function Branch:add_mark(mark, label)
-  if type(mark) == "table" and mark._NAME == "mark" then
+  if type(mark) == "table" and mark._NAME == CLASS.MARK then
     local absolute = mark:absolute()
     self.marks[absolute] = mark
     if #vim.tbl_keys(self.marks) ~= #self.views then table.insert(self.views, absolute) end
@@ -95,7 +96,7 @@ end
 ---@return Mark
 function Branch:remove_mark(mark)
   local rm_mark
-  if type(mark) == "table" and mark._NAME == "mark" then
+  if type(mark) == "table" and mark._NAME == CLASS.MARK then
     rm_mark = self.marks[mark:absolute()]
   else
     local temp_mark = Mark({ uri = mark })
@@ -136,7 +137,7 @@ end
 ---@param force? boolean overrides `Branch.disable_history`.
 function Branch:insert_history(mark, force)
   local mark_type = type(mark)
-  assert(mark_type == "table" and mark._NAME == "mark", "mark: Mark cannot be nil.")
+  assert(mark_type == "table" and mark._NAME == CLASS.MARK, "mark: Mark cannot be nil.")
   if self.disable_history and not force then return end
   table.insert(self.history, 1, mark)
   if #self.history > self.maximum_history then table.remove(self.history, #self.history) end
@@ -157,7 +158,7 @@ end
 ---@param mark Mark
 ---@param uri string
 function Branch:change_mark_uri(mark, uri)
-  assert(type(mark) == "table" and mark._NAME == "mark", "mark: restricted type")
+  assert(type(mark) == "table" and mark._NAME == CLASS.MARK, "mark: restricted type")
   local abs = mark:absolute()
   local new_mark = Mark({ uri = uri, label = mark.label })
   local new_abs = new_mark:absolute()

@@ -18,7 +18,7 @@ cmd("Track", function(data)
     local buffers = V.getbufinfo({ buflisted = 1 })
     for _, info in ipairs(buffers) do
       local name = A.nvim_buf_get_name(info.bufnr)
-      if name ~= "" and not name:match("^term://") then vim.cmd.Mark(name) end
+      if name ~= "" then vim.cmd.Mark(name) end
     end
     return
   end

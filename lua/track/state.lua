@@ -2,12 +2,12 @@ local M = {}
 
 local config = require("track.config").get()
 
-local Root = require("track.containers.root")
-local Mark = require("track.containers.mark")
-local Branch = require("track.containers.branch")
+local Root = require("track.model.root")
+local Mark = require("track.model.mark")
+local Branch = require("track.model.branch")
 local P = require("plenary.path")
 
-local log = require("track.log")
+local log = require("track.dev.log")
 
 ---Main state of track.nvim. It tracks all roots.
 ---@type table<string, Root>

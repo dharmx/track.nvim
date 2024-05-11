@@ -7,6 +7,9 @@ local utils = require("telescope.utils")
 local util = require("track.util")
 local make_entry = require("telescope.make_entry")
 
+local enum = require("track.dev.enum")
+local URI = enum.URI
+
 function M.gen_from_view(opts)
   local icons = opts.icons
   local displayer = entry_display.create({
@@ -26,7 +29,7 @@ function M.gen_from_view(opts)
   local function make_display(entry)
     local mark = entry.value
     local absolute = mark:absolute()
-    local allowed = vim.tbl_contains({ "term", "man", "http", "https" }, mark.type)
+    local allowed = vim.tbl_contains({ URI.TERM, URI.MAN, URI.HTTP, URI.HTTPS }, mark.type)
 
     -- we may/may not have read permissions on that file - priority: 1
     local marker, marker_hl = icons.accessible, "TrackViewsAccessible"
@@ -45,11 +48,11 @@ function M.gen_from_view(opts)
     local display, display_hl = absolute, ""
     if not allowed then
       display = utils.transform_path(opts, mark.uri)
-    elseif mark.type == "term" then
+    elseif mark.type == URI.TERM then
       display = util.transform_term_uri(mark.uri)
-    elseif mark.type == "man" then
+    elseif mark.type == URI.MAN then
       display = util.transform_man_uri(mark.uri)
-    elseif mark.type == "https" then
+    elseif mark.type == URI.HTTPS or mark.type == URI.HTTP then
       display = util.transform_site_uri(mark.uri)
     end
 

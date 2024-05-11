@@ -6,11 +6,14 @@ local V = vim.fn
 local A = vim.api
 local if_nil = vim.F.if_nil
 
+local enum = require("track.dev.enum")
+local URI = enum.URI
+
 ---Dummy function that does noting.
 function M.mute() end
 
 function M.open_entry(mark)
-  if mark.type == "https" or mark.type == "http" then
+  if mark.type == URI.HTTPS or mark.tyoe == URI.HTTP then
     vim.fn.jobstart({ "xdg-open", mark:absolute() }, { detach = true })
     return
   end
@@ -19,19 +22,19 @@ end
 
 ---@return string
 function M.filetype(uri)
-  local uri_type = if_nil(uri:match("^(%w+)://"), "file")
-  if uri_type == "file" then
+  local uri_type = if_nil(uri:match("^(%w+)://"), URI.FILE)
+  if uri_type == URI.FILE then
     uri = vim.fs.normalize(uri)
     local stat, _, e = U.fs_stat(uri)
     if e == "EACCES" then
-      return "no_access"
+      return URI.NO_ACCESS
     elseif e == "ENOENT" then
-      return "no_exists"
+      return URI.NO_EXIST
     else
-      return stat and stat.type or "error"
+      return stat and stat.type or URI.ERROR
     end
   end
-  return vim.trim(uri_type) == "" and "default" or uri_type
+  return vim.trim(uri_type) == "" and URI.DEFAULT or URI[uri_type:upper()]
 end
 
 -- stylua: ignore
@@ -47,17 +50,28 @@ function M.transform_site_uri(uri) return uri:match("https?://w?w?w?%.?(.+)") en
 ---@return string
 function M.cwd() return (U.cwd()) or vim.fn.getcwd() or vim.env.PWD end
 
+function M.icon_exists(symbol, extra_icons)
+  extra_icons = if_nil(extra_icons, {})
+  local ok, devicons = pcall(require, "nvim-web-devicons")
+  if not ok then return false end
+  if not devicons.has_loaded() then devicons.setup() end
+  local icons = devicons.get_icons()
+  for _, icon in pairs(icons) do if icon.icon == symbol then return true end end
+  for _, icon in pairs(extra_icons) do if icon == symbol then return true end end
+  return false
+end
+
 function M.get_icon(mark, extra_icons, opts)
   local icon, group = "", ""
   if opts.disable_devicons then return icon end
 
-  if mark.type == "term" then
+  if mark.type == URI.TERM then
     icon, group = extra_icons.terminal, "TrackViewsTerminal"
-  elseif mark.type == "man" then
+  elseif mark.type == URI.MAN then
     icon, group = extra_icons.manual, "TrackViewsManual"
-  elseif mark.type == "directory" then
+  elseif mark.type == URI.DIR then
     icon, group = extra_icons.directory, "TrackViewsDirectory"
-  elseif mark.type == "http" or mark.type == "https" then
+  elseif mark.type == URI.HTTP or mark.type == URI.HTTPS then
     icon, group = extra_icons.site, "TrackViewsSite"
   else
     local ok, devicons = pcall(require, "nvim-web-devicons")
@@ -106,7 +120,7 @@ function M.root_and_branch(opts, force)
     branch = root.branches[branch_name]
   elseif force then
     if not root then
-      local Root = require("track.containers.root")
+      local Root = require("track.model.root")
       local new_root = Root(root_path)
       state._roots[root_path] = new_root
       root = new_root
@@ -133,19 +147,19 @@ end
 function M.parsed_buf_name(buffer)
   local name = A.nvim_buf_get_name(if_nil(buffer, 0))
   local filetype = M.filetype(name)
-  if filetype == "file" then
+  if filetype == URI.FILE then
     name = U.fs_realpath(vim.fs.normalize(name))
     name = if_nil(name, V.fnamemodify(name, ":p"))
-  elseif filetype == "term" then
+  elseif filetype == URI.TERM then
     name = M.clean_term_uri(name)
   end
   return name
 end
 
-function M.apply_root_entry(mark, opts)
+function M.to_root_entry(mark, opts)
   local root_path = mark:absolute()
   if #root_path > 1 then root_path = root_path:gsub("/$", "") end
-  if opts.switch_directory and mark.type == "directory" and require("track.state")._roots[root_path] then
+  if opts.switch_directory and mark.type == URI.DIR and require("track.state")._roots[root_path] then
     vim.cmd.doautocmd("DirChangedPre")
     U.chdir(root_path)
     vim.cmd.doautocmd("DirChanged")

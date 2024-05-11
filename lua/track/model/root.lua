@@ -14,13 +14,12 @@ setmetatable(Root, {
   end,
 })
 
-local log = require("track.log")
-local util = require("track.util")
-local P = require("plenary.path")
+local CLASS = require("track.dev.enum").CLASS
+local log = require("track.dev.log")
 local if_nil = vim.F.if_nil
 
----@module "track.containers.branch"
-local Branch = require("track.containers.branch")
+---@module "track.model.branch"
+local Branch = require("track.model.branch")
 
 -- TODO: Implement if cwd/block - cwd != "" then branches from cwd will be shown instead of cwd/block.
 -- TODO: Implement a way to distinguish projects i.e., if cwd has .git then mark it as a git directory.
@@ -45,7 +44,7 @@ function Root:_new(opts)
   self.branches = {}
   self.stashed = nil -- currently stashed branch (if any)
   self.previous = nil -- previous branch (alternate)
-  self._NAME = "root"
+  self._NAME = CLASS.ROOT
   ---@diagnostic disable-next-line: missing-return
   self.main = if_nil(opts.main, "main")
 end
@@ -202,7 +201,7 @@ end
 
 function Root:insert_history(branch, force)
   local branch_type = type(branch)
-  assert(branch_type == "table" and branch._NAME == "branch", "branch: Branch cannot be nil")
+  assert(branch_type == "table" and branch._NAME == CLASS.BRANCH, "branch: Branch cannot be nil")
   if self.disable_history and not force then return end
   table.insert(self.history, 1, branch)
   if #self.history > self.maximum_history then table.remove(self.history, #self.history) end
@@ -212,7 +211,7 @@ end
 function Root:rename_branch(branch, new_name)
   local branch_type = type(branch)
   assert(
-    branch_type == "string" or (branch_type == "table" and branch._NAME == "branch"),
+    branch_type == "string" or (branch_type == "table" and branch._NAME == CLASS.BRANCH),
     "branch: branch needs to be Branch|string"
   )
   local name = type(branch) == "string" and branch or branch.name

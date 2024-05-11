@@ -8,17 +8,23 @@ setmetatable(Pad, {
   end,
 })
 
+-- TODO: If `Pad` or, `pickers.views` is opened and then if the current branch gets changed, redraw the `Pad/pickers.views` with the new branch's contents.
+
 local A = vim.api
 local V = vim.fn
 local if_nil = vim.F.if_nil
 
-local Mark = require("track.containers.mark")
+local Mark = require("track.model.mark")
 
 local util = require("track.util")
 local state = require("track.state")
 
 local utils = require("telescope.utils")
 local strings = require("plenary.strings")
+
+local enum = require("track.dev.enum")
+local CLASS = enum.CLASS
+local URI = enum.URI
 
 function Pad:_new(opts)
   local types = type(opts)
@@ -45,7 +51,7 @@ function Pad:_new(opts)
     local mark = Pad.line2mark(A.nvim_get_current_line(), self.icons, self.disable_devicons)
     if not mark then return end
     self:close()
-    if util.apply_root_entry(mark, self) then return end
+    if util.to_root_entry(mark, self) then return end
     self.hooks.on_choose(mark)
   end
 
@@ -83,7 +89,7 @@ function Pad:_new(opts)
     end,
   })
 
-  self._NAME = "pad"
+  self._NAME = CLASS.PAD
 end
 
 function Pad.make_entry(index, view_mark, icons, disable_devicons, color_devicons)
@@ -110,7 +116,12 @@ function Pad.line2mark(line, icons, disable_devicons)
       local icon, content = line:match("^([^%s]+)%s(.+)$")
       if icon and not utils.is_uri(icon) then
         mark = Mark({ uri = content })
-        if util.get_icon(mark, icons, { disable_devicons = disable_devicons }) ~= icon then mark.uri = trimmed end
+        if
+          not util.icon_exists(icon, icons)
+          and util.get_icon(mark, icons, { disable_devicons = disable_devicons }) ~= icon
+        then
+          mark.uri = trimmed
+        end
       else
         mark = Mark({ uri = trimmed })
       end
@@ -126,7 +137,7 @@ function Pad:apply_status()
     local mark = Pad.line2mark(line, self.icons, self.disable_devicons)
     if mark then
       local absolute = mark:absolute()
-      local allowed = vim.tbl_contains({ "term", "man", "http", "https" }, mark.type)
+      local allowed = vim.tbl_contains({ URI.TERM, URI.MAN, URI.HTTP, URI.HTTPS }, mark.type)
 
       local marker, marker_hl = self.icons.accessible, "TrackPadAccessible"
       if not mark:readable() then
@@ -264,11 +275,11 @@ function Pad:render()
 
     local start = range[1][1][2] + (self.disable_devicons and 0 or 1)
     A.nvim_buf_add_highlight(self.buffer, self.namespace, range[2], line, start, start + #mark.uri)
-    if mark.type == "file" or mark.type == "directory" or mark.type == "no_exists" then
+    if mark.type == URI.FILE or mark.type == URI.DIR or mark.type == URI.NO_EXIST then
       self:conceal_path(line, start, mark.uri)
-    elseif mark.type == "term" then
+    elseif mark.type == URI.TERM then
       self:conceal_term(line, start, mark.uri)
-    elseif mark.type ~= "file" then
+    else
       self:conceal_uri(line, start, mark.uri)
     end
   end

@@ -20,6 +20,9 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim).
 -- no configuration needed
 "dharmx/track.nvim",
 
+-- when lazy = true for lazy.nvim
+{ "dharmx/track.nvim", config = true }
+
 -- recommended lazy load
 {
   "dharmx/track.nvim",
@@ -27,9 +30,15 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim).
     local set = vim.keymap.set -- tweak to suit your own
     local silent = { silent = true }
     set("n", "<leader><leader>", "<cmd>Track<cr>", silent)
+    set("n", "<leader>xx", "<cmd>Track!<cr>", silent)
     set("n", "<leader>ee", "<cmd>Track branches<cr>", silent)
     set("n", "<leader>aa", "<cmd>Mark<cr>", silent)
     set("n", "<leader>dd", "<cmd>Unmark<cr>", silent)
+
+    for serial = 1, 9 do
+      local key = tostring(serial)
+      set("n", "<leader>" .. key, "<cmd>OpenMark " .. key .. "<cr>")
+    end
 
     -- alternatively require("track").setup()
     require("track").setup({ -- non-nerdfonts icons
@@ -67,12 +76,12 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim).
     })
   end,
   cmd = {
+    "Track",
     "Mark",
-    "MarkOpened",
-    "StashBranch",
-    "RestoreBranch",
-    "AlternateBranch",
-    "Unmark"
+    "Unmark",
+    "RMBranch",
+    "NewBranch",
+    "SwapBranch",
   },
 },
 ```
@@ -355,5 +364,5 @@ Builtin commands provided by track.nvim. See how to hack and create more command
 
 ## Credits
 
-- harpoon
-- @nikfp
+- [harpoon](https://github.com/ThePrimeagen/harpoon)
+- [@nikfp](https://github.com/nikfp)
