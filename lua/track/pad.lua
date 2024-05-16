@@ -8,8 +8,6 @@ setmetatable(Pad, {
   end,
 })
 
--- TODO: If `Pad` or, `pickers.views` is opened and then if the current branch gets changed, redraw the `Pad/pickers.views` with the new branch's contents.
-
 local A = vim.api
 local V = vim.fn
 local if_nil = vim.F.if_nil
@@ -48,7 +46,7 @@ function Pad:_new(opts)
 
   self.mappings.n["<cr>"] = function()
     if self:hidden() then return end
-    local mark = Pad.line2mark(A.nvim_get_current_line(), self.icons, self.disable_devicons)
+    local mark = self:parse_line_with_data(A.nvim_get_current_line(), self.icons, self.disable_devicons)
     if not mark then return end
     self:close()
     if util.to_root_entry(mark, self) then return end
@@ -92,6 +90,15 @@ function Pad:_new(opts)
   self._NAME = CLASS.PAD
 end
 
+---@private
+function Pad:parse_line_with_data(...)
+  local mark = Pad.parse_line(...)
+  if not mark then return end
+  local old_mark = self.branch.marks[mark:absolute()]
+  if old_mark then mark.data = old_mark.data end
+  return mark
+end
+
 function Pad.make_entry(index, view_mark, icons, disable_devicons, color_devicons)
   local entry = { index = index, value = view_mark }
   local icon, group = util.get_icon(entry.value, icons, {
@@ -106,7 +113,7 @@ function Pad.make_entry(index, view_mark, icons, disable_devicons, color_devicon
   return entry
 end
 
-function Pad.line2mark(line, icons, disable_devicons)
+function Pad.parse_line(line, icons, disable_devicons)
   local trimmed = vim.trim(line)
   if trimmed ~= "" then
     local mark
@@ -134,7 +141,7 @@ function Pad:apply_status()
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, true)
   for index, line in ipairs(lines) do
     local row = index - 1
-    local mark = Pad.line2mark(line, self.icons, self.disable_devicons)
+    local mark = Pad.parse_line(line, self.icons, self.disable_devicons)
     if mark then
       local absolute = mark:absolute()
       local allowed = vim.tbl_contains({ URI.TERM, URI.MAN, URI.HTTP, URI.HTTPS }, mark.type)
@@ -185,7 +192,7 @@ function Pad:apply_serial()
 
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, false)
   for serial, line in ipairs(lines) do
-    local mark = Pad.line2mark(line, self.icons, self.disable_devicons)
+    local mark = self:parse_line_with_data(line, self.icons, self.disable_devicons)
     if mark then
       vim.keymap.set("n", tostring(serial), function()
         self:close()
@@ -288,11 +295,15 @@ function Pad:render()
 end
 
 function Pad:sync(save)
+  local marks = self.branch.marks
   self.branch:clear()
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, true)
   for _, line in ipairs(lines) do
-    local parsed_mark = Pad.line2mark(line, self.icons, self.disable_devicons)
-    if parsed_mark then self.branch:add_mark(parsed_mark) end
+    local mark = Pad.parse_line(line, self.icons, self.disable_devicons)
+    if mark then
+      mark.data = marks[mark:absolute()].data
+      self.branch:add_mark(mark)
+    end
   end
   self:render()
   if save then state.save() end
@@ -303,7 +314,7 @@ function Pad:hidden() return not self.window or not A.nvim_win_is_valid(self.win
 -- stylua: ignore
 function Pad:open()
   if not self:hidden() then return end
-  self._focused = util.parsed_buf_name()
+  self._focused = util.parsed_bufname()
   self.window = A.nvim_open_win(self.buffer, true, self.config)
   A.nvim_win_set_option(self.window, "winhighlight", "SignColumn:NormalFloat,CursorLineSign:NormalFloat,FloatTitle:TrackPadTitle,FloatBorder:NormalFloat")
   A.nvim_win_set_option(self.window, "number", true)

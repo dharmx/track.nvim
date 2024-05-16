@@ -24,12 +24,13 @@ local CLASS = enum.CLASS
 ---@param opts MarkFields Available mark attributes/fields.
 function Mark:_new(opts)
   local types = type(opts)
-  assert(types == "table", "expected: fields: table found: " .. types)
-  assert(opts.uri and type(opts.uri) == "string", "fields.path: string cannot be nil")
+  assert(types == "table", "expected: opts.opts to be table found " .. types)
+  assert(opts.uri and type(opts.uri) == "string", "opts.path: string cannot be nil")
 
   self.uri = opts.uri
   self.label = opts.label
   self.type = if_nil(opts.type, util.filetype(opts.uri))
+  self.data = if_nil(opts.data, {})
   self._NAME = CLASS.MARK
 end
 

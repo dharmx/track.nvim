@@ -18,6 +18,7 @@ function M.open_entry(mark)
     return
   end
   vim.cmd("confirm edit " .. mark:absolute())
+  if mark.data.xy then M.to_location(unpack(mark.data.xy)) end
 end
 
 ---@return string
@@ -144,7 +145,7 @@ function M.contains(patterns, item)
   return false
 end
 
-function M.parsed_buf_name(buffer)
+function M.parsed_bufname(buffer)
   local name = A.nvim_buf_get_name(if_nil(buffer, 0))
   local filetype = M.filetype(name)
   if filetype == URI.FILE then
@@ -166,6 +167,13 @@ function M.to_root_entry(mark, opts)
     return true
   end
   return false
+end
+
+function M.to_location(row, col)
+  if A.nvim_buf_line_count(0) < row then return end
+  local line_len = #A.nvim_buf_get_lines(0, row - 1, row, true)[1]
+  if line_len < col then col = line_len end
+  A.nvim_win_set_cursor(0, { row, col })
 end
 
 return M

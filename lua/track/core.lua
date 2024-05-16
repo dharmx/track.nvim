@@ -9,6 +9,7 @@ local Mark = require("track.model.mark")
 local Pad = require("track.pad")
 
 local URI = require("track.dev.enum").URI
+local A = vim.api
 
 local log = require("track.dev.log")
 local if_nil = vim.F.if_nil
@@ -41,7 +42,11 @@ function M:mark(file, branch_name, save)
   end
 
   local mark = Mark({ uri = file })
-  if mark.type == URI.TERM then mark.uri = util.clean_term_uri(file) end
+  if mark.type == URI.TERM then
+    mark.uri = util.clean_term_uri(file)
+  elseif mark.type ~= URI.HTTP and mark.type ~= URI.HTTPS then
+    mark.data.xy = mark:absolute() == A.nvim_buf_get_name(0) and A.nvim_win_get_cursor(0) or nil
+  end
   root.branches[branch_name]:add_mark(mark)
   if save then state.save() end
   return self

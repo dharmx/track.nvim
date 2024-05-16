@@ -1,4 +1,4 @@
----@diagnostic disable: undefined-field
+---@diagnostic disable: undefined-field, inject-field
 ---A virtual mark-map. Allows one to create different versions of marks that
 ---is better suited to a part of a project that you might be working on.
 ---
@@ -78,8 +78,9 @@ end
 ---Add a mark into the `Branch`.
 ---@param mark Mark|string `Mark` or, the path that will be turned into a `Mark`.
 ---@param label? string Title of the mark.
+---@param data? string Metadata.
 ---@return Mark
-function Branch:add_mark(mark, label)
+function Branch:add_mark(mark, label, data)
   if type(mark) == "table" and mark._NAME == CLASS.MARK then
     local absolute = mark:absolute()
     self.marks[absolute] = mark
@@ -88,7 +89,7 @@ function Branch:add_mark(mark, label)
     return self.marks[absolute]
   end
   -- if it does not exist then create it
-  return self:add_mark(Mark({ uri = mark, label = label }))
+  return self:add_mark(Mark({ uri = mark, label = label, data = data }))
 end
 
 ---Remove a mark from the Branch. Returns the removed mark (if available).
