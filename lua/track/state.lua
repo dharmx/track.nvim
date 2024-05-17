@@ -56,7 +56,6 @@ local function parse_marks(marks)
       uri = mark.uri,
       label = mark.label,
       type = mark.type,
-      data = mark.data,
     })
   end
   return store

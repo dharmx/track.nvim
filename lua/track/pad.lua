@@ -22,7 +22,7 @@ local strings = require("plenary.strings")
 
 local enum = require("track.dev.enum")
 local CLASS = enum.CLASS
-local URI = enum.URI
+local M_TYPE = enum.M_TYPE
 
 function Pad:_new(opts)
   local types = type(opts)
@@ -46,7 +46,7 @@ function Pad:_new(opts)
 
   self.mappings.n["<cr>"] = function()
     if self:hidden() then return end
-    local mark = self:parse_line_with_data(A.nvim_get_current_line(), self.icons, self.disable_devicons)
+    local mark = Pad.parse_line(A.nvim_get_current_line(), self.icons, self.disable_devicons)
     if not mark then return end
     self:close()
     if util.to_root_entry(mark, self) then return end
@@ -88,15 +88,6 @@ function Pad:_new(opts)
   })
 
   self._NAME = CLASS.PAD
-end
-
----@private
-function Pad:parse_line_with_data(...)
-  local mark = Pad.parse_line(...)
-  if not mark then return end
-  local old_mark = self.branch.marks[mark:absolute()]
-  if old_mark then mark.data = old_mark.data end
-  return mark
 end
 
 function Pad.make_entry(index, view_mark, icons, disable_devicons, color_devicons)
@@ -144,7 +135,7 @@ function Pad:apply_status()
     local mark = Pad.parse_line(line, self.icons, self.disable_devicons)
     if mark then
       local absolute = mark:absolute()
-      local allowed = vim.tbl_contains({ URI.TERM, URI.MAN, URI.HTTP, URI.HTTPS }, mark.type)
+      local allowed = vim.tbl_contains({ M_TYPE.TERM, M_TYPE.MAN, M_TYPE.HTTP, M_TYPE.HTTPS }, mark.type)
 
       local marker, marker_hl = self.icons.accessible, "TrackPadAccessible"
       if not mark:readable() then
@@ -192,7 +183,7 @@ function Pad:apply_serial()
 
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, false)
   for serial, line in ipairs(lines) do
-    local mark = self:parse_line_with_data(line, self.icons, self.disable_devicons)
+    local mark = Pad.parse_line(line, self.icons, self.disable_devicons)
     if mark then
       vim.keymap.set("n", tostring(serial), function()
         self:close()
@@ -282,9 +273,9 @@ function Pad:render()
 
     local start = range[1][1][2] + (self.disable_devicons and 0 or 1)
     A.nvim_buf_add_highlight(self.buffer, self.namespace, range[2], line, start, start + #mark.uri)
-    if mark.type == URI.FILE or mark.type == URI.DIR or mark.type == URI.NO_EXIST then
+    if mark.type == M_TYPE.FILE or mark.type == M_TYPE.DIR or mark.type == M_TYPE.NO_EXIST then
       self:conceal_path(line, start, mark.uri)
-    elseif mark.type == URI.TERM then
+    elseif mark.type == M_TYPE.TERM then
       self:conceal_term(line, start, mark.uri)
     else
       self:conceal_uri(line, start, mark.uri)
@@ -295,15 +286,11 @@ function Pad:render()
 end
 
 function Pad:sync(save)
-  local marks = self.branch.marks
   self.branch:clear()
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, true)
   for _, line in ipairs(lines) do
     local mark = Pad.parse_line(line, self.icons, self.disable_devicons)
-    if mark then
-      mark.data = marks[mark:absolute()].data
-      self.branch:add_mark(mark)
-    end
+    if mark then self.branch:add_mark(mark) end
   end
   self:render()
   if save then state.save() end
