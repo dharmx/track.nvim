@@ -77,10 +77,8 @@ end
 
 ---Add a mark into the `Branch`.
 ---@param mark Mark|string `Mark` or, the path that will be turned into a `Mark`.
----@param label? string Title of the mark.
----@param data? string Metadata.
 ---@return Mark
-function Branch:add_mark(mark, label, data)
+function Branch:add_mark(mark)
   if type(mark) == "table" and mark._NAME == CLASS.MARK then
     local absolute = mark:absolute()
     self.marks[absolute] = mark
@@ -89,7 +87,7 @@ function Branch:add_mark(mark, label, data)
     return self.marks[absolute]
   end
   -- if it does not exist then create it
-  return self:add_mark(Mark({ uri = mark, label = label, data = data }))
+  return self:add_mark(Mark({ uri = mark }))
 end
 
 ---Remove a mark from the Branch. Returns the removed mark (if available).
@@ -161,7 +159,7 @@ end
 function Branch:change_mark_uri(mark, uri)
   assert(type(mark) == "table" and mark._NAME == CLASS.MARK, "mark: restricted type")
   local abs = mark:absolute()
-  local new_mark = Mark({ uri = uri, label = mark.label })
+  local new_mark = Mark({ uri = uri })
   local new_abs = new_mark:absolute()
   for index, view in ipairs(self.views) do
     if view == abs then

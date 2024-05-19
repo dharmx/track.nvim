@@ -104,14 +104,12 @@
 ---your current working directory. It serves as a project-scoped file-bookmark.
 ---@class Mark
 ---@field path string Path to mark.
----@field label? string Optional label for that the mark.
 ---@field absolute string Absolute path to mark.
 ---@field type? string Type of mark.
 ---@field _NAME string Type.
 
 ---@class MarkFields
 ---@field uri string Path to mark.
----@field label? string Optional label for the mark.
 ---@field type? MarkType Optional type for the mark.
 
 ---@alias Core table

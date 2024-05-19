@@ -54,7 +54,6 @@ local function parse_marks(marks)
   for path, mark in pairs(marks) do
     store[path] = Mark({
       uri = mark.uri,
-      label = mark.label,
       type = mark.type,
     })
   end

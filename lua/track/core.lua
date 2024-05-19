@@ -9,7 +9,6 @@ local Mark = require("track.model.mark")
 local Pad = require("track.pad")
 
 local M_TYPE = require("track.dev.enum").M_TYPE
-local A = vim.api
 
 local log = require("track.dev.log")
 local if_nil = vim.F.if_nil

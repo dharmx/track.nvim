@@ -13,6 +13,7 @@ setmetatable(Mark, {
 
 local V = vim.fn
 local U = vim.loop
+local A = vim.api
 local if_nil = vim.F.if_nil
 
 local util = require("track.util")
@@ -27,10 +28,15 @@ function Mark:_new(opts)
   assert(types == "table", "expected: opts.opts to be table found " .. types)
   assert(opts.uri and type(opts.uri) == "string", "opts.path: string cannot be nil")
 
+  self.range = { 1, 0 }
+  self:update_range()
   self.uri = opts.uri
-  self.label = opts.label
   self.type = if_nil(opts.type, util.filetype(opts.uri))
   self._NAME = CLASS.MARK
+end
+
+function Mark:update_range()
+  self.range = self:absolute() == A.nvim_buf_get_name(0) and A.nvim_win_get_cursor(0) or self.range
 end
 
 function Mark:absolute()

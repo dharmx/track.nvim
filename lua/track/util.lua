@@ -58,8 +58,12 @@ function M.icon_exists(symbol, extra_icons)
   if not ok then return false end
   if not devicons.has_loaded() then devicons.setup() end
   local icons = devicons.get_icons()
-  for _, icon in pairs(icons) do if icon.icon == symbol then return true end end
-  for _, icon in pairs(extra_icons) do if icon == symbol then return true end end
+  for _, icon in pairs(icons) do
+    if icon.icon == symbol then return true end
+  end
+  for _, icon in pairs(extra_icons) do
+    if icon == symbol then return true end
+  end
   return false
 end
 
