@@ -6,14 +6,24 @@ local V = vim.fn
 local A = vim.api
 local if_nil = vim.F.if_nil
 
-local enum = require("track.dev.enum")
-local M_TYPE = enum.M_TYPE
+local M_TYPE = require("track.dev.enum").M_TYPE
+local TERM = M_TYPE.TERM
+local DEFAULT = M_TYPE.DEFAULT
+local RANGE = M_TYPE.RANGE
+local HTTP = M_TYPE.HTTP
+local HTTPS = M_TYPE.HTTPS
+local DIR = M_TYPE.DIR
+local MAN = M_TYPE.MAN
+local FILE = M_TYPE.FILE
+local NO_EXIST = M_TYPE.NO_EXIST
+local NO_ACCESS = M_TYPE.NO_ACCESS
+local ERROR = M_TYPE.ERROR
 
 ---Dummy function that does noting.
 function M.mute() end
 
 function M.open_entry(mark)
-  if mark.type == M_TYPE.HTTPS or mark.tyoe == M_TYPE.HTTP then
+  if mark.type == HTTPS or mark.tyoe == HTTP then
     vim.fn.jobstart({ "xdg-open", mark:absolute() }, { detach = true })
     return
   end
@@ -22,21 +32,21 @@ end
 
 ---@return string
 function M.filetype(uri)
-  local uri_type = if_nil(uri:match("^(%w+)://"), M_TYPE.FILE)
-  if uri_type == M_TYPE.FILE then
+  local uri_type = if_nil(uri:match("^(%w+)://"), FILE)
+  if uri_type == FILE then
     local tokens = vim.split(uri, ":")
-    if #tokens > 1 then return M_TYPE.RANGE end
+    if #tokens > 1 then return RANGE end
     uri = vim.fs.normalize(uri)
     local stat, _, e = U.fs_stat(uri)
     if e == "EACCES" then
-      return M_TYPE.NO_ACCESS
+      return NO_ACCESS
     elseif e == "ENOENT" then
-      return M_TYPE.NO_EXIST
+      return NO_EXIST
     else
-      return stat and stat.type or M_TYPE.ERROR
+      return stat and stat.type or ERROR
     end
   end
-  return vim.trim(uri_type) == "" and M_TYPE.DEFAULT or M_TYPE[uri_type:upper()]
+  return vim.trim(uri_type) == "" and DEFAULT or M_TYPE[uri_type:upper()]
 end
 
 -- stylua: ignore
@@ -71,13 +81,13 @@ function M.get_icon(mark, extra_icons, opts)
   local icon, group = "", ""
   if opts.disable_devicons then return icon end
 
-  if mark.type == M_TYPE.TERM then
+  if mark.type == TERM then
     icon, group = extra_icons.terminal, "TrackViewsTerminal"
-  elseif mark.type == M_TYPE.MAN then
+  elseif mark.type == MAN then
     icon, group = extra_icons.manual, "TrackViewsManual"
-  elseif mark.type == M_TYPE.DIR then
+  elseif mark.type == DIR then
     icon, group = extra_icons.directory, "TrackViewsDirectory"
-  elseif mark.type == M_TYPE.HTTP or mark.type == M_TYPE.HTTPS then
+  elseif mark.type == HTTP or mark.type == HTTPS then
     icon, group = extra_icons.site, "TrackViewsSite"
   else
     local ok, devicons = pcall(require, "nvim-web-devicons")
@@ -153,10 +163,10 @@ end
 function M.parsed_bufname(buffer)
   local name = A.nvim_buf_get_name(if_nil(buffer, 0))
   local filetype = M.filetype(name)
-  if filetype == M_TYPE.FILE then
+  if filetype == FILE then
     name = U.fs_realpath(vim.fs.normalize(name))
     name = if_nil(name, V.fnamemodify(name, ":p"))
-  elseif filetype == M_TYPE.TERM then
+  elseif filetype == TERM then
     name = M.clean_term_uri(name)
   end
   return name
@@ -165,7 +175,7 @@ end
 function M.to_root_entry(mark, opts)
   local root_path = mark:absolute()
   if #root_path > 1 then root_path = root_path:gsub("/$", "") end
-  if opts.switch_directory and mark.type == M_TYPE.DIR and require("track.state")._roots[root_path] then
+  if opts.switch_directory and mark.type == DIR and require("track.state")._roots[root_path] then
     vim.cmd.doautocmd("DirChangedPre")
     U.chdir(root_path)
     vim.cmd.doautocmd("DirChanged")

@@ -22,7 +22,13 @@ local strings = require("plenary.strings")
 
 local enum = require("track.dev.enum")
 local CLASS = enum.CLASS
-local M_TYPE = enum.M_TYPE
+local TERM = enum.M_TYPE.TERM
+local HTTP = enum.M_TYPE.HTTP
+local HTTPS = enum.M_TYPE.HTTPS
+local DIR = enum.M_TYPE.DIR
+local MAN = enum.M_TYPE.MAN
+local FILE = enum.M_TYPE.FILE
+local NO_EXIST = enum.M_TYPE.NO_EXIST
 
 function Pad:_new(opts)
   local types = type(opts)
@@ -135,7 +141,7 @@ function Pad:apply_status()
     local mark = Pad.parse_line(line, self.icons, self.disable_devicons)
     if mark then
       local absolute = mark:absolute()
-      local allowed = vim.tbl_contains({ M_TYPE.TERM, M_TYPE.MAN, M_TYPE.HTTP, M_TYPE.HTTPS }, mark.type)
+      local allowed = vim.tbl_contains({ TERM, MAN, HTTP, HTTPS }, mark.type)
 
       local marker, marker_hl = self.icons.accessible, "TrackPadAccessible"
       if not mark:readable() then
@@ -273,9 +279,9 @@ function Pad:render()
 
     local start = range[1][1][2] + (self.disable_devicons and 0 or 1)
     A.nvim_buf_add_highlight(self.buffer, self.namespace, range[2], line, start, start + #mark.uri)
-    if mark.type == M_TYPE.FILE or mark.type == M_TYPE.DIR or mark.type == M_TYPE.NO_EXIST then
+    if mark.type == FILE or mark.type == DIR or mark.type == NO_EXIST then
       self:conceal_path(line, start, mark.uri)
-    elseif mark.type == M_TYPE.TERM then
+    elseif mark.type == TERM then
       self:conceal_term(line, start, mark.uri)
     else
       self:conceal_uri(line, start, mark.uri)
